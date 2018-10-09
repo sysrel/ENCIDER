@@ -2520,7 +2520,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           if (st) {
              std::string tname = getTypeName(t); 
              state.typeToAddr[t] = result;
-             llvm::outs() << "mapping bitcast instance of " << tname << " to " << result << "\n";
+             llvm::outs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << "\n";
           }
        }
     } 

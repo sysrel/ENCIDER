@@ -203,6 +203,8 @@ ExecutionState::ExecutionState(const ExecutionState& state):
   id = counter++;
   if (LifeCycleModelState::lcm)
     lcmState = new LifeCycleModelState(*state.lcmState);
+  typeToAddr = state.typeToAddr;
+  lazyInitSingleInstances = state.lazyInitSingleInstances;
   /* SYSREL */ 
 }
 

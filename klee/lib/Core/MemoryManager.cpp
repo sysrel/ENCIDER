@@ -114,7 +114,7 @@ MemoryObject *MemoryManager::getInstanceForType(ExecutionState &state, llvm::Typ
 
 
 ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::Type *t, bool &result) {
-   llvm::errs() << "in getInstanceAddressForType " << getTypeName(t) << "\n";
+   llvm::errs() << "in getInstanceAddressForType " << getTypeName(t) << " type pointer=" << t << "\n";
   if (state.lazyInitSingleInstances.find(t) != state.lazyInitSingleInstances.end()) {
       result = true;
      return state.lazyInitSingleInstances[t]->getBaseExpr();
@@ -122,6 +122,7 @@ ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::
   else  {
         // Grab the address mapped to this type
         if (state.typeToAddr.find(t) != state.typeToAddr.end()) {
+            llvm::outs() << "found the instance for type " << getTypeName(t) << "\n";
             result = true;
             return state.typeToAddr[t];
         }
@@ -143,22 +144,24 @@ ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::
                   if (res) {
                      const llvm::DataLayout &dl = moduleHandle->getDataLayout();
                      const llvm::StructLayout *sl =  dl.getStructLayout(set);
-                     for(unsigned i=0; i< set->getNumElements(); i++) {  
-                        if (set->getElementType(i) == t)
+                     unsigned i = 0;
+                     for(; i< set->getNumElements(); i++) {                   
+                        if (set->getElementType(i) == t) {
+                           llvm::outs() << "matched element " << i << " to type " << getTypeName(t) << "\n";
                             break;
+                        }
+                     }
                      assert(i >=0  && i < set->getNumElements());
                      ref<Expr> re = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), eaddr);
-                     llvm::outs() << "instance for embedded type found at " << re << "\n";
+                     llvm::outs() << "instance for embedded type found at " << re << " after adding offset " << sl->getElementOffset(i) << " for element " << i << " to addr " << eaddr << "\n";
                      result = true;
                      return re;
-                     }
+                   }
                      
-                  }
                }
+          }
           // }
- 
-        }
-     }
+      }
   }
   result = false;
   return ConstantExpr::alloc(0, Expr::Int64);
