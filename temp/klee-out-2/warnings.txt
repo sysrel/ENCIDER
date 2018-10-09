@@ -1,0 +1,22 @@
+KLEE: WARNING: undefined reference to function: __kmalloc
+KLEE: WARNING: undefined reference to function: _dev_info
+KLEE: WARNING: undefined reference to function: kfree
+KLEE: WARNING: undefined reference to function: refcount_inc
+KLEE: WARNING: undefined reference to function: usb_control_msg
+KLEE: WARNING: undefined reference to function: usb_deregister
+KLEE: WARNING: undefined reference to function: usb_get_dev
+KLEE: WARNING: undefined reference to function: usb_put_dev
+KLEE: WARNING: undefined reference to function: usb_register_driver
+KLEE: WARNING: undefined reference to function: usbtv_audio_free
+KLEE: WARNING: undefined reference to function: usbtv_audio_init
+KLEE: WARNING: undefined reference to function: usbtv_video_free
+KLEE: WARNING: undefined reference to function: usbtv_video_init
+KLEE: WARNING: undefined reference to function: v4l2_device_put
+KLEE: WARNING ONCE: Alignment of memory from call "__kmalloc" is not modelled. Using alignment of 8.
+KLEE: WARNING ONCE: calling external: usb_get_dev(61888344) at [no debug info]
+KLEE: WARNING ONCE: calling external: usbtv_video_init(61881008) at [no debug info]
+KLEE: WARNING ONCE: calling external: usbtv_audio_init(61881008) at [no debug info]
+KLEE: WARNING ONCE: calling external: refcount_inc(61881128) at [no debug info]
+KLEE: WARNING ONCE: calling external: _dev_info(61857008, 61832080) at [no debug info]
+KLEE: WARNING ONCE: calling external: usb_put_dev(61956544) at [no debug info]
+KLEE: WARNING ONCE: calling external: usbtv_video_free(61881008) at [no debug info]

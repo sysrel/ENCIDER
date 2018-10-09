@@ -1,0 +1,6808 @@
+KLEE: output directory is "/home/tuba/Documents/tools/klee-3.8/temp/klee-out-33"
+KLEE: Using STP solver backend
+KLEE: WARNING: undefined reference to function: __kmalloc
+KLEE: WARNING: undefined reference to function: _dev_info
+KLEE: WARNING: undefined reference to function: kfree
+KLEE: WARNING: undefined reference to function: refcount_inc
+KLEE: WARNING: undefined reference to function: usb_control_msg
+KLEE: WARNING: undefined reference to function: usb_deregister
+KLEE: WARNING: undefined reference to function: usb_get_dev
+KLEE: WARNING: undefined reference to function: usb_put_dev
+KLEE: WARNING: undefined reference to function: usb_register_driver
+KLEE: WARNING: undefined reference to function: usbtv_audio_free
+KLEE: WARNING: undefined reference to function: usbtv_audio_init
+KLEE: WARNING: undefined reference to function: usbtv_video_free
+KLEE: WARNING: undefined reference to function: usbtv_video_init
+KLEE: WARNING: undefined reference to function: v4l2_device_put
+arg 0 type %struct.usb_interface*
+allocation size: 1648
+binding arg 0 of type %struct.usb_interface* to address 31005056
+arg 1 type %struct.usb_device_id*
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  store %struct.usb_interface* %intf, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  store %struct.usb_device_id* %id, %struct.usb_device_id** %id.addr, align 8
+ address: 31014000
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014000
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %0 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %dev1 = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %0, i32 0, i32 7
+ initial base: 31005056
+geptr offset: 48
+geptr base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  store %struct.device* %dev1, %struct.device** %dev, align 8
+ address: 31015856
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31015856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %1 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %num_altsetting = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %1, i32 0, i32 2
+ initial base: 31005056
+geptr offset: 16
+geptr base: 31005072
+geptr final base: 31005072
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %2 = load i32, i32* %num_altsetting, align 4  %2 = load i32, i32* %num_altsetting, align 4
+Framework dts:
+data type=struct.usb_interface num inst=2
+data type=struct.usbtv num inst=2
+data type=struct.usb_device_id num inst=2
+data type=struct usb_host_endpoint num inst=2
+data type=i8 num inst=10
+data type=struct.device num inst=2
+data type=struct.usb_device num inst=2
+data type=struct.v4l2_device num inst=2
+data type=struct.v4l2_ctrl_handler num inst=2
+data type=struct.video_device num inst=2
+data type=struct.vb2_queue num inst=2
+data type=struct.snd_card num inst=2
+data type=struct.snd_pcm_substream num inst=2
+data type=struct.urb num inst=2
+data type=struct.usbtv_buf num inst=2
+data type=struct.usb_endpoint_descriptor num inst=2
+
+ address: 31005072
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31005072
+default offset for target address 16
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ReadLSB w32 16 arg_0)
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %3 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=2
+Number of states=1
+GetElementPtr info:
+  %altsetting = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %3, i32 0, i32 0
+ initial base: 31005056
+geptr final base: 31005056
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %4 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting, align 8  %4 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting, align 8
+
+ address: 31005056
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005056
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_interface** (count=0) to be lazy init?
+ load result: (ReadLSB w64 0 arg_0)
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %arrayidx = getelementptr %struct.usb_host_interface, %struct.usb_host_interface* %4, i64 1
+ initial base: (ReadLSB w64 0 arg_0)
+geptr offset: 40
+geptr base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %desc = getelementptr inbounds %struct.usb_host_interface, %struct.usb_host_interface* %arrayidx, i32 0, i32 0
+ initial base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %bNumEndpoints = getelementptr inbounds %struct.usb_interface_descriptor, %struct.usb_interface_descriptor* %desc, i32 0, i32 4
+ initial base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr offset: 4
+geptr base: (Add w64 44
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 44
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %5 = load i8, i8* %bNumEndpoints, align 1
+ address: (Add w64 44
+          (ReadLSB w64 0 arg_0))
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop (Add w64 44
+          (ReadLSB w64 0 arg_0))
+default offset for target address (Add w64 18446744073679255628
+          (ReadLSB w64 0 arg_0))
+bounds check expression (Ult (Add w64 18446744073679255628
+               (ReadLSB w64 0 arg_0))
+      14)
+in bounds? 0
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679255628
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr1)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679255196
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr2)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679193228
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr3)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679192700
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr4)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679192412
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr5)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679176924
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr6)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679176636
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr7)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679176204
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr8)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679175708
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr9)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679172636
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr10)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679172284
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr11)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679171948
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr12)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679171900
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr13)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679170540
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr14)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679167772
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr15)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679167228
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr16)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679166892
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr17)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679166844
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr18)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679165372
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr19)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679165324
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr20)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679164972
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr21)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679164140
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr22)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679164092
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr23)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679163516
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr24)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679162732
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr25)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679162684
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr26)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073679154060
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr27)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678784076
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr28)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678782332
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr29)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678782284
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr30)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678781788
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr31)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678781004
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr32)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678758780
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr33)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678758332
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr34)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678757836
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr35)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678757404
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr36)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678756108
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr37)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678755724
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr38)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678754732
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr39)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678754284
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr40)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678753900
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr41)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678753516
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr42)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678579660
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr43)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678579196
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr44)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678577708
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr45)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678575884
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr46)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678575596
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr47)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678575244
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr48)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678573948
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr49)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678573388
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr50)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678572780
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr51)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678572092
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr52)
+ load result: (Read w8 (Extract w32 0KLEE: ERROR: (location information missing) memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+ (Add w64 18446744073678571532
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr53)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678570972
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr54)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678570412
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr55)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678569852
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr56)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678569292
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr57)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678568588
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr58)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678568076
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr59)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678546604
+                                  (ReadLSB w64 0 arg_0)))
+          arg_0)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678538380
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr60)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678537660
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr61)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678537628
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr62)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678537196
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr63)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678536364
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr64)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678535804
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr65)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678535420
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr66)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446744073678534940
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr67)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604441038791468
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr68)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604441038789932
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr69)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604441038787372
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr70)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604440993917196
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr71)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604440993917180
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr72)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604440993917164
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr73)
+ load result: (Read w8 (Extract w32 0 (Add w64 18446604440993917148
+                                  (ReadLSB w64 0 arg_0)))
+          const_arr74)
+Info: 
+	address: (Add w64 44
+          (ReadLSB w64 0 arg_0))
+	example: 44
+	range: [0, 18446744073709551615]
+	next: object at 30296032 of size 14
+		MO1[14] allocated at usbtv_probe():  %retval = alloca i32, align 4
+
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+Number of states=74
+main thread es->rtid=-1
+Number of states=74
+main thread es->rtid=-1
+Number of states=74
+main thread es->rtid=-1
+Number of states=74
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=74
+main thread es->rtid=-1
+Number of states=74
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=74
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=75
+main thread es->rtid=-1
+Number of states=75
+Number of states=74
+main thread es->rtid=-1
+Number of states=74
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=73
+main thread es->rtid=-1
+Number of states=73
+Number of states=72
+main thread es->rtid=-1
+Number of states=72
+main thread es->rtid=-1
+Number of states=72
+main thread es->rtid=-1
+Number of states=72
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=72
+main thread es->rtid=-1
+Number of states=72
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=72
+main thread es->rtid=-1
+Number of states=72
+Number of states=71
+main thread es->rtid=-1
+Number of states=71
+main thread es->rtid=-1
+Number of states=71
+main thread es->rtid=-1
+Number of states=71
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+main thread es->rtid=-1
+Number of states=70
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=69
+main thread es->rtid=-1
+Number of states=69
+Number of states=68
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=68
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=67
+main thread es->rtid=-1
+Number of states=67
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=66
+main thread es->rtid=-1
+Number of states=66
+Number of states=65
+main thread es->rtid=-1
+Number of states=65
+Number of states=64
+main thread es->rtid=-1
+Number of states=64
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=63
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+main thread es->rtid=-1
+Number of states=63
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=63
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=63
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+main thread es->rtid=-1
+Number of states=62
+Number of states=61
+main thread es->rtid=-1
+Number of states=61
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=61
+main thread es->rtid=-1
+Number of states=61
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=61
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=61
+main thread es->rtid=-1
+Number of states=61
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=61
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=61
+main thread es->rtid=-1
+Number of states=61
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=60
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=60
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+main thread es->rtid=-1
+Number of states=60
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=60
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=59
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=59
+Number of states=58
+main thread es->rtid=-1
+Number of states=58
+main thread es->rtid=-1
+Number of states=58
+main thread es->rtid=-1
+Number of states=58
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=58
+main thread es->rtid=-1
+Number of states=58
+main thread es->rtid=-1
+Number of states=58
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=58
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=58
+main thread es->rtid=-1
+Number of states=58
+Number of states=57
+memory operation
+  %6 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=57
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+main thread es->rtid=-1
+Number of states=57
+Number of states=56
+main thread es->rtid=-1
+Number of states=56
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=56
+main thread es->rtid=-1
+Number of states=56
+Number of states=55
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=55
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=55
+main thread es->rtid=-1
+Number of states=55
+Number of states=54
+main thread es->rtid=-1
+Number of states=54
+main thread es->rtid=-1
+Number of states=54
+main thread es->rtid=-1
+Number of states=54
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=54
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=54
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=53
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=53
+Number of states=52
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+memory operation
+  %6 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=53
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+main thread es->rtid=-1
+Number of states=53
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=53
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=53
+Number of states=52
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=52
+main thread es->rtid=-1
+Number of states=52
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=51
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=51
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=51
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+main thread es->rtid=-1
+Number of states=51
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=51
+Number of states=50
+main thread es->rtid=-1
+Number of states=50
+main thread es->rtid=-1
+Number of states=50
+main thread es->rtid=-1
+Number of states=50
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=50
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=50
+main thread es->rtid=-1
+Number of states=50
+Number of states=49
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=49
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=49
+main thread es->rtid=-1
+Number of states=49
+main thread es->rtid=-1
+Number of states=49
+main thread es->rtid=-1
+Number of states=49
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=49
+main thread es->rtid=-1
+Number of states=49
+main thread es->rtid=-1
+Number of states=49
+main thread es->rtid=-1
+Number of states=49
+Number of states=48
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=48
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=48
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=48
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=48
+main thread es->rtid=-1
+Number of states=48
+main thread es->rtid=-1
+Number of states=48
+main thread es->rtid=-1
+Number of states=48
+main thread es->rtid=-1
+Number of states=48
+main thread es->rtid=-1
+Number of states=48
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=48
+main thread es->rtid=-1
+Number of states=48
+Number of states=47
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=47
+main thread es->rtid=-1
+Number of states=47
+main thread es->rtid=-1
+Number of states=47
+main thread es->rtid=-1
+Number of states=47
+main thread es->rtid=-1
+Number of states=47
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=47
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=47
+main thread es->rtid=-1
+Number of states=47
+main thread es->rtid=-1
+Number of states=47
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=47
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=47
+Number of states=46
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=46
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=46
+main thread es->rtid=-1
+Number of states=46
+main thread es->rtid=-1
+Number of states=46
+main thread es->rtid=-1
+Number of states=46
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=46
+main thread es->rtid=-1
+Number of states=46
+main thread es->rtid=-1
+Number of states=46
+main thread es->rtid=-1
+Number of states=46
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=46
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=46
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=46
+Number of states=45
+main thread es->rtid=-1
+Number of states=45
+memory operation
+  %6 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=45
+Number of states=44
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=44
+Number of states=43
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=43
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=43
+main thread es->rtid=-1
+Number of states=43
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=43
+main thread es->rtid=-1
+Number of states=43
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=43
+Number of states=42
+Number of states=41
+main thread es->rtid=-1
+Number of states=41
+Number of states=40
+GetElementPtr info:
+  %altsetting6 = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %6, i32 0, i32 0
+ initial base: 31005056
+geptr final base: 31005056
+main thread es->rtid=-1
+Number of states=40
+main thread es->rtid=-1
+Number of states=40
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=40
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=40
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=40
+Number of states=39
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=39
+Number of states=38
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=38
+main thread es->rtid=-1
+Number of states=38
+memory operation
+  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8
+
+ address: 31005056
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005056
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_interface** (count=0) to be lazy init?
+ load result: (ReadLSB w64 0 arg_0)
+main thread es->rtid=-1
+Number of states=38
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=38
+main thread es->rtid=-1
+Number of states=38
+Number of states=37
+main thread es->rtid=-1
+Number of states=37
+main thread es->rtid=-1
+Number of states=37
+main thread es->rtid=-1
+Number of states=37
+main thread es->rtid=-1
+Number of states=37
+main thread es->rtid=-1
+Number of states=37
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=37
+main thread es->rtid=-1
+Number of states=37
+Number of states=36
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=36
+main thread es->rtid=-1
+Number of states=36
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=36
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=36
+main thread es->rtid=-1
+Number of states=36
+main thread es->rtid=-1
+Number of states=36
+main thread es->rtid=-1
+Number of states=36
+Number of states=35
+Number of states=34
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=34
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=34
+Number of states=33
+main thread es->rtid=-1
+Number of states=33
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=33
+main thread es->rtid=-1
+Number of states=33
+main thread es->rtid=-1
+Number of states=33
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=33
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=33
+main thread es->rtid=-1
+Number of states=33
+main thread es->rtid=-1
+Number of states=33
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=33
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=33
+main thread es->rtid=-1
+Number of states=33
+Number of states=32
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=32
+main thread es->rtid=-1
+Number of states=32
+main thread es->rtid=-1
+Number of states=32
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=32
+GetElementPtr info:
+  %altsetting6 = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %6, i32 0, i32 0
+ initial base: 31005056
+geptr final base: 31005056
+main thread es->rtid=-1
+Number of states=32
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=32
+main thread es->rtid=-1
+Number of states=32
+Number of states=31
+main thread es->rtid=-1
+Number of states=31
+main thread es->rtid=-1
+Number of states=31
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=32
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=32
+main thread es->rtid=-1
+Number of states=32
+Number of states=31
+main thread es->rtid=-1
+Number of states=31
+Number of states=30
+main thread es->rtid=-1
+Number of states=30
+main thread es->rtid=-1
+Number of states=30
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=30
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=30
+main thread es->rtid=-1
+Number of states=30
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=30
+memory operation
+  %6 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=30
+Number of states=29
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=29
+main thread es->rtid=-1
+Number of states=29
+main thread es->rtid=-1
+Number of states=29
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=29
+main thread es->rtid=-1
+Number of states=29
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=29
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=29
+Number of states=28
+Number of states=27
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=27
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=27
+Number of states=26
+main thread es->rtid=-1
+Number of states=26
+Number of states=25
+GetElementPtr info:
+  %altsetting6 = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %6, i32 0, i32 0
+ initial base: 31005056
+geptr final base: 31005056
+main thread es->rtid=-1
+Number of states=25
+main thread es->rtid=-1
+Number of states=25
+Number of states=24
+Number of states=23
+Number of states=22
+Number of states=21
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=21
+main thread es->rtid=-1
+Number of states=21
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=21
+Number of states=20
+main thread es->rtid=-1
+Number of states=20
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=20
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=20
+main thread es->rtid=-1
+Number of states=20
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=20
+Number of states=19
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=19
+Number of states=18
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=18
+main thread es->rtid=-1
+Number of states=18
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=18
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=18
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=18
+Number of states=17
+main thread es->rtid=-1
+Number of states=17
+Number of states=16
+memory operation
+  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8
+
+ address: 31005056
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005056
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_interface** (count=0) to be lazy init?
+ load result: (ReadLSB w64 0 arg_0)
+main thread es->rtid=-1
+Number of states=16
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=16
+GetElementPtr info:
+  %arrayidx7 = getelementptr %struct.usb_host_interface, %struct.usb_host_interface* %7, i64 1
+ initial base: (ReadLSB w64 0 arg_0)
+geptr offset: 40
+geptr base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=16
+main thread es->rtid=-1
+Number of states=16
+Number of states=15
+Number of states=14
+GetElementPtr info:
+  %altsetting6 = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %6, i32 0, i32 0
+ initial base: 31005056
+geptr final base: 31005056
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8
+
+ address: 31005056
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005056
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_interface** (count=0) to be lazy init?
+ load result: (ReadLSB w64 0 arg_0)
+main thread es->rtid=-1
+Number of states=14
+main thread es->rtid=-1
+Number of states=14
+GetElementPtr info:
+  %arrayidx7 = getelementptr %struct.usb_host_interface, %struct.usb_host_interface* %7, i64 1
+ initial base: (ReadLSB w64 0 arg_0)
+geptr offset: 40
+geptr base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8  %7 = load %struct.usb_host_interface*, %struct.usb_host_interface** %altsetting6, align 8
+
+ address: 31005056
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005056
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_interface** (count=0) to be lazy init?
+ load result: (ReadLSB w64 0 arg_0)
+main thread es->rtid=-1
+Number of states=14
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=14
+GetElementPtr info:
+  %endpoint = getelementptr inbounds %struct.usb_host_interface, %struct.usb_host_interface* %arrayidx7, i32 0, i32 3
+ initial base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr offset: 24
+geptr base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=14
+memory operation
+  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8KLEE: ERROR: (location information missing) memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+
+ address: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop (Add w64 64
+          (ReadLSB w64 0 arg_0))
+default offset for target address (Add w64 18446744073678546624
+          (ReadLSB w64 0 arg_0))
+bounds check expression (Ult (Add w64 18446744073678546624
+               (ReadLSB w64 0 arg_0))
+      1641)
+in bounds? 0
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+Info: 
+	address: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+	example: 31006708
+	range: [31006697, 31006723]
+	next: object at 31013280 of size 4
+		MO67[4] allocated at usbtv_probe():  %retval = alloca i32, align 4
+	prev: object at 31005056 of size 1648
+		MO66[1648] allocated at usbtv_probe():  %retval = alloca i32, align 4
+
+main thread es->rtid=-1
+Number of states=14
+main thread es->rtid=-1
+Number of states=14
+Number of states=13
+GetElementPtr info:
+  %endpoint = getelementptr inbounds %struct.usb_host_interface, %struct.usb_host_interface* %arrayidx7, i32 0, i32 3
+ initial base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr offset: 24
+geptr base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=13
+GetElementPtr info:
+  %arrayidx8 = getelementptr %struct.usb_host_endpoint, %struct.usb_host_endpoint* %8, i64 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+main thread es->rtid=-1
+Number of states=13
+memory operation
+  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8
+
+ address: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop (Add w64 64
+          (ReadLSB w64 0 arg_0))
+default offset for target address (Add w64 18446604441038791488
+          (ReadLSB w64 0 arg_0))
+bounds check expression (Ult (Add w64 18446604441038791488
+               (ReadLSB w64 0 arg_0))
+      1529)
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+main thread es->rtid=-1
+Number of states=13
+Number of states=12
+Number of states=11
+Number of states=10
+GetElementPtr info:
+  %arrayidx8 = getelementptr %struct.usb_host_endpoint, %struct.usb_host_endpoint* %8, i64 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+main thread es->rtid=-1
+Number of states=10
+GetElementPtr info:
+  %arrayidx7 = getelementptr %struct.usb_host_interface, %struct.usb_host_interface* %7, i64 1
+ initial base: (ReadLSB w64 0 arg_0)
+geptr offset: 40
+geptr base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=10
+main thread es->rtid=-1
+Number of states=10
+GetElementPtr info:
+  %endpoint = getelementptr inbounds %struct.usb_host_interface, %struct.usb_host_interface* %arrayidx7, i32 0, i32 3
+ initial base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr offset: 24
+geptr base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=10
+memory operation
+  store i32 -19, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=10
+memory operation
+  store %struct.usb_host_endpoint* %arrayidx8, %struct.usb_host_endpoint** %ep, align 8
+ address: 31016720
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=10
+Number of states=9
+main thread es->rtid=-1
+Number of states=9
+memory operation
+  store %struct.usb_host_endpoint* %arrayidx8, %struct.usb_host_endpoint** %ep, align 8
+ address: 31016720
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=9
+memory operation
+  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+main thread es->rtid=-1
+Number of states=9
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=9
+GetElementPtr info:
+  %desc9 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %9, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+main thread es->rtid=-1
+Number of states=9
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=9
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+Number of states=7
+GetElementPtr info:
+  %arrayidx7 = getelementptr %struct.usb_host_interface, %struct.usb_host_interface* %7, i64 1
+ initial base: (ReadLSB w64 0 arg_0)
+geptr offset: 40
+geptr base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=7
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=7
+Number of states=6
+GetElementPtr info:
+  %endpoint = getelementptr inbounds %struct.usb_host_interface, %struct.usb_host_interface* %arrayidx7, i32 0, i32 3
+ initial base: (Add w64 40
+          (ReadLSB w64 0 arg_0))
+geptr offset: 24
+geptr base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+geptr final base: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+main thread es->rtid=-1
+Number of states=6
+memory operation
+  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8
+
+ address: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop (Add w64 64
+          (ReadLSB w64 0 arg_0))
+default offset for target address (Add w64 18446604441038787392
+          (ReadLSB w64 0 arg_0))
+bounds check expression (Ult (Add w64 18446604441038787392
+               (ReadLSB w64 0 arg_0))
+      761)
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+main thread es->rtid=-1
+Number of states=6
+memory operation
+  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+main thread es->rtid=-1
+Number of states=6
+memory operation
+  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8  %8 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %endpoint, align 8
+
+ address: (Add w64 64
+          (ReadLSB w64 0 arg_0))
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop (Add w64 64
+          (ReadLSB w64 0 arg_0))
+default offset for target address (Add w64 18446604441038789952
+          (ReadLSB w64 0 arg_0))
+bounds check expression (Ult (Add w64 18446604441038789952
+               (ReadLSB w64 0 arg_0))
+      1529)
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+main thread es->rtid=-1
+Number of states=6
+GetElementPtr info:
+  %desc9 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %9, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+main thread es->rtid=-1
+Number of states=6
+Number of states=5
+GetElementPtr info:
+  %arrayidx8 = getelementptr %struct.usb_host_endpoint, %struct.usb_host_endpoint* %8, i64 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %40 = load i32, i32* %retval
+ address: 31013280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31013280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 4294967277
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  store %struct.usb_host_endpoint* %arrayidx8, %struct.usb_host_endpoint** %ep, align 8
+ address: 31016720
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 34235312
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 34235312
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 34235312
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 34235312
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+allocation size: 16
+lazy initializing writing 31663232 to 34235312
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 34235312
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 34235312
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31663232
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31663232
+geptr offset: 4
+geptr base: 31663236
+geptr final base: 31663236
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %arrayidx8 = getelementptr %struct.usb_host_endpoint, %struct.usb_host_endpoint* %8, i64 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31663236
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31663236
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**)
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  store %struct.usb_host_endpoint* %arrayidx8, %struct.usb_host_endpoint** %ep, align 8
+ address: 31016720
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  store i32 %call, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %desc9 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %9, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %10 = load i32, i32* %size, align 4  %10 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+          2047)
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %9 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+main thread es->rtid=-1
+Number of states=5
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 32146560
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32146560
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 32146560
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32146560
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+allocation size: 16
+lazy initializing writing 31862672 to 32146560
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 32146560
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32146560
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31862672
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %desc10 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %11, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %desc9 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %9, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31862672
+geptr offset: 4
+geptr base: 31862676
+geptr final base: 31862676
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31862676
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31862676
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31884128
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31884128
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 31884128
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31884128
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446744073678546624
+                                         (ReadLSB w64 0 arg_0))) arg_0)
+allocation size: 16
+lazy initializing writing 31251216 to 31884128
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31884128
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31884128
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31251216
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31283216
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31283216
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31166288
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31166288
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 31166288
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31166288
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+allocation size: 16
+lazy initializing writing 31290224 to 31166288
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31166288
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31166288
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31290224
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31251216
+geptr offset: 4
+geptr base: 31251220
+geptr final base: 31251220
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31251220
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31251220
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %call, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %10 = load i32, i32* %size, align 4  %10 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+          2047)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 31283216
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31283216
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+allocation size: 16
+lazy initializing writing 31545856 to 31283216
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31283216
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31283216
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31545856
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31290224
+geptr offset: 4
+geptr base: 31290228
+geptr final base: 31290228
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31545856
+geptr offset: 4
+geptr base: 31545860
+geptr final base: 31545860
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %desc10 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %11, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31290228
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31290228
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31545860
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31545860
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %conv, i32* %maxp, align 4
+ address: 31558848
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31558848
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %2 = load i32, i32* %maxp, align 4  %2 = load i32, i32* %maxp, align 4
+
+ address: 31558848
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31558848
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %call, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %10 = load i32, i32* %size, align 4  %10 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+          2047)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 32118048
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32118048
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %mul, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 32118048
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32118048
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038791488
+                                         (ReadLSB w64 0 arg_0))) const_arr68)
+allocation size: 16
+lazy initializing writing 31728208 to 32118048
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 32118048
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32118048
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31728208
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31728208
+geptr offset: 4
+geptr base: 31728212
+geptr final base: 31728212
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31728212
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31728212
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %call, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 33469728
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33469728
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %desc10 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %11, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %10 = load i32, i32* %size, align 4  %10 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+          2047)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 31985392
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31985392
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 33469728
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33469728
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8  %11 = load %struct.usb_host_endpoint*, %struct.usb_host_endpoint** %ep, align 8
+
+ address: 31016720
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016720
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_host_endpoint** (count=0) to be lazy init?
+ load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 31985392
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31985392
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 20971712
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %conv, i32* %maxp, align 4
+ address: 32036928
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 32036928
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %2 = load i32, i32* %maxp, align 4  %2 = load i32, i32* %maxp, align 4
+
+ address: 32036928
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 32036928
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %desc10 = getelementptr inbounds %struct.usb_host_endpoint, %struct.usb_host_endpoint* %11, i32 0, i32 0
+ initial base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+geptr final base: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 31251040
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31251040
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 31191216
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31191216
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 33943648
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33943648
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 31251040
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31251040
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4KLEE: WARNING ONCE: calling external: __kmalloc(2560, 21004480) at [no debug info]
+
+ address: 31191216
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31191216
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 21004480
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+ext function operand 1 6
+ext function operand 2 7
+return type of external function: i8*
+allocation size: 8
+memory operation
+  %call = call noalias i8* @__kmalloc(i64 %0, i32 %1) #10
+ address: 31471488
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31471488
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 8)
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_endpoint_descriptor* %epd, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31792912
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31792912
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usbtv* %12, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 31792912
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31792912
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038787392
+                                         (ReadLSB w64 0 arg_0))) const_arr70)
+allocation size: 16
+lazy initializing writing 34408320 to 31792912
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 31792912
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31792912
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 34408320
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usbtv** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 0 8)
+allocation size: 16
+lazy initializing writing 32700896 to 31016240
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 32700896
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+
+ address: 33943648
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33943648
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usb_endpoint_descriptor** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 N0:(Extract w32 0 (Add w64 18446604441038789952
+                                         (ReadLSB w64 0 arg_0))) const_arr69)
+allocation size: 16
+lazy initializing writing 31268016 to 33943648
+memory operation
+  %0 = load %struct.usb_endpoint_descriptor*, %struct.usb_endpoint_descriptor** %epd.addr, align 8
+ address: 33943648
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33943648
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31268016
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %mul, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 34408320
+geptr offset: 4
+geptr base: 34408324
+geptr final base: 34408324
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %wMaxPacketSize = getelementptr inbounds %struct.usb_endpoint_descriptor, %struct.usb_endpoint_descriptor* %0, i32 0, i32 4
+ initial base: 31268016
+geptr offset: 4
+geptr base: 31268020
+geptr final base: 31268020
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 34408324
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 34408324
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %14 = load %struct.device*, %struct.device** %dev, align 8
+ address: 31015856
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31015856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005104
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %15 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32700896
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %dev17 = getelementptr inbounds %struct.usbtv, %struct.usbtv* %15, i32 0, i32 0
+ initial base: 32700896
+geptr final base: 32700896
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.device* %14, %struct.device** %dev17, align 8
+ address: 32700896
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32700896
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 33899456
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33899456
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 34235312
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 34235312
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 33899456
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33899456
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 34235312
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 34235312
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 20971712
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %16 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %conv, i32* %maxp, align 4
+ address: 34831856
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 34831856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %2 = load i32, i32* %maxp, align 4  %2 = load i32, i32* %maxp, align 4
+
+ address: 34831856
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 34831856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_interface* %intf, %struct.usb_interface** %intf.addr, align 8
+ address: 33172672
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33172672
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i16, i16* %wMaxPacketSize, align 1  %1 = load i16, i16* %wMaxPacketSize, align 1
+
+ address: 31268020
+executeMemoryOperation isWrite? 0
+width for the memop: 16
+bytes for the memop: 2
+address for memop 31268020
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i16* (count=0) to be lazy init?
+ load result: (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 33172672
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33172672
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %dev = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %0, i32 0, i32 7
+ initial base: 31005056
+geptr offset: 48
+geptr base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %parent = getelementptr inbounds %struct.device, %struct.device* %dev, i32 0, i32 0
+ initial base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8  %1 = load %struct.device*, %struct.device** %parent, align 8
+
+ address: 31005104
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+Is %struct.device** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 48 arg_0)
+allocation size: 16
+lazy initializing writing 32126256 to 31005104
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8
+ address: 31005104
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 32126256
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.device* %1, %struct.device** %__mptr, align 8
+ address: 33177488
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33177488
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %2 = load %struct.device*, %struct.device** %__mptr, align 8
+ address: 33177488
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33177488
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32126256
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %add.ptr = getelementptr i8, i8* %3, i64 -152
+ initial base: 32126256
+geptr offset: 18446744073709551464
+geptr base: 32126104
+geptr final base: 32126104
+main thread es->rtid=-1
+Number of states=4
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 32018640
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32018640
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_device* %4, %struct.usb_device** %tmp
+ address: 33663568
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33663568
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 32715872
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 32715872
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 32018640
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32018640
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %5 = load %struct.usb_device*, %struct.usb_device** %tmpKLEE: WARNING ONCE: calling external: usb_get_dev(32126104) at [no debug info]
+
+ address: 33663568
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33663568
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32126104
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+ext function operand 1 66
+return type of external function: %struct.usb_device*
+allocation size: 8
+memory operation
+  %call19 = call %struct.usb_device* @usb_get_dev(%struct.usb_device* %call18) #10
+ address: 31171552
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31171552
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 67)
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %17 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32700896
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 32715872
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 32715872
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 21004480
+main thread es->rtid=-1
+Number of states=4
+ext function operand 1 6
+ext function operand 2 7
+return type of external function: i8*
+allocation size: 8
+memory operation
+  %call = call noalias i8* @__kmalloc(i64 %0, i32 %1) #10
+ address: 31542960
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31542960
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 8)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %udev = getelementptr inbounds %struct.usbtv, %struct.usbtv* %17, i32 0, i32 1
+ initial base: 32700896
+geptr offset: 8
+geptr base: 32700904
+geptr final base: 32700904
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %conv, i32* %maxp, align 4
+ address: 31505280
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31505280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %2 = load i32, i32* %maxp, align 4  %2 = load i32, i32* %maxp, align 4
+
+ address: 31505280
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31505280
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store %struct.usb_device* %call19, %struct.usb_device** %udev, align 8
+ address: 32700904
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32700904
+default offset for target address 8
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %18 = load i32, i32* %size, align 4  %18 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (Mul w32 (And w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+                            2047)
+                   2047)
+          (Add w32 1
+                   (AShr w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+                                      6144)
+                             11)))
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %19 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32700896
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %mul, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=4
+GetElementPtr info:
+  %iso_size = getelementptr inbounds %struct.usbtv, %struct.usbtv* %19, i32 0, i32 17
+ initial base: 32700896
+geptr offset: 2340
+geptr base: 32703236
+geptr final base: 32703236
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  store i32 %18, i32* %iso_size, align 4KLEE: ERROR: (location information missing) memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+
+ address: 32703236
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+Info: 
+	address: 32703236
+	next: object at 139632670760192 of size 1536
+		MO45[1536] (no allocation info)
+	prev: object at 32700896 of size 16
+		MO341[16] allocated at usbtv_probe():  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store %struct.usbtv* %12, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usbtv** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 0 8)
+allocation size: 16
+lazy initializing writing 33243088 to 31016240
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 33243088
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %14 = load %struct.device*, %struct.device** %dev, align 8
+ address: 31015856
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31015856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005104
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %15 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 33243088
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 33249136
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33249136
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %dev17 = getelementptr inbounds %struct.usbtv, %struct.usbtv* %15, i32 0, i32 0
+ initial base: 33243088
+geptr final base: 33243088
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 31907456
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31907456
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store %struct.device* %14, %struct.device** %dev17, align 8
+ address: 33243088
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33243088
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %16 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i32 %mul, i32* %size, align 4
+ address: 31015296
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 33249136
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33249136
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 31907456
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31907456
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 20971712
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store %struct.usb_interface* %intf, %struct.usb_interface** %intf.addr, align 8
+ address: 31284192
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31284192
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %0 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31284192
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31284192
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 31510800
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31510800
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 32185488
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 32185488
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 31510800
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31510800
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %dev = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %0, i32 0, i32 7
+ initial base: 31005056
+geptr offset: 48
+geptr base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 32185488
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 32185488
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 20971712
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %parent = getelementptr inbounds %struct.device, %struct.device* %dev, i32 0, i32 0
+ initial base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 31535408
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31535408
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8  %1 = load %struct.device*, %struct.device** %parent, align 8
+
+ address: 31005104
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+Is %struct.device** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 48 arg_0)
+allocation size: 16
+lazy initializing writing 32235392 to 31005104
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8
+ address: 31005104
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 32235392
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store %struct.device* %1, %struct.device** %__mptr, align 8
+ address: 32954128
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32954128
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %2 = load %struct.device*, %struct.device** %__mptr, align 8
+ address: 32954128
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32954128
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32235392
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i64 %size, i64* %size.addr, align 8
+ address: 30278176
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 30278176
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 33653536
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 33653536
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i32 %flags, i32* %flags.addr, align 4
+ address: 33275936
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 33275936
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 31535408
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31535408
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %add.ptr = getelementptr i8, i8* %3, i64 -152
+ initial base: 32235392
+geptr offset: 18446744073709551464
+geptr base: 32235240
+geptr final base: 32235240
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %0 = load i64, i64* %size.addr, align 8
+ address: 30278176
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 30278176
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 2560
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store %struct.usb_device* %4, %struct.usb_device** %tmp
+ address: 31128416
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31128416
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %5 = load %struct.usb_device*, %struct.usb_device** %tmp
+ address: 31128416
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31128416
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32235240
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+ext function operand 1 66
+return type of external function: %struct.usb_device*
+allocation size: 8
+memory operation
+  %call19 = call %struct.usb_device* @usb_get_dev(%struct.usb_device* %call18) #10
+ address: 32838624
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32838624
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 67)
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 33275936
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 33275936
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 21004480
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %17 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 33243088
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %udev = getelementptr inbounds %struct.usbtv, %struct.usbtv* %17, i32 0, i32 1
+ initial base: 33243088
+geptr offset: 8
+geptr base: 33243096
+geptr final base: 33243096
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store %struct.usb_device* %call19, %struct.usb_device** %udev, align 8
+ address: 33243096
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33243096
+default offset for target address 8
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=3
+ext function operand 1 6
+ext function operand 2 7
+return type of external function: i8*
+allocation size: 8
+memory operation
+  %call = call noalias i8* @__kmalloc(i64 %0, i32 %1) #10
+ address: 33392032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33392032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 8)
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %1 = load i32, i32* %flags.addr, align 4
+ address: 33653536
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 33653536
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 21004480
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %18 = load i32, i32* %size, align 4  %18 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (Mul w32 (And w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+                            2047)
+                   2047)
+          (Add w32 1
+                   (AShr w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+                                      6144)
+                             11)))
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %19 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 33243088
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %iso_size = getelementptr inbounds %struct.usbtv, %struct.usbtv* %19, i32 0, i32 17
+ initial base: 33243088
+geptr offset: 2340
+geptr base: 33245428
+geptr final base: 33245428
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  store i32 %18, i32* %iso_size, align 4
+ address: 33245428
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+Info: 
+	address: 33245428
+	next: object at 139632670760192 of size 1536
+		MO45[1536] (no allocation info)
+	prev: object at 33243088 of size 16
+		MO397[16] allocated at usbtv_probe():  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+ext function operand 1 6
+ext function operand 2 7
+return type of external function: i8*
+allocation size: 8
+memory operation
+  %call = call noalias i8* @__kmalloc(i64 %0, i32 %1) #10
+ address: 34563024
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 34563024
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 8)
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usbtv* %12, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usbtv** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 0 8)
+allocation size: 16
+lazy initializing writing 31310016 to 31016240
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31310016
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %14 = load %struct.device*, %struct.device** %dev, align 8
+ address: 31015856
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31015856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005104
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %15 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31310016
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usbtv* %12, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %dev17 = getelementptr inbounds %struct.usbtv, %struct.usbtv* %15, i32 0, i32 0
+ initial base: 31310016
+geptr final base: 31310016
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.device* %14, %struct.device** %dev17, align 8
+ address: 31310016
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31310016
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is %struct.usbtv** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 0 8)
+allocation size: 16
+lazy initializing writing 32065776 to 31016240
+memory operation
+  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 32065776
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %16 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %14 = load %struct.device*, %struct.device** %dev, align 8
+ address: 31015856
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31015856
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005104
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %15 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32065776
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %dev17 = getelementptr inbounds %struct.usbtv, %struct.usbtv* %15, i32 0, i32 0
+ initial base: 32065776
+geptr final base: 32065776
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.device* %14, %struct.device** %dev17, align 8
+ address: 32065776
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32065776
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=2
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=2
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %16 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31014032
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31014032
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usb_interface* %intf, %struct.usb_interface** %intf.addr, align 8
+ address: 31544896
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31544896
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %0 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 31544896
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31544896
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %dev = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %0, i32 0, i32 7
+ initial base: 31005056
+geptr offset: 48
+geptr base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %parent = getelementptr inbounds %struct.device, %struct.device* %dev, i32 0, i32 0
+ initial base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=2
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=2
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8  %1 = load %struct.device*, %struct.device** %parent, align 8
+
+ address: 31005104
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+Is %struct.device** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 48 arg_0)
+allocation size: 16
+lazy initializing writing 33388928 to 31005104
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8
+ address: 31005104
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 33388928
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.device* %1, %struct.device** %__mptr, align 8
+ address: 31591440
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31591440
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+Alloc'ing...
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usb_interface* %intf, %struct.usb_interface** %intf.addr, align 8
+ address: 33243968
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33243968
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %0 = load %struct.usb_interface*, %struct.usb_interface** %intf.addr, align 8
+ address: 33243968
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33243968
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31005056
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %2 = load %struct.device*, %struct.device** %__mptr, align 8
+ address: 31591440
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31591440
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 33388928
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %dev = getelementptr inbounds %struct.usb_interface, %struct.usb_interface* %0, i32 0, i32 7
+ initial base: 31005056
+geptr offset: 48
+geptr base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %parent = getelementptr inbounds %struct.device, %struct.device* %dev, i32 0, i32 0
+ initial base: 31005104
+geptr final base: 31005104
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8  %1 = load %struct.device*, %struct.device** %parent, align 8
+
+ address: 31005104
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+Is %struct.device** (count=2) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 48 arg_0)
+allocation size: 16
+lazy initializing writing 31619344 to 31005104
+memory operation
+  %1 = load %struct.device*, %struct.device** %parent, align 8
+ address: 31005104
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31005104
+default offset for target address 48
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 31619344
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %add.ptr = getelementptr i8, i8* %3, i64 -152
+ initial base: 33388928
+geptr offset: 18446744073709551464
+geptr base: 33388776
+geptr final base: 33388776
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.device* %1, %struct.device** %__mptr, align 8
+ address: 32954432
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32954432
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %2 = load %struct.device*, %struct.device** %__mptr, align 8
+ address: 32954432
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32954432
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31619344
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usb_device* %4, %struct.usb_device** %tmp
+ address: 33248816
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33248816
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %5 = load %struct.usb_device*, %struct.usb_device** %tmp
+ address: 33248816
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33248816
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 33388776
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %add.ptr = getelementptr i8, i8* %3, i64 -152
+ initial base: 31619344
+geptr offset: 18446744073709551464
+geptr base: 31619192
+geptr final base: 31619192
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+ext function operand 1 66
+return type of external function: %struct.usb_device*
+allocation size: 8
+memory operation
+  %call19 = call %struct.usb_device* @usb_get_dev(%struct.usb_device* %call18) #10
+ address: 31490096
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31490096
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 67)
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %17 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31310016
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %udev = getelementptr inbounds %struct.usbtv, %struct.usbtv* %17, i32 0, i32 1
+ initial base: 31310016
+geptr offset: 8
+geptr base: 31310024
+geptr final base: 31310024
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usb_device* %4, %struct.usb_device** %tmp
+ address: 32851120
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32851120
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %5 = load %struct.usb_device*, %struct.usb_device** %tmp
+ address: 32851120
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32851120
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31619192
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usb_device* %call19, %struct.usb_device** %udev, align 8
+ address: 31310024
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31310024
+default offset for target address 8
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %18 = load i32, i32* %size, align 4  %18 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (Mul w32 (And w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+                            2047)
+                   2047)
+          (Add w32 1
+                   (AShr w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+                                      6144)
+                             11)))
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %19 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 31310016
+main thread es->rtid=-1
+Number of states=2
+ext function operand 1 66
+return type of external function: %struct.usb_device*
+allocation size: 8
+memory operation
+  %call19 = call %struct.usb_device* @usb_get_dev(%struct.usb_device* %call18) #10
+ address: 33302080
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 33302080
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w64 0 67)
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %iso_size = getelementptr inbounds %struct.usbtv, %struct.usbtv* %19, i32 0, i32 17
+ initial base: 31310016
+geptr offset: 2340
+geptr base: 31312356
+geptr final base: 31312356
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %17 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32065776
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %udev = getelementptr inbounds %struct.usbtv, %struct.usbtv* %17, i32 0, i32 1
+ initial base: 32065776
+geptr offset: 8
+geptr base: 32065784
+geptr final base: 32065784
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store %struct.usb_device* %call19, %struct.usb_device** %udev, align 8
+ address: 32065784
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 32065784
+default offset for target address 8
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %18 = load i32, i32* %size, align 4  %18 = load i32, i32* %size, align 4
+
+ address: 31015296
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 31015296
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (Mul w32 (And w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**))
+                            2047)
+                   2047)
+          (Add w32 1
+                   (AShr w32 (And w32 (ZExt w32 (ReadLSB w16 4 %struct.usb_endpoint_descriptor**_1))
+                                      6144)
+                             11)))
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store i32 %18, i32* %iso_size, align 4
+ address: 31312356
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+Info: 
+	address: 31312356
+	next: object at 31490096 of size 8
+		MO495[8] allocated at usbtv_probe():  %call19 = call %struct.usb_device* @usb_get_dev(%struct.usb_device* %call18) #10
+	prev: object at 31310016 of size 16
+		MO458[16] allocated at usbtv_probe():  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+
+Number of states=1
+memory operation
+  %19 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+ address: 31016240
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 31016240
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 32065776
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %iso_size = getelementptr inbounds %struct.usbtv, %struct.usbtv* %19, i32 0, i32 17
+ initial base: 32065776
+geptr offset: 2340
+geptr base: 32068116
+geptr final base: 32068116
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  store i32 %18, i32* %iso_size, align 4
+KLEE: done: total instructions = 946
+KLEE: done: completed paths = 82
+KLEE: done: generated tests = 79
+
+ address: 32068116
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+Info: 
+	address: 32068116
+	next: object at 33302080 of size 8
+		MO504[8] allocated at usbtv_probe():  %call19 = call %struct.usb_device* @usb_get_dev(%struct.usb_device* %call18) #10
+	prev: object at 32065776 of size 16
+		MO465[16] allocated at usbtv_probe():  %13 = load %struct.usbtv*, %struct.usbtv** %usbtv, align 8
+

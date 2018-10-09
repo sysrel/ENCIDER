@@ -1,0 +1,698 @@
+KLEE: output directory is "/home/tuba/Documents/tools/klee-3.8/temp/klee-out-19"
+KLEE: Using STP solver backend
+KLEE: WARNING: undefined reference to function: foo
+KLEE: WARNING: undefined reference to function: printf
+arg 0 type %struct.device*
+allocation size: 40
+binding arg 0 of type %struct.device* to address 55506112
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  store %struct.device* %dev, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %2 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %5 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=1
+GetElementPtr info:
+  %6 = getelementptr inbounds %struct.device, %struct.device* %5, i32 0, i32 0
+ initial base: 55506112
+geptr final base: 55506112
+main thread es->rtid=-1
+Number of states=1
+memory operation
+  %7 = load i32, i32* %6, align 8  %7 = load i32, i32* %6, align 8
+Framework dts:
+data type=struct.data num inst=1
+data type=i8 num inst=1
+KLEE: WARNING ONCE: calling external: foo(55236592) at [no debug info]
+
+ address: 55506112
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 55506112
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ReadLSB w32 0 arg_0)
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=2
+ext function operand 1 2
+Type of parameter 0 to external func is a pointer type
+return type of external function: i32
+allocation size: 4
+memory operation
+  %33 = call i32 @foo(i8* %y)
+ address: 55773024
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 55773024
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: (ReadLSB w32 0 36)
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %10 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  store i32 %33, i32* %x, align 4
+ address: 55236560
+executeMemoryOperation isWrite? 1
+width for the memop: 32
+bytes for the memop: 4
+address for memop 55236560
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %11 = getelementptr inbounds %struct.device, %struct.device* %10, i32 0, i32 2
+ initial base: 55506112
+geptr offset: 32
+geptr base: 55506144
+geptr final base: 55506144
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %12 = load %struct.data*, %struct.data** %11, align 8  %12 = load %struct.data*, %struct.data** %11, align 8
+
+ address: 55506144
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55506144
+default offset for target address 32
+bounds check expression true
+in bounds? 1
+Is %struct.data** (count=1) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 32 arg_0)
+allocation size: 8
+lazy initializing writing 55787168 to 55506144
+memory operation
+  %12 = load %struct.data*, %struct.data** %11, align 8
+ address: 55506144
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55506144
+default offset for target address 32
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 55787168
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %34 = load i8, i8* %y, align 1  %34 = load i8, i8* %y, align 1
+
+ address: 55236592
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55236592
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 0 shadow)
+main thread es->rtid=-1
+Number of states=2
+GetElementPtr info:
+  %13 = getelementptr inbounds %struct.data, %struct.data* %12, i32 0, i32 0
+ initial base: 55787168
+geptr final base: 55787168
+main thread es->rtid=-1
+Number of states=2
+memory operation
+  %14 = load i8*, i8** %13, align 8  %14 = load i8*, i8** %13, align 8
+
+ address: 55787168
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55787168
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i8** (count=1) to be lazy init?
+Yes!
+original load result: (ReadLSB w64 0 %struct.data**)
+allocation size: 8
+lazy initializing writing 55793872 to 55787168
+memory operation
+  %14 = load i8*, i8** %13, align 8KLEE: WARNING ONCE: calling external: printf(55538272) at [no debug info]
+
+ address: 55787168
+executeMemoryOperation isWrite? 1
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55787168
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+just wrote:
+ load result: 55793872
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+Number of states=2
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+memory operation
+  %42 = load i32, i32* %x, align 4  %42 = load i32, i32* %x, align 4
+
+ address: 55236560
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 55236560
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ReadLSB w32 0 36)
+main thread es->rtid=-1
+Number of states=3
+GetElementPtr info:
+  %15 = getelementptr inbounds i8, i8* %14, i64 0d2->buf not G
+
+ initial base: 55793872
+geptr final base: 55793872
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %16 = load i8, i8* %15, align 1  %16 = load i8, i8* %15, align 1
+
+ address: 55793872
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55793872
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 0 i8**)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+memory operation
+  %49 = load %struct.device*, %struct.device** %1, align 8<=7 X
+>7 X
+d2->buf G
+
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %22 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %50 = getelementptr inbounds %struct.device, %struct.device* %49, i32 0, i32 1
+ initial base: 55506112
+geptr offset: 4
+geptr base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %23 = getelementptr inbounds %struct.device, %struct.device* %22, i32 0, i32 1
+ initial base: 55506112
+geptr offset: 4
+geptr base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %51 = getelementptr inbounds [24 x i8], [24 x i8]* %50, i64 0, i64 1
+ initial base: 55506116
+geptr offset: 1
+geptr base: 55506117
+geptr final base: 55506117
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %52 = load i8, i8* %51, align 1  %52 = load i8, i8* %51, align 1
+
+ address: 55506117
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55506117
+default offset for target address 5
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 5 arg_0)
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %49 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %24 = getelementptr inbounds [24 x i8], [24 x i8]* %23, i64 0, i64 0
+ initial base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %42 = load i32, i32* %x, align 4  %42 = load i32, i32* %x, align 4
+
+ address: 55236560
+executeMemoryOperation isWrite? 0
+width for the memop: 32
+bytes for the memop: 4
+address for memop 55236560
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+Is i32* (count=0) to be lazy init?
+ load result: (ReadLSB w32 0 36)
+main thread es->rtid=-1
+Number of states=5
+GetElementPtr info:
+  %50 = getelementptr inbounds %struct.device, %struct.device* %49, i32 0, i32 1
+ initial base: 55506112
+geptr offset: 4
+geptr base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+memory operation
+  %25 = load i8, i8* %24, align 4  %25 = load i8, i8* %24, align 4
+
+ address: 55506116
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55506116
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 4 arg_0)
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=6
+GetElementPtr info:
+  %51 = getelementptr inbounds [24 x i8], [24 x i8]* %50, i64 0, i64 1
+ initial base: 55506116
+geptr offset: 1
+geptr base: 55506117
+geptr final base: 55506117
+main thread es->rtid=-1
+Number of states=6
+memory operation
+  %52 = load i8, i8* %51, align 1  %52 = load i8, i8* %51, align 1
+
+ address: 55506117
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55506117
+default offset for target address 5
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 5 arg_0)
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+memory operation
+  %22 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+memory operation
+  %49 = load %struct.device*, %struct.device** %1, align 8>5 data C
+<=7 X
+>7 X
+
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=7
+GetElementPtr info:
+  %23 = getelementptr inbounds %struct.device, %struct.device* %22, i32 0, i32 1
+ initial base: 55506112
+geptr offset: 4
+geptr base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=7
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+GetElementPtr info:
+  %24 = getelementptr inbounds [24 x i8], [24 x i8]* %23, i64 0, i64 0
+ initial base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=8
+memory operation
+  %49 = load %struct.device*, %struct.device** %1, align 8
+ address: 55235920
+executeMemoryOperation isWrite? 0
+width for the memop: 64
+bytes for the memop: 8
+address for memop 55235920
+default offset for target address 0
+bounds check expression true
+in bounds? 1
+ load result: 55506112
+main thread es->rtid=-1
+Number of states=8
+memory operation
+  %25 = load i8, i8* %24, align 4  %25 = load i8, i8* %24, align 4
+
+ address: 55506116
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55506116
+default offset for target address 4
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 4 arg_0)
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+Number of states=7
+GetElementPtr info:
+  %50 = getelementptr inbounds %struct.device, %struct.device* %49, i32 0, i32 1<=5 not B
+<=5 not B
+
+ initial base: 55506112
+geptr offset: 4
+geptr base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=7
+main thread es->rtid=-1
+Number of states=7
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=8
+GetElementPtr info:
+  %51 = getelementptr inbounds [24 x i8], [24 x i8]* %50, i64 0, i64 1
+ initial base: 55506116
+geptr offset: 1
+geptr base: 55506117
+geptr final base: 55506117
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+GetElementPtr info:
+  %50 = getelementptr inbounds %struct.device, %struct.device* %49, i32 0, i32 1
+ initial base: 55506112
+geptr offset: 4
+geptr base: 55506116
+geptr final base: 55506116
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+GetElementPtr info:
+  %51 = getelementptr inbounds [24 x i8], [24 x i8]* %50, i64 0, i64 1
+ initial base: 55506116
+geptr offset: 1
+geptr base: 55506117
+geptr final base: 55506117
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=9
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+main thread es->rtid=-1
+Number of states=8
+Number of states=7
+main thread es->rtid=-1
+Number of states=7
+main thread es->rtid=-1
+Number of states=7
+Number of states=6
+memory operation
+  %52 = load i8, i8* %51, align 1  %52 = load i8, i8* %51, align 1
+
+ address: 55506117
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55506117
+default offset for target address 5
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 5 arg_0)
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+main thread es->rtid=-1
+Number of states=6
+Number of states=5
+main thread es->rtid=-1
+Number of states=5
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=6
+Number of states=5
+Number of states=4
+memory operation
+  %52 = load i8, i8* %51, align 1  %52 = load i8, i8* %51, align 1
+
+KLEE: done: total instructions = 126
+KLEE: done: completed paths = 12
+KLEE: done: generated tests = 12
+
+ address: 55506117
+executeMemoryOperation isWrite? 0
+width for the memop: 8
+bytes for the memop: 1
+address for memop 55506117
+default offset for target address 5
+bounds check expression true
+in bounds? 1
+Is i8* (count=0) to be lazy init?
+ load result: (Read w8 5 arg_0)
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+main thread es->rtid=-1
+Number of states=4
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+Number of states=2
+main thread es->rtid=-1
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+main thread es->rtid=-1
+Number of states=3
+Number of states=2
+Number of states=1
+main thread es->rtid=-1
+Number of states=1
+main thread es->rtid=-1
+Number of states=1

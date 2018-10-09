@@ -1,0 +1,1 @@
+/usr/bin/c++   -Wall -Wextra -Wno-unused-parameter -O2 -g  -rdynamic CMakeFiles/FileCheck.dir/FileCheck.cpp.o  -o ../bin/FileCheck /usr/lib/llvm-3.8/lib/libLLVMSupport.a -lrt -ldl -ltinfo -lpthread -lz -lm -lrt -ldl -ltinfo -lpthread -lz -lm 

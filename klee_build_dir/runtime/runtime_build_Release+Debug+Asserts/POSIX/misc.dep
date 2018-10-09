@@ -1,0 +1,5 @@
+/home/tuba/Documents/tools/klee-3.8/klee_build_dir/runtime/runtime_build_Release+Debug+Asserts/POSIX/misc.bc: \
+  /home/tuba/Documents/tools/klee-3.8/klee/runtime/POSIX/misc.c \
+  /home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee.h
+
+/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee.h:

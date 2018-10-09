@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/ADT/KTest.h
+
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Basic/KTest.cpp
+klee/Internal/ADT/KTest.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Basic/klee/Internal/ADT/KTest.h
+stdlib.h
+-
+string.h
+-
+stdio.h
+-
+

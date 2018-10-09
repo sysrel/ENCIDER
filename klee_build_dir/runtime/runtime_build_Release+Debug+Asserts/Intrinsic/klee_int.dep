@@ -1,0 +1,5 @@
+/home/tuba/Documents/tools/klee-3.8/klee_build_dir/runtime/runtime_build_Release+Debug+Asserts/Intrinsic/klee_int.bc: \
+  /home/tuba/Documents/tools/klee-3.8/klee/runtime/Intrinsic/klee_int.c \
+  /home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee.h
+
+/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee.h:

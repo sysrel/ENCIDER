@@ -1,0 +1,20 @@
+../klee_build_dir/bin/klee -entry-point=usbtv_probe -framework-dts=dts_usbtv.txt usbtv_core.bc
+PID: 11229
+Started: 2018-08-27 12:05:45
+BEGIN searcher description
+<InterleavedSearcher> containing 2 searchers:
+RandomPathSearcher
+WeightedRandomSearcher::CoveringNew
+</InterleavedSearcher>
+END searcher description
+Finished: 2018-08-27 12:05:45
+Elapsed: 00:00:00
+KLEE: done: explored paths = 1
+KLEE: done: total queries = 0
+KLEE: done: valid queries = 0
+KLEE: done: invalid queries = 0
+KLEE: done: query cex = 0
+
+KLEE: done: total instructions = 16
+KLEE: done: completed paths = 1
+KLEE: done: generated tests = 1
