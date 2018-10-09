@@ -12,6 +12,6 @@
 #define KLEE_COMPILE_TIME_INFO_H
 
 #define KLEE_BUILD_MODE "RelWithDebInfo (Asserts: ON)"
-#define KLEE_BUILD_REVISION "196fbe5625de7cc76e25ccf26a34646553ecf8ff"
+#define KLEE_BUILD_REVISION "unknown"
 
 #endif

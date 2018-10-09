@@ -7,11 +7,7 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/tuba/Documents/tools/klee-3.8/klee/.git/HEAD"
-  "/home/tuba/Documents/tools/klee-3.8/klee/.git/refs/heads/master"
   "/home/tuba/Documents/tools/klee-3.8/klee/CMakeLists.txt"
-  "/home/tuba/Documents/tools/klee-3.8/klee/cmake/GetGitRevisionDescription.cmake"
-  "/home/tuba/Documents/tools/klee-3.8/klee/cmake/GetGitRevisionDescription.cmake.in"
   "/home/tuba/Documents/tools/klee-3.8/klee/cmake/add_global_flag.cmake"
   "/home/tuba/Documents/tools/klee-3.8/klee/cmake/c_flags_override.cmake"
   "/home/tuba/Documents/tools/klee-3.8/klee/cmake/compiler_warnings.cmake"
@@ -59,7 +55,6 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.8.0-rc2/CMakeCCompiler.cmake"
   "CMakeFiles/3.8.0-rc2/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.8.0-rc2/CMakeSystem.cmake"
-  "CMakeFiles/git-data/grabRef.cmake"
   "runtime/BuildKLEERuntimes-prefix/tmp/BuildKLEERuntimes-cfgcmd.txt.in"
   "/usr/local/lib/cmake/STP/STPConfig.cmake"
   "/usr/local/lib/cmake/STP/STPConfigVersion.cmake"
@@ -107,9 +102,6 @@ set(CMAKE_MAKEFILE_OUTPUTS
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
   "include/klee/Config/config.h"
-  "CMakeFiles/git-data/HEAD"
-  "CMakeFiles/git-data/grabRef.cmake"
-  "CMakeFiles/git-data/head-ref"
   "include/klee/Config/CompileTimeInfo.h"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   "lib/CMakeFiles/CMakeDirectoryInformation.cmake"
