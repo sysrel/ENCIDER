@@ -113,8 +113,10 @@ extern MutexAPIHandler*  mutexAPIHandler;
 extern RefCountAPIHandler *refcountAPIHandler;
 extern SetGetAPIHandler *setgetAPIHandler;
 extern AllocAPIHandler *allocAPIHandler;
+extern FreeAPIHandler *freeAPIHandler;
 extern ReadWriteAPIHandler *readWriteAPIHandler;
 extern IgnoreAPIHandler *ignoreAPIHandler;
+extern CallbackAPIHandler *callbackAPIHandler;
 extern bool progModel;
 
 std::string getAsyncFunction(std::string fn) {
@@ -1767,10 +1769,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         statsTracker->framePopped(state);
 
       if (InvokeInst *ii = dyn_cast<InvokeInst>(caller)) {
+        llvm::outs() << "returning to basic block of " << (*caller) << "\n";
         transferToBasicBlock(ii->getNormalDest(), caller->getParent(), state);
       } else {
         state.pc = kcaller;
         ++state.pc;
+        llvm::outs() << "returning to " <<  (*state.pc->inst) << "\n"; 
       }
 
       if (!isVoidReturn) {
@@ -2037,7 +2041,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Function *f = getTargetFunction(fp, state);
 
     /* begin SYSREL extension */
-    llvm::outs() << "calling function " << f->getName() << "\n";
+    if (f)
+       llvm::outs() << "calling function " << f->getName() << "\n";
     if (asyncMode) { 
       if (isAsyncInitiate(f->getName())) {
          std::string asyncName = getAsyncFunction(f->getName());
@@ -3558,19 +3563,23 @@ void Executor::callExternalFunction(ExecutionState &state,
        bool mutAPI = mutexAPIHandler->handle(state, function->getName(), arguments);
        bool refAPI = refcountAPIHandler->handle(state, function->getName(), arguments);
        bool allAPI = allocAPIHandler->handle(state, function->getName(), arguments, target, resHandled); 
+       bool freAPI = freeAPIHandler->handle(state, function->getName(), arguments, target);
        bool rwAPI = readWriteAPIHandler->handle(state, function->getName(), arguments, target);
        bool sgAPI = setgetAPIHandler->handle(state, function->getName(), arguments, target);
        bool igAPI = ignoreAPIHandler->handle(state, function->getName(), arguments, target);
-       if (regAPI || resAPI || mutAPI || refAPI || allAPI || rwAPI || sgAPI || igAPI) {
+       bool cbAPI = callbackAPIHandler->handle(state, function->getName(), arguments, target); 
+       if (regAPI || resAPI || mutAPI || refAPI || allAPI || freAPI || rwAPI || sgAPI || igAPI || cbAPI) {
           llvm::outs() << "Handled API function " << function->getName() << "\n";
           llvm::outs() << "regApi=" << regAPI << "\n";
           llvm::outs() << "resApi=" << resAPI << "\n";
           llvm::outs() << "mutApi=" << mutAPI << "\n";
           llvm::outs() << "refApi=" << refAPI << "\n";
           llvm::outs() << "allApi=" << allAPI << "\n";
+          llvm::outs() << "freApi=" << freAPI << "\n"; 
           llvm::outs() << "rwApi=" << rwAPI << "\n";
           llvm::outs() << "sgApi=" << sgAPI << "\n";
           llvm::outs() << "igApi=" << igAPI << "\n";
+          llvm::outs() << "cbApi=" << cbAPI << "\n";
 
           if (sgAPI || (allAPI && resHandled))	
              return;
@@ -3650,12 +3659,18 @@ void Executor::callExternalFunction(ExecutionState &state,
     llvm::raw_string_ostream rso(type_str);
     function->getReturnType()->print(rso);
     llvm::outs() << "return type of external function " << function->getName() << ": " << rso.str() << "\n";
-    MemoryObject *mo;
-    mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1);
+    const MemoryObject *mo;
+    ref<Expr> laddr;
+    llvm::Type *rType;
+    bool mksym; 
+    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), function->getReturnType(),  
+          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
+    //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1, laddr);
     mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
-    llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << "\n";
-    executeMakeSymbolic(state, mo, mo->name);
-    executeMemoryOperation(state, false, mo->getBaseExpr(), 0, target);
+    llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
+    if (mksym)
+       executeMakeSymbolic(state, mo, mo->name);
+    executeMemoryOperation(state, false, laddr, 0, target);
     return;
     }
     else {
@@ -3867,11 +3882,12 @@ void Executor::executeAlloc(ExecutionState &state,
 void Executor::executeFree(ExecutionState &state,
                            ref<Expr> address,
                            KInstruction *target) {
-  llvm::outs() << "Executing free..\n"; 
+  llvm::outs() << "Executing free " << address << " from function " << state.prevPC->inst->getParent()->getParent()->getName() << "\n"; 
 
 
   StatePair zeroPointer = fork(state, Expr::createIsZero(address), true);
   if (zeroPointer.first) {
+     llvm::outs() << "A zero pointer possibility in free " << address << "\n";
     if (target)
       bindLocal(target, *zeroPointer.first, Expr::createPointer(0));
   }
@@ -3890,6 +3906,8 @@ void Executor::executeFree(ExecutionState &state,
         terminateStateOnError(*it->second, "free of global", Free, NULL,
                               getAddressInfo(*it->second, address));
       } else {
+         llvm::outs() << "In free, unbinding obj at address "  << mo->getBaseExpr() << "\n";
+
         it->second->addressSpace.unbindObject(mo);
         if (target)
           bindLocal(target, *it->second, Expr::createPointer(0));
@@ -4063,14 +4081,19 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   llvm::raw_string_ostream rso2(type_str2);
                   t->print(rso2);
                   llvm::outs() << "Allocating memory for type " << rso2.str() << " of size " << "\n"; 
-                  MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count); 
+                  ref<Expr> laddr;
+                  llvm::Type *rType;
+                  bool mksym;
+                  const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
+                  //MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count, laddr); 
                   mo->name = rso.str();
-                  executeMakeSymbolic(state, mo, rso.str());
-                  llvm::outs() << "lazy initializing writing " << mo->getBaseExpr() << " to " << address << "\n";
+                  if (mksym)
+                     executeMakeSymbolic(state, mo, rso.str());
+                  llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
                   forcedOffset = true;
-                  executeMemoryOperation(state, true, address, mo->getBaseExpr(), 0);
+                  executeMemoryOperation(state, true, address, laddr, 0);
                   forcedOffset = false; 
-                  result = mo->getBaseExpr();
+                  result = laddr;
               }
             }
         }
@@ -4269,6 +4292,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc) {
         int count = 0;
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
         if (lazyInitT) {
+          /*
            // if single instance and already init use that one 
            MemoryObject *mo = memory->getInstanceForType(state, at);      
            if (singleInstance && (mo || isEmbeddedType(at))) {
@@ -4292,13 +4316,20 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc) {
               } 
            }
            else {// otherwise
-              mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count);
+           */
+              // We now handle all these individual cases in a uniform way!!!
+              ref<Expr> laddr;
+              llvm::Type *rType;
+              bool mksym;
+              const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance, count, rType, laddr, mksym);
+              //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               mo->name = entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind);
-              executeMakeSymbolic(state, mo, entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind)); 
-              bindArgument(kf, ind, state, mo->getBaseExpr());
-              llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << mo->getBaseExpr() << "\n";
-           }
+              if (mksym)
+                 executeMakeSymbolic(state, mo, entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind)); 
+              bindArgument(kf, ind, state, laddr);
+              llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << laddr << " (in " << mo->getBaseExpr() << ")\n";
+           //}
         }
         else llvm::outs() << "skipping lazy init for " << rso.str() << "\n";
      } 

@@ -1021,10 +1021,14 @@ Memory.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Memory.h
 MemoryManager.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MemoryManager.h
+Executor.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Executor.h
 klee/Expr.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/Expr.h
 klee/Internal/Support/ErrorHandling.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/Internal/Support/ErrorHandling.h
+klee/Interpreter.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/Interpreter.h
 llvm/Support/CommandLine.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/Support/CommandLine.h
 llvm/Support/MathExtras.h
@@ -1187,6 +1191,8 @@ Executor.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Executor.h
 MemoryManager.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MemoryManager.h
+StatsTracker.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/StatsTracker.h
 klee/CommandLine.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/CommandLine.h
 llvm/IR/Module.h

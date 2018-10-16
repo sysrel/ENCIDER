@@ -907,12 +907,17 @@ Async::Async(ExecutionState *state, Function *f, int tid,  MemoryManager *memory
         int count = 0;
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
         if (lazyInitT) {
-           MemoryObject *mo = memory->allocateForLazyInit(*state, prevPC->inst, at, singleInstance, count);
+           ref<Expr> laddr;
+           llvm::Type *rType;
+           bool mksym;
+           const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(*state, prevPC->inst, at, at, singleInstance, count, rType, laddr, mksym);
+           //MemoryObject *mo = memory->allocateForLazyInit(*state, prevPC->inst, at, singleInstance, count, laddr);
            mo->name = std::string("arg_") + std::to_string(ind);
            Executor *exe = (Executor*)theInterpreter;
-           exe->executeMakeSymbolicThread(*state, mo, std::string("arg_") + std::to_string(ind), tid); 
-           exe->bindArgumentThread(kf, ind, *state, mo->getBaseExpr(), tid);
-           llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << mo->getBaseExpr() << "\n";
+           if (mksym)
+              exe->executeMakeSymbolicThread(*state, mo, std::string("arg_") + std::to_string(ind), tid); 
+           exe->bindArgumentThread(kf, ind, *state, laddr, tid);
+           llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << laddr << " (in " << mo->getBaseExpr() << ")\n";
         }
      }    
      ind++; 

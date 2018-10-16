@@ -94,6 +94,8 @@ SetGetAPIHandler *setgetAPIHandler = NULL;
 AllocAPIHandler *allocAPIHandler = NULL;
 ReadWriteAPIHandler *readWriteAPIHandler = NULL;
 IgnoreAPIHandler *ignoreAPIHandler = NULL;
+CallbackAPIHandler *callbackAPIHandler = NULL;
+FreeAPIHandler *freeAPIHandler = NULL;
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
@@ -1061,6 +1063,8 @@ void readProgModelSpec(const char *name) {
   allocAPIHandler = new AllocAPIHandler();
   readWriteAPIHandler = new ReadWriteAPIHandler();
   ignoreAPIHandler = new IgnoreAPIHandler();
+  callbackAPIHandler = new CallbackAPIHandler();
+  freeAPIHandler = new FreeAPIHandler();
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
      std::string line, desc, data;
@@ -1129,6 +1133,22 @@ void readProgModelSpec(const char *name) {
                        ltrim(rtrim(init)) == "true" ? true : false, ltrim(rtrim(sym)) == "true" ? true : false,
                        ltrim(rtrim(ret)) == "true" ? true : false);       
          llvm::outs() << " alloc,parameter,initzero,sym interface " << alloc << " " << param  << " " << init << " " << sym << " " << ret << "\n";
+       }
+       else if (desc.find("free,parameter") != std::string::npos) {
+         std::string freeapi,  param;
+         std::istringstream iss2(data);
+         getline(iss2, freeapi, ',');
+         getline(iss2, param, ',');
+         freeAPIHandler->addFree(ltrim(rtrim(freeapi)), std::stoi(ltrim(rtrim(param)))); 
+         llvm::outs() << " free,parameter interface " << freeapi << " " << param << "\n"; 
+       }
+       else if (desc.find("callback") !=  std::string::npos) {
+         std::string api, cb;
+         std::istringstream iss2(data);
+         getline(iss2, api, ',');
+         getline(iss2, cb, ',');
+         callbackAPIHandler->addCallback(ltrim(rtrim(api)), ltrim(rtrim(cb))); 
+         llvm::outs() << "callback interface " << api << " " << cb << "\n"; 
        }
        else if (desc.find("write") != std::string::npos) {
           if (desc.find("write,source,dest") != std::string::npos) {

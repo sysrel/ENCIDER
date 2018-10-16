@@ -23,10 +23,14 @@ void AddressSpace::bindObject(const MemoryObject *mo, ObjectState *os) {
   assert(os->copyOnWriteOwner==0 && "object already has owner");
   os->copyOnWriteOwner = cowKey;
   objects = objects.replace(std::make_pair(mo, os));
+
+   
+
 }
 
 void AddressSpace::unbindObject(const MemoryObject *mo) {
   objects = objects.remove(mo);
+
 }
 
 const ObjectState *AddressSpace::findObject(const MemoryObject *mo) const {

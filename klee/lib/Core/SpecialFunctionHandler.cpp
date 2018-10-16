@@ -21,7 +21,9 @@
 
 #include "Executor.h"
 #include "MemoryManager.h"
-
+/* SYSREL extension */
+#include "StatsTracker.h"
+/* SYSREL extension */
 #include "klee/CommandLine.h"
 
 #include "llvm/IR/Module.h"
@@ -53,6 +55,7 @@ namespace {
 /* SYSREL EXTENSION */
 extern Interpreter *theInterpreter;
 extern const Module * moduleHandle;
+extern KModule *kmoduleExt;
 /* SYSREL EXTENSION */
 
 /// \todo Almost all of the demands in this file should be replaced
@@ -1186,6 +1189,32 @@ bool AllocAPIHandler::handle(ExecutionState &state, std::string fname, std::vect
   return handle(state, tid, fname, arguments, target);
 }
 
+FreeAPIHandler::FreeAPIHandler() {}
+       
+bool FreeAPIHandler::handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
+     if (freeAPI.find(fname) == freeAPI.end())
+         return false;
+     int param = freeAPI[fname];
+     if (tid == -1)  
+         ((Executor*)(theInterpreter))->executeFree(state, arguments[param], target);
+     else
+         ((Executor*)(theInterpreter))->executeFreeThread(state, arguments[param], target, tid);     
+     return true;
+}
+
+void FreeAPIHandler::addFree(std::string fapi, int param) {
+   freeAPI[fapi] = param;
+}
+      
+bool FreeAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
+    return handle(state, -1, fname, arguments, target);
+}
+      
+bool FreeAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {
+    return handle(state, tid, fname, arguments, target);
+}
+
+
 ReadWriteAPIHandler::ReadWriteAPIHandler() {
 }
 
@@ -1292,5 +1321,48 @@ bool IgnoreAPIHandler::handle(ExecutionState &state, std::string fname, std::vec
   return handle(state, tid, fname, arguments, target); 
 } 
 
+CallbackAPIHandler::CallbackAPIHandler() {}
+
+bool CallbackAPIHandler::handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
+   if (cbAPI.find(fname) == cbAPI.end())
+      return false;
+   llvm::outs() << "calling callback " << cbAPI[fname] << "\n";
+   Function *f = kmoduleExt->module->getFunction(cbAPI[fname]);
+   assert(f && "Callback function not defined!\n");
+   llvm::outs() << "simulating callback " << cbAPI[fname] << " with return instr " << (*state.prevPC->inst) << "\n";   
+   KFunction *kf = kmoduleExt->functionMap[f];      
+   state.pushFrame(state.prevPC, kf);
+   state.pc = kf->instructions;
+
+
+   StatsTracker * statsTracker = ((Executor*)theInterpreter)->getStatsTracker();
+   if (statsTracker) {
+      if (tid == -1)
+         statsTracker->framePushed(state, &state.stack[state.stack.size()-2]);
+      else
+         statsTracker->framePushedThread(state, &state.stack[state.stack.size()-2], tid);
+   }
+   // allocate symbolic arguments
+   ((Executor*)theInterpreter)->initArgsAsSymbolic(state, kf->function);
+   return true; 
+}
+ 
+void CallbackAPIHandler::addCallback(std::string api, std::string cb) {
+   if (cbAPI.find(api) != cbAPI.end()) {
+       llvm::errs() << "WARNING:  " << api << "->" << cbAPI[api] << " (API->callback) overwritten!\n";
+   }
+   cbAPI[api] = cb;
+}
+
+bool CallbackAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
+   return handle(state, -1, fname, arguments, target);
+}
+     
+bool CallbackAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {              
+   return handle(state, tid, fname, arguments, target);
+}
+
 /* SYSREL EXTENSION */
+
+
 

@@ -113,6 +113,17 @@ namespace klee {
       bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, bool &retstat, int tid);       
    };
 
+   class FreeAPIHandler {
+     private:
+       std::map<std::string, int> freeAPI;
+       bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+    public:
+      FreeAPIHandler();
+      void addFree(std::string fapi, int param);
+      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);       
+   };
+
    class ReadWriteAPIHandler {
     private:
      std::set<std::string> readAPI;
@@ -139,6 +150,18 @@ namespace klee {
      void addIgnore(std::string ignore);
      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid); 
+   };
+
+   class CallbackAPIHandler {
+    private:
+     // for now we handle at most one callback from a given API 
+     std::map<std::string, std::string> cbAPI;
+     bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+    public:
+     CallbackAPIHandler();
+     void addCallback(std::string api, std::string cb);
+     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);               
    };
 
   /* SYSREL EXTENSION */ 

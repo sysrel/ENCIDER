@@ -124,8 +124,10 @@ extern MutexAPIHandler*  mutexAPIHandler;
 extern RefCountAPIHandler *refcountAPIHandler;
 extern SetGetAPIHandler *setgetAPIHandler;
 extern AllocAPIHandler *allocAPIHandler;
+extern FreeAPIHandler *freeAPIHandler;
 extern ReadWriteAPIHandler *readWriteAPIHandler;
 extern IgnoreAPIHandler *ignoreAPIHandler;
+extern CallbackAPIHandler *callbackAPIHandler;
 extern bool progModel;
 extern std::string getTypeName(Type *t);
 /* end SYSREL extension */
@@ -2091,10 +2093,12 @@ void Executor::callExternalFunctionThread(ExecutionState &state,
        bool mutApi = mutexAPIHandler->handle(state, function->getName(), arguments, tid);
        bool refAPI = refcountAPIHandler->handle(state, function->getName(), arguments, tid);
        bool allAPI = allocAPIHandler->handle(state, function->getName(), arguments, target, resHandled, tid); 
+       bool freAPI = freeAPIHandler->handle(state, function->getName(), arguments, target, tid);
        bool rwAPI = readWriteAPIHandler->handle(state, function->getName(), arguments, target, tid);
        bool sgAPI = setgetAPIHandler->handle(state, function->getName(), arguments, target, tid);
        bool igAPI = ignoreAPIHandler->handle(state, function->getName(), arguments, target);
-       if (regApi || resApi || mutApi || refAPI || allAPI || rwAPI || sgAPI || igAPI) {
+       bool cbAPI = callbackAPIHandler->handle(state, function->getName(), arguments, target); 
+       if (regApi || resApi || mutApi || refAPI || allAPI || freAPI || rwAPI || sgAPI || igAPI | cbAPI) {
           if (sgAPI || (allAPI && resHandled))
              return;
           argInitSkip = true; 
@@ -2166,11 +2170,16 @@ void Executor::callExternalFunctionThread(ExecutionState &state,
     llvm::raw_string_ostream rso(type_str);
     function->getReturnType()->print(rso);
     llvm::outs() << "return type of external function: " << rso.str() << "\n";
-    MemoryObject *mo;
-    mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), false, 1);
+    ref<Expr> laddr;
+    llvm::Type *rType;
+    bool mksym;
+    const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), 
+             function->getReturnType(), false, 1, rType, laddr, mksym); 
+    //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), false, 1, laddr);
     mo->name = "%sym" + std::to_string(target->dest);
-    executeMakeSymbolicThread(state, mo, mo->name, tid);
-    executeMemoryOperationThread(state, false, mo->getBaseExpr(), 0, target, tid);
+    if (mksym)
+       executeMakeSymbolicThread(state, mo, mo->name, tid);
+    executeMemoryOperationThread(state, false, laddr, 0, target, tid);
     return;
     }
     else {
@@ -2522,12 +2531,18 @@ void Executor::executeMemoryOperationThread(ExecutionState &state,
                   llvm::raw_string_ostream rso2(type_str2);
                   t->print(rso2);
                   llvm::outs() << "Allocating memory for type " << rso2.str() << " of size " << "\n"; 
-                  MemoryObject *mo = memory->allocateForLazyInit(state, state.threads[tid].prevPC->inst, t, singleInstance, count); 
+                  ref<Expr> laddr;
+                  llvm::Type *rType;
+                  bool mksym;
+                  const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.threads[tid].prevPC->inst, t, t,
+                             singleInstance, count, rType, laddr, mksym); 
+                  //MemoryObject *mo = memory->allocateForLazyInit(state, state.threads[tid].prevPC->inst, t, singleInstance, count, laddr); 
                   mo->name = rso.str();
-                  executeMakeSymbolicThread(state, mo, rso.str(), tid);
-                  llvm::outs() << "lazy initializing writing " << mo->getBaseExpr() << " to " << address << "\n";
+                  if (mksym)
+                     executeMakeSymbolicThread(state, mo, rso.str(), tid);
+                  llvm::outs() << "lazy initializing writing " << laddr << "( in " << mo->getBaseExpr() << ") to " << address << "\n";
                   forcedOffset = true;
-                  executeMemoryOperationThread(state, true, address, mo->getBaseExpr(), 0, tid);
+                  executeMemoryOperationThread(state, true, address, laddr, 0, tid);
                   forcedOffset = false; 
                   result = mo->getBaseExpr();
               }
