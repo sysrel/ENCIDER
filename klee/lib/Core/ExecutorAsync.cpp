@@ -128,6 +128,7 @@ extern FreeAPIHandler *freeAPIHandler;
 extern ReadWriteAPIHandler *readWriteAPIHandler;
 extern IgnoreAPIHandler *ignoreAPIHandler;
 extern CallbackAPIHandler *callbackAPIHandler;
+extern SideEffectAPIHandler *sideEffectAPIHandler;
 extern bool progModel;
 extern std::string getTypeName(Type *t);
 /* end SYSREL extension */
@@ -2098,7 +2099,8 @@ void Executor::callExternalFunctionThread(ExecutionState &state,
        bool sgAPI = setgetAPIHandler->handle(state, function->getName(), arguments, target, tid);
        bool igAPI = ignoreAPIHandler->handle(state, function->getName(), arguments, target);
        bool cbAPI = callbackAPIHandler->handle(state, function->getName(), arguments, target); 
-       if (regApi || resApi || mutApi || refAPI || allAPI || freAPI || rwAPI || sgAPI || igAPI | cbAPI) {
+       bool seAPI = sideEffectAPIHandler->handle(state, function->getName(), arguments, target);
+       if (regApi || resApi || mutApi || refAPI || allAPI || freAPI || rwAPI || sgAPI || igAPI | cbAPI || seAPI) {
           if (sgAPI || (allAPI && resHandled))
              return;
           argInitSkip = true; 

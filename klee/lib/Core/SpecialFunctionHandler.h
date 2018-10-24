@@ -13,8 +13,9 @@
 #include <iterator>
 #include <map>
 #include <vector>
-#include <set>
 #include <string>
+#include <set>
+#include "llvm/IR/DataLayout.h"
 
 namespace llvm {
   class Function;
@@ -162,6 +163,19 @@ namespace klee {
      void addCallback(std::string api, std::string cb);
      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);               
+   };
+
+   class SideEffectAPIHandler {
+     private:
+      std::map<std::string, std::set<std::string> > sideEffectAPI;
+      bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+      ref<Expr> eval(ExecutionState &state,  const llvm::DataLayout &dl, llvm::Function *f, 
+                         std::vector< ref<Expr> > &arguments, std::string expr, bool address);
+     public:
+      SideEffectAPIHandler(); 
+      void addAPIUpdateExpr(std::string api, std::string expr);
+      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);         
    };
 
   /* SYSREL EXTENSION */ 

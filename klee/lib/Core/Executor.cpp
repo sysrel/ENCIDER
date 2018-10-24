@@ -100,6 +100,8 @@ using namespace klee;
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
 
+extern std::set<std::string> assemblyFunctions;
+
 KModule *kmoduleExt; 
 llvm::Function *entryFunc;
 extern const Module * moduleHandle;
@@ -117,6 +119,7 @@ extern FreeAPIHandler *freeAPIHandler;
 extern ReadWriteAPIHandler *readWriteAPIHandler;
 extern IgnoreAPIHandler *ignoreAPIHandler;
 extern CallbackAPIHandler *callbackAPIHandler;
+extern SideEffectAPIHandler *sideEffectAPIHandler;
 extern bool progModel;
 
 std::string getAsyncFunction(std::string fn) {
@@ -127,6 +130,13 @@ std::string getAsyncFunction(std::string fn) {
 std::string getEnableFunction(std::string fn) {
   
   return fn.substr(fn.find(ENABLE_STR) + strlen(ENABLE_STR) + 1, fn.size());
+}
+
+bool isAssemblyFunc(std::string name) {
+  for(auto af : assemblyFunctions)
+     if (af == name)
+        return true;
+  return false;
 }
 
 extern bool lazyInit;
@@ -2041,8 +2051,6 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Function *f = getTargetFunction(fp, state);
 
     /* begin SYSREL extension */
-    if (f)
-       llvm::outs() << "calling function " << f->getName() << "\n";
     if (asyncMode) { 
       if (isAsyncInitiate(f->getName())) {
          std::string asyncName = getAsyncFunction(f->getName());
@@ -2087,6 +2095,16 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       arguments.push_back(eval(ki, j+1, state).value);
 
     if (f) {
+
+       /* SYSREL extension */
+       llvm::outs() << "calling function " << f->getName() << "\n";
+       if (isAssemblyFunc(f->getName())) {
+          llvm::outs() << "handling assembly function " << f->getName() << "\n";
+          callExternalFunction(state, ki, f, arguments);
+          return;
+       }
+       /* SYSREL extension */
+
       const FunctionType *fType = 
         dyn_cast<FunctionType>(cast<PointerType>(f->getType())->getElementType());
       const FunctionType *fpType =
@@ -3568,7 +3586,8 @@ void Executor::callExternalFunction(ExecutionState &state,
        bool sgAPI = setgetAPIHandler->handle(state, function->getName(), arguments, target);
        bool igAPI = ignoreAPIHandler->handle(state, function->getName(), arguments, target);
        bool cbAPI = callbackAPIHandler->handle(state, function->getName(), arguments, target); 
-       if (regAPI || resAPI || mutAPI || refAPI || allAPI || freAPI || rwAPI || sgAPI || igAPI || cbAPI) {
+       bool seAPI = sideEffectAPIHandler->handle(state, function->getName(), arguments, target);
+       if (regAPI || resAPI || mutAPI || refAPI || allAPI || freAPI || rwAPI || sgAPI || igAPI || cbAPI || seAPI) {
           llvm::outs() << "Handled API function " << function->getName() << "\n";
           llvm::outs() << "regApi=" << regAPI << "\n";
           llvm::outs() << "resApi=" << resAPI << "\n";
@@ -3580,7 +3599,7 @@ void Executor::callExternalFunction(ExecutionState &state,
           llvm::outs() << "sgApi=" << sgAPI << "\n";
           llvm::outs() << "igApi=" << igAPI << "\n";
           llvm::outs() << "cbApi=" << cbAPI << "\n";
-
+          llvm::outs() << "seApi=" << seAPI << "\n";
           if (sgAPI || (allAPI && resHandled))	
              return;
           argInitSkip = true;          

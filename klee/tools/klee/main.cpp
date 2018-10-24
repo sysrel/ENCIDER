@@ -86,6 +86,7 @@ std::set<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
 bool progModel = false;
+std::set<std::string> assemblyFunctions;
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
 MutexAPIHandler*  mutexAPIHandler = NULL;
@@ -96,6 +97,7 @@ ReadWriteAPIHandler *readWriteAPIHandler = NULL;
 IgnoreAPIHandler *ignoreAPIHandler = NULL;
 CallbackAPIHandler *callbackAPIHandler = NULL;
 FreeAPIHandler *freeAPIHandler = NULL;
+SideEffectAPIHandler *sideEffectAPIHandler = NULL;
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
@@ -1065,6 +1067,7 @@ void readProgModelSpec(const char *name) {
   ignoreAPIHandler = new IgnoreAPIHandler();
   callbackAPIHandler = new CallbackAPIHandler();
   freeAPIHandler = new FreeAPIHandler();
+  sideEffectAPIHandler = new SideEffectAPIHandler();
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
      std::string line, desc, data;
@@ -1073,7 +1076,23 @@ void readProgModelSpec(const char *name) {
        getline(iss, desc, ':');
        getline(iss, data);
        llvm::outs() << desc << ":" << data << "\n";
-       if (desc.find("register,deregister[enable]") != std::string::npos) {
+       if (desc.find("assembly") != std::string::npos) {
+          std::string afunc;
+          afunc = ltrim(rtrim(data));
+          assemblyFunctions.insert(afunc);
+          llvm::outs() << "assembly " << afunc << "\n"; 
+       }
+       else if (desc.find("side-effect") != std::string::npos) {
+          std::string api, expr;
+          std::istringstream iss2(data);
+          getline(iss2, api, ',');
+          getline(iss2, expr, ',');
+          api = ltrim(rtrim(api));
+          expr = ltrim(rtrim(expr));
+          llvm::outs() << "registering sideeffect expr " << expr << " for " << api << "\n";
+          sideEffectAPIHandler->addAPIUpdateExpr(api, expr);
+       }
+       else if (desc.find("register,deregister[enable]") != std::string::npos) {
           std::string reg, unreg, el, enabled; 
           std::istringstream iss2(data);
           getline(iss2, reg, ',');

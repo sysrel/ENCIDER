@@ -56,6 +56,9 @@ namespace {
 extern Interpreter *theInterpreter;
 extern const Module * moduleHandle;
 extern KModule *kmoduleExt;
+extern std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v");
+extern std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v");
+extern std::string getTypeName(llvm::Type*);
 /* SYSREL EXTENSION */
 
 /// \todo Almost all of the demands in this file should be replaced
@@ -1361,6 +1364,159 @@ bool CallbackAPIHandler::handle(ExecutionState &state, std::string fname, std::v
 bool CallbackAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {              
    return handle(state, tid, fname, arguments, target);
 }
+
+SideEffectAPIHandler::SideEffectAPIHandler() {}
+
+void SideEffectAPIHandler::addAPIUpdateExpr(std::string api, std::string expr) {
+   std::set<std::string> se; 
+   if (sideEffectAPI.find(api) != sideEffectAPI.end())
+       se = sideEffectAPI[api];
+   se.insert(expr);
+   sideEffectAPI[api] = se;
+}
+
+// syntax argi([-> | .]fieldindex)+
+// to do: handle the * operator
+ref<Expr> SideEffectAPIHandler::eval(ExecutionState &state,  const DataLayout &dl, Function *f, 
+     std::vector< ref<Expr> > &arguments, std::string expr, bool address) {
+// try {
+    auto pos = expr.find("arg");
+    if (pos == std::string::npos) {
+       llvm::outs() <<  expr << "\n";
+       assert(0 && "expression does not refer to an argument");
+    }
+    unsigned i; 
+    for(i = pos + 3; expr[i] != '-' && expr[i] != '.' && i < expr.length() ; i++) ;
+    std::string index;
+    int argindex; 
+    if (i == expr.length()) 
+       index = expr.substr(pos+3);
+    else {
+       index = expr.substr(pos+3, i);
+    }     
+    argindex = std::stoi(index); 
+    // find the type of the argument
+    llvm::Type *t = NULL;
+    llvm::StructType *st = NULL;
+    int j = 0;
+    for(llvm::Argument & arg : f->args()) {
+       if (j == argindex) {
+           t = arg.getType();
+           break;
+       }
+       j++;
+    }
+    if (t->isPointerTy()) {
+       t = t->getPointerElementType(); 
+    } 
+    st = dyn_cast<StructType>(t);
+    ref<Expr> cur = arguments[argindex];
+    llvm::errs() << "In SE:  arguments[" << argindex << "] is " <<  cur << "\n";
+    int last = 0;
+    std::string field;
+    int fieldIndex; 
+    while (i < expr.length()) {
+        llvm::errs() <<"parsing loop \n";
+        if ((expr[i] == '-' || expr[i] == '.')) {
+           if (!st)
+              assert(0 && "Dereferencing into a non-struct type pointer!\n");
+           if (expr[i] == '-') {
+              assert(expr[i+1] == '>' && "Unexpected dereferencing operator in the update expression!\n");
+              /*bool asuccess;
+              ObjectPair op;
+              ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
+              if (!state.addressSpace.resolveOne(state, ((Executor*)(theInterpreter))->solver, cur, op, asuccess)) {
+                 cur = ((Executor*)(theInterpreter))->toConstant(state, cur, "resolveOne failure");
+                 asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(cur), op);
+              }
+              ((Executor*)(theInterpreter))->solver->setTimeout(0);             
+              if (asuccess) {
+                 cur = op.second->read(0,op.first->size);
+                // read the field string           
+              }
+              else assert(0 && "Could not find memory object for update expression!");*/
+              i = i + 2;
+           }
+           else  i = i + 1;
+           last = i;
+           if (i == expr.length())
+              assert(0 && "Incomplete update expression field name does not follow the dereferencing operator!\n");
+           else {
+              while (i < expr.length() && expr[i] != '-' && expr[i] != '.') {
+                i++;
+              }  
+              field = expr.substr(last, i);
+              fieldIndex = std::stoi(field); 
+              uint64_t offset = dl.getStructLayout(st)->getElementOffset(fieldIndex);
+              llvm::outs() << "using " << cur << "\n"; 
+              cur = AddExpr::create(ConstantExpr::create(offset, Expr::Int64), cur);
+              llvm::outs() << "computed addr " << cur << "\n";
+              t = st->getElementType(fieldIndex);
+              if (t->isPointerTy())
+                 t = t->getPointerElementType();  
+              std::string type_str;
+              llvm::raw_string_ostream rso(type_str);
+              t->print(rso);
+              llvm::errs() << "type in SE expr: " << rso.str() << "\n";
+              st = dyn_cast<StructType>(t);
+           }
+        }
+        else {
+           assert(0 && "Unexpected dereferencing operator in the update expression!\n");
+        }
+    } 
+    return cur;   
+ //}
+ //catch (std::invalid_argument e) {
+   //    assert(0 && "argument index not a number in the update expression!\n");
+ //}     
+}
+
+bool SideEffectAPIHandler::handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
+   if (sideEffectAPI.find(fname)  == sideEffectAPI.end())
+      return false;
+   Function *f = kmoduleExt->module->getFunction(fname);
+   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
+   std::set<std::string> se = sideEffectAPI[fname];
+   for(auto uexpr : se) {
+      std::string lhs, rhs; 
+      std::istringstream ss(uexpr);
+      getline(ss, lhs, '=');
+      getline(ss, rhs, '=');
+      lhs = ltrim(rtrim(lhs));
+      rhs = ltrim(rtrim(rhs));
+      llvm::outs() << "lhs=" << lhs << "\n";
+      llvm::outs() << "rhs=" << rhs << "\n";
+      ref<Expr> addr = eval(state, dl, f, arguments, lhs, true);
+      ref<Expr> value = eval(state, dl, f, arguments, rhs, false);
+      // write value to addr
+      bool asuccess;
+      ObjectPair op; 
+      ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
+      if (!state.addressSpace.resolveOne(state, ((Executor*)(theInterpreter))->solver, addr, op, asuccess)) {
+         addr = ((Executor*)(theInterpreter))->toConstant(state, addr, "resolveOne failure");
+         asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(addr), op);
+      }
+      ((Executor*)(theInterpreter))->solver->setTimeout(0);             
+      if (asuccess) {
+         ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
+         ref<Expr> offsetexpr =  SubExpr::create(addr, op.first->getBaseExpr());
+         llvm::outs() << "executing side-effect expr: " << uexpr << " and writing " << value << 
+                         " to address " << op.first->getBaseExpr() << " at offset " << offsetexpr << "\n";
+         wos->write(offsetexpr, value);         
+      }      
+   }
+   return true;
+}
+
+bool SideEffectAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
+   return handle(state, -1, fname, arguments, target);
+}
+
+bool SideEffectAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {
+    return handle(state, tid, fname, arguments, target);
+}
+
 
 /* SYSREL EXTENSION */
 
