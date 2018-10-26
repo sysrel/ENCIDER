@@ -108,7 +108,8 @@ extern const Module * moduleHandle;
 extern bool asyncMode;
 extern std::vector<std::string> asyncFunc;
 extern std::vector<std::string> enabledFunc;
-
+extern APIHandler *apiHandler;
+/*
 extern RegistrationAPIHandler  *regAPIHandler;
 extern ResourceAllocReleaseAPIHandler *resADAPIHandler;
 extern MutexAPIHandler*  mutexAPIHandler;
@@ -120,6 +121,7 @@ extern ReadWriteAPIHandler *readWriteAPIHandler;
 extern IgnoreAPIHandler *ignoreAPIHandler;
 extern CallbackAPIHandler *callbackAPIHandler;
 extern SideEffectAPIHandler *sideEffectAPIHandler;
+*/
 extern bool progModel;
 
 std::string getAsyncFunction(std::string fn) {
@@ -620,6 +622,15 @@ Executor::Executor(LLVMContext &ctx, const InterpreterOptions &opts,
   }
 }
 
+const Function *Executor::getFunctionFromAddress(ref<Expr> addr) {
+   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(addr)) {
+      if (globalAddressesRev.find(CE) != globalAddressesRev.end()) {
+         const Function *f = dyn_cast<Function>(globalAddressesRev.find(CE)->second);
+         return f;
+      }
+   }
+   return NULL;
+}
 
 const Module *Executor::setModule(llvm::Module *module, 
                                   const ModuleOptions &opts) {
@@ -756,6 +767,10 @@ void Executor::initializeGlobals(ExecutionState &state) {
     }
     
     globalAddresses.insert(std::make_pair(f, addr));
+
+    /* SYSREL extension */ 
+    globalAddressesRev.insert(std::make_pair(addr,f));
+    /* SYSREL extension */ 
   }
 
 #ifndef WINDOWS
@@ -839,6 +854,10 @@ void Executor::initializeGlobals(ExecutionState &state) {
       globalObjects.insert(std::make_pair(v, mo));
       globalAddresses.insert(std::make_pair(v, mo->getBaseExpr()));
 
+      /* SYSREL extension */ 
+      globalAddressesRev.insert(std::make_pair(mo->getBaseExpr(), v));
+      /* SYSREL extension */ 
+
       // Program already running = object already initialized.  Read
       // concrete value and write it to our copy.
       if (size) {
@@ -874,6 +893,11 @@ void Executor::initializeGlobals(ExecutionState &state) {
       globalObjects.insert(std::make_pair(v, mo));
       globalAddresses.insert(std::make_pair(v, mo->getBaseExpr()));
 
+      /* SYSREL extnesion */ 
+      globalAddressesRev.insert(std::make_pair(mo->getBaseExpr(), v));
+      /* SYSREL extnesion */ 
+
+
       if (!i->hasInitializer())
           os->initializeToRandom();
     }
@@ -885,6 +909,10 @@ void Executor::initializeGlobals(ExecutionState &state) {
     // Map the alias to its aliasee's address. This works because we have
     // addresses for everything, even undefined functions. 
     globalAddresses.insert(std::make_pair(&*i, evalConstant(i->getAliasee())));
+    /* SYSREL extension */ 
+    globalAddressesRev.insert(std::make_pair(evalConstant(i->getAliasee()), &*i));
+    /* SYSREL extension */ 
+
   }
 
   // once all objects are allocated, do the actual initialization
@@ -3572,9 +3600,19 @@ void Executor::callExternalFunction(ExecutionState &state,
 
     /* SYSREL EXTENSION */
 
-    bool argInitSkip = false;
 
     if (progModel) {
+       // let the generic API handler handle the arg and return value symbolization
+       std::vector<ExecutionState*> successors;
+       llvm::outs() << "are we handling external function " << function->getName() << "\n";
+       bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target);
+       if (!resHandled) {
+          llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
+          symbolizeArguments(state, target, function, arguments);
+          symbolizeReturnValue(state, target, function);
+       }
+       return;
+       /*
        bool resHandled = false;
        bool regAPI = regAPIHandler->handle(state, function->getName(), arguments);
        bool resAPI = resADAPIHandler->handle(state, function->getName(), arguments);
@@ -3605,8 +3643,10 @@ void Executor::callExternalFunction(ExecutionState &state,
           argInitSkip = true;          
        }
     }   
+       */
 
 
+     /*
 
    if (lazyInit) {
     // Instead of terminating the path, we would like to model such calls as functions that 
@@ -3684,13 +3724,13 @@ void Executor::callExternalFunction(ExecutionState &state,
     bool mksym; 
     mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), function->getReturnType(),  
           isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
-    //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1, laddr);
     mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
     if (mksym)
        executeMakeSymbolic(state, mo, mo->name);
     executeMemoryOperation(state, false, laddr, 0, target);
     return;
+    */
     }
     else {
     /* SYSREL EXTENSION */
@@ -3721,6 +3761,95 @@ void Executor::callExternalFunction(ExecutionState &state,
     bindLocal(target, state, e);
   }
 }
+
+/* SYSREL extension */
+
+void Executor::symbolizeArguments(ExecutionState &state, 
+                                  KInstruction *target,
+                                  Function *function,
+                                  std::vector< ref<Expr> > &arguments) {
+
+    unsigned int ai = 0;
+    for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) { 
+       llvm::outs() << "ext function operand " << ai+1 << " " << target->operands[ai+1] << "\n";
+       if (target->operands[ai+1] >= 0) { // a local var
+          Type *at = agi->getType();
+          if (at->isPointerTy()) {
+             Type *bt = at->getPointerElementType();      
+                 std::string type_str;
+                 llvm::raw_string_ostream rso(type_str);
+                 at->print(rso);
+             //if (bt->getPrimitiveSizeInBits()) {
+                llvm::outs() << "Type of parameter " << ai << " is " << rso.str() << "\n";
+                DataLayout *TD = kmodule->targetData;
+                // find the MemoryObject for this value
+                ObjectPair op;
+                bool asuccess;
+                ref<Expr> base = eval(target, ai+1, state).value;
+                if (SimplifySymIndices) {
+                   if (!isa<ConstantExpr>(base))
+                      base = state.constraints.simplifyExpr(base);
+                }
+                solver->setTimeout(coreSolverTimeout);
+                if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+                   base = toConstant(state, base, "resolveOne failure");
+                   asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+                }
+                solver->setTimeout(0);             
+                if (asuccess) {      
+                   MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal, 
+                           op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
+                   unsigned id = 0;
+                   std::string name = "shadow";
+                   std::string uniqueName = name;
+                   while (!state.arrayNames.insert(uniqueName).second) {
+                       uniqueName = name + "_" + llvm::utostr(++id);
+                   }
+                   // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
+                   const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
+                   ObjectState *sos = bindObjectInState(state, sm, true, array);
+                   ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
+                   ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
+                   wos->write(ConstantExpr::alloc(0, Expr::Int64), result);
+                   llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n"; 
+               }
+               else llvm::outs() << "Couldn't resolve address during lazy init arg: " << base << " for function " << function->getName() << "\n";
+             //}
+
+         }
+       }
+      }
+
+}
+
+
+const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state, 
+                                  KInstruction *target,
+                                  Function *function) {
+
+    if (function->getReturnType()->isVoidTy())
+       return NULL;  
+    std::string type_str;
+    llvm::raw_string_ostream rso(type_str);
+    function->getReturnType()->print(rso);
+    llvm::outs() << "return type of external function " << function->getName() << ": " << rso.str() << "\n";
+    const MemoryObject *mo;
+    ref<Expr> laddr;
+    llvm::Type *rType;
+    bool mksym; 
+    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), function->getReturnType(),  
+          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
+    //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1, laddr);
+    mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
+    llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
+    if (mksym)
+       executeMakeSymbolic(state, mo, mo->name);
+    executeMemoryOperation(state, false, laddr, 0, target);
+    return mo;
+}
+
+/* SYSREL extension */
+
 
 /***/
 
@@ -3810,6 +3939,8 @@ void Executor::executeAlloc(ExecutionState &state,
       } else {
         os->initializeToRandom();
       }
+
+      llvm::outs() << "binding " << mo->getBaseExpr() << " to " << (*target->inst) << "\n";
       bindLocal(target, state, mo->getBaseExpr());
       
       if (reallocFrom) {
@@ -4072,19 +4203,20 @@ void Executor::executeMemoryOperation(ExecutionState &state,
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
             llvm::outs() << "load orig result: " << result << "\n";
-            bool lazyInit = false, singleInstance = false;
+            bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;       
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
             if (li) {
                Type *t = li->getPointerOperand()->getType();
                int count = 0;
-               lazyInit = isLazyInit(t, singleInstance, count);
-               std::string type_str;
-               llvm::raw_string_ostream rso(type_str);
-               t->print(rso);
-               llvm::outs() << "Is " << rso.str() << " (count=" << count << ") to be lazy init?\n";
+               lazyInitTemp = isLazyInit(t, singleInstance, count);
+               //std::string type_str;
+               //llvm::raw_string_ostream rso(type_str);
+               //t->print(rso);
+               std::string rsostr = getTypeName(t);
+               llvm::outs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               if (lazyInit) {
+               if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
                      if (t->isPointerTy()) 
@@ -4096,18 +4228,19 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                      assert(false && "Expected a pointer type for lazy init");
                   llvm::outs() << "Yes!\n";
                   llvm::outs() << "original load result: " << result << "\n";
-                  std::string type_str2;
-                  llvm::raw_string_ostream rso2(type_str2);
-                  t->print(rso2);
-                  llvm::outs() << "Allocating memory for type " << rso2.str() << " of size " << "\n"; 
+                  //std::string type_str2;
+                  //llvm::raw_string_ostream rso2(type_str2);
+                  //t->print(rso2);
+                  std::string rso2str = getTypeName(t);
+                  llvm::outs() << "Allocating memory for type " << rso2str << " of size " << "\n"; 
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
                   const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
                   //MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count, laddr); 
-                  mo->name = rso.str();
+                  mo->name = rso2str;
                   if (mksym)
-                     executeMakeSymbolic(state, mo, rso.str());
+                     executeMakeSymbolic(state, mo, rso2str);
                   llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
                   forcedOffset = true;
                   executeMemoryOperation(state, true, address, laddr, 0);
@@ -4583,6 +4716,10 @@ void Executor::runFunctionAsMain(Function *f,
 
   globalObjects.clear();
   globalAddresses.clear();
+  /* SYSREL extension */ 
+  globalAddressesRev.clear();
+  /* SYSREL extension */ 
+  
 
   if (statsTracker)
     statsTracker->done();

@@ -116,8 +116,10 @@ extern std::set<std::string> lazyInitSingles;
 extern std::map<std::string, int> lazyInitNumInstances;
 
 extern bool isLazyInit(Type *t, bool &single, int &count);
+bool isLazySingle(Type *t, std::string pointertype="**");
 extern bool isAllocTypeLazyInit(Type *t, bool &single, int &count);
-
+extern APIHandler *apiHandler;
+/*
 extern RegistrationAPIHandler  *regAPIHandler;
 extern ResourceAllocReleaseAPIHandler *resADAPIHandler;
 extern MutexAPIHandler*  mutexAPIHandler;
@@ -129,6 +131,7 @@ extern ReadWriteAPIHandler *readWriteAPIHandler;
 extern IgnoreAPIHandler *ignoreAPIHandler;
 extern CallbackAPIHandler *callbackAPIHandler;
 extern SideEffectAPIHandler *sideEffectAPIHandler;
+*/
 extern bool progModel;
 extern std::string getTypeName(Type *t);
 /* end SYSREL extension */
@@ -2085,6 +2088,16 @@ void Executor::callExternalFunctionThread(ExecutionState &state,
 
     /* SYSREL EXTENSION */
 
+    if (progModel) {
+       // let the generic API handler handle the arg and return value symbolization
+       std::vector<ExecutionState*> successors;
+       bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target, tid);
+       if (!resHandled) {
+          symbolizeArgumentsThread(state, target, function, arguments, tid);
+          symbolizeReturnValueThread(state, target, function, tid); 
+       }
+       return;
+/*
     bool argInitSkip = false;
 
     if (progModel) {
@@ -2206,6 +2219,91 @@ void Executor::callExternalFunctionThread(ExecutionState &state,
                                            getWidthForLLVMType(resultType));
     bindLocalThread(target, state, e, tid);
   }
+}
+
+void Executor::symbolizeArgumentsThread(ExecutionState &state, 
+                                  KInstruction *target,
+                                  Function *function,
+                                  std::vector< ref<Expr> > &arguments, int tid) {
+
+    unsigned int ai = 0;
+    for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) { 
+       llvm::outs() << "ext function operand " << ai+1 << " " << target->operands[ai+1] << "\n";
+       if (target->operands[ai+1] >= 0) { // a local var
+          Type *at = agi->getType();
+          if (at->isPointerTy()) {
+             Type *bt = at->getPointerElementType();      
+                 std::string type_str;
+                 llvm::raw_string_ostream rso(type_str);
+                 at->print(rso);
+             //if (bt->getPrimitiveSizeInBits()) {
+                llvm::outs() << "Type of parameter " << ai << " is " << rso.str() << "\n";
+                DataLayout *TD = kmodule->targetData;
+                // find the MemoryObject for this value
+                ObjectPair op;
+                bool asuccess;
+                ref<Expr> base = eval(target, ai+1, state).value;
+                if (SimplifySymIndices) {
+                   if (!isa<ConstantExpr>(base))
+                      base = state.constraints.simplifyExpr(base);
+                }
+                solver->setTimeout(coreSolverTimeout);
+                if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+                   base = toConstant(state, base, "resolveOne failure");
+                   asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+                }
+                solver->setTimeout(0);             
+                if (asuccess) {      
+                   MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal, 
+                           op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
+                   unsigned id = 0;
+                   std::string name = "shadow";
+                   std::string uniqueName = name;
+                   while (!state.arrayNames.insert(uniqueName).second) {
+                       uniqueName = name + "_" + llvm::utostr(++id);
+                   }
+                   // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
+                   const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
+                   ObjectState *sos = bindObjectInStateThread(state, sm, true, array,tid);
+                   ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
+                   ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
+                   wos->write(ConstantExpr::alloc(0, Expr::Int64), result);
+                   llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n"; 
+               }
+               else llvm::outs() << "Couldn't resolve address during lazy init arg: " << base << " for function " << function->getName() << "\n";
+             //}
+
+         }
+       }
+      }
+
+}
+
+
+
+const MemoryObject *Executor::symbolizeReturnValueThread(ExecutionState &state, 
+                                  KInstruction *target,
+                                  Function *function, int tid) {
+
+    if (function->getReturnType()->isVoidTy())
+       return NULL;  
+    std::string type_str;
+    llvm::raw_string_ostream rso(type_str);
+    function->getReturnType()->print(rso);
+    llvm::outs() << "return type of external function " << function->getName() << ": " << rso.str() << "\n";
+    const MemoryObject *mo;
+    ref<Expr> laddr;
+    llvm::Type *rType;
+    bool mksym; 
+    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), function->getReturnType(),  
+          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
+    //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1, laddr);
+    mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
+    llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
+    if (mksym)
+       executeMakeSymbolicThread(state, mo, mo->name, tid);
+    executeMemoryOperationThread(state, false, laddr, 0, target, tid);
+    return mo;
 }
 
 
@@ -2505,19 +2603,19 @@ void Executor::executeMemoryOperationThread(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            bool lazyInit = false, singleInstance = false;
+            bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.threads[tid].prevPC->inst;       
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
             if (li) {
                Type *t = li->getPointerOperand()->getType();
                int count = 0;
-               lazyInit = isLazyInit(t, singleInstance, count);
+               lazyInitTemp = isLazyInit(t, singleInstance, count);
                std::string type_str;
                llvm::raw_string_ostream rso(type_str);
                t->print(rso);
                llvm::outs() << "Is " << rso.str() << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               if (lazyInit) {
+               if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
                      if (t->isPointerTy()) 

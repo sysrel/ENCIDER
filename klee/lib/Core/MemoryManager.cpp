@@ -181,8 +181,72 @@ MemoryObject *MemoryManager::simulateMalloc(ExecutionState &state, ref<Expr> siz
     return mo;  
  } 
  assert(false && "Not simulating symbolic size memory allocations!"); 
+
 }
- 
+
+
+/* Meant to be used internally */
+const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(ExecutionState &state, llvm::Instruction *inst, 
+         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym) {
+     std::string type_str;
+     llvm::raw_string_ostream rso(type_str);
+     allocType->print(rso); 
+     size_t allocationAlignment = 8;
+     const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
+     llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
+     if (li) {
+        allocationAlignment = li->getAlignment();
+     } 
+     else {
+       allocationAlignment = dl.getPrefTypeAlignment(allocType);
+     }
+      MemoryObject *mo = NULL; 
+     if (isSingle) {  
+        if (state.lazyInitSingleInstances.find(allocType) != state.lazyInitSingleInstances.end()) {
+           rallocType = allocType;
+           resaddr = state.lazyInitSingleInstances[allocType]->getBaseExpr();
+           llvm::outs() << "returning address " << state.lazyInitSingleInstances[allocType]->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+           sym = false;
+           return state.lazyInitSingleInstances[allocType];
+        }
+        if (isEmbeddedType(origType) && state.typeToAddr.find(allocType) != state.typeToAddr.end()) {
+           bool asuccess;
+           ObjectPair op;
+           ((Executor*)theInterpreter)->solver->setTimeout(((Executor*)theInterpreter)->coreSolverTimeout);
+           if (!state.addressSpace.resolveOne(state, ((Executor*)theInterpreter)->solver, state.typeToAddr[allocType], op, asuccess)) {
+              ref<Expr> base = ((Executor*)theInterpreter)->toConstant(state, state.typeToAddr[allocType], "resolveOne failure");
+              asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+           }
+           ((Executor*)theInterpreter)->solver->setTimeout(0);             
+           if (asuccess) {      
+              rallocType = allocType;
+              resaddr = op.first->getBaseExpr();
+              llvm::outs() << "returning address " << op.first->getBaseExpr() << " as embedded type ancestor instance " << rso.str() << "\n"; 
+              sym = false;
+              return op.first;
+           }
+           assert(0 && "could not resolve embedded type address\n");
+        }
+     }
+     llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
+     mo = allocate(dl.getTypeAllocSize(allocType)*count, false, /*true*/false, inst, allocationAlignment);
+     resaddr = mo->getBaseExpr();
+     rallocType = allocType;
+     llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
+     if (st) {
+        std::string tname = getTypeName(allocType); 
+        state.typeToAddr[allocType] = mo->getBaseExpr();
+        llvm::outs() << "mapping lazy instance of " << tname << " to " << mo->getBaseExpr() << "\n";
+     }   
+
+     if (isSingle) {
+        state.lazyInitSingleInstances[allocType] = mo;
+        llvm::outs() << "storing address " << mo->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+     }
+     sym = true;
+     return mo;
+
+ }
 
 // in the very first call allocType is the same as origType
 // if origType is an embeddedType and the corresponding object does not exist yet, 
@@ -253,9 +317,12 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            }
                      
      }
-     return NULL;
+     // even though the type is embedded, obviously there are cases where it is used independently. So create an independent memory object
+     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym);
   }
   else { // base case: not an embedded type
+     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym);
+/*
      size_t allocationAlignment = 8;
      const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
      llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -294,7 +361,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
         }
      }
      llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
-     mo = allocate(dl.getTypeAllocSize(allocType)*count, false, /*true*/false, inst, allocationAlignment);
+     mo = allocate(dl.getTypeAllocSize(allocType)*count, false, false, inst, allocationAlignment);
      resaddr = mo->getBaseExpr();
      rallocType = allocType;
      llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
@@ -310,7 +377,8 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
      }
      sym = true;
      return mo;
-  }
+  */
+ }
 }
 
 MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::Instruction *inst, llvm::Type *allocType, bool isSingle, int count) {

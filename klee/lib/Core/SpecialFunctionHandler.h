@@ -21,6 +21,7 @@ namespace llvm {
   class Function;
 }
 
+
 namespace klee {
   class Executor;
   class Expr;
@@ -29,8 +30,87 @@ namespace klee {
   template<typename T> class ref;
 
   /* SYSREL EXTENSION */ 
+  class ResourceAllocReleaseAPIHandler;
+  class AllocAPIHandler;
+  class FreeAPIHandler;
+  class IgnoreAPIHandler;
+  class SideEffectAPIHandler;
+  class APIAction;
+  class APIBlock;
 
-  class MutexAPIHandler {
+  class APIHandler {
+   protected:
+    //static RegistrationAPIHandler  *regAPIHandler; 
+    //static ResourceAllocReleaseAPIHandler *resADAPIHandler;
+    //static MutexAPIHandler*  mutexAPIHandler;
+    //static RefCountAPIHandler *refcountAPIHandler;
+    //static SetGetAPIHandler *setgetAPIHandler;
+    //static ReadWriteAPIHandler *readWriteAPIHandler;
+    //static CallbackAPIHandler *callbackAPIHandler;
+    ref<Expr> eval(ExecutionState &state,  const llvm::DataLayout &dl, llvm::Function *f, 
+                     std::vector< ref<Expr> > &arguments, std::string expr, bool address);
+    public:
+     static void addAction(std::string, APIAction *action);
+     static SideEffectAPIHandler *sideEffectAPIHandler;
+     static  std::map<std::string, std::set<APIAction*>> apiModel;
+     static IgnoreAPIHandler *ignoreAPIHandler;
+     static AllocAPIHandler *allocAPIHandler;
+     static FreeAPIHandler *freeAPIHandler;
+     static void readProgModelSpec(const char *name);
+     static bool handle(ExecutionState &state, std::vector<ExecutionState*> &branches, std::string fname, 
+                               std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);
+     APIHandler();
+     virtual bool interpret(APIAction &action, ExecutionState &state, 
+        std::vector< ref<Expr> > &arguments, KInstruction *target,int tid);
+     virtual bool assignsRetValue(APIAction &action);
+     bool setsArgs();
+  };
+
+  enum RetCond {ZERO, NOTZERO, LTZERO, LTEQZERO, GTZERO, GTEQZERO, TRUE};
+
+  enum Cond {ON_ZERO, NONE};
+
+  // If condition holds executes based on the semantics of desc and param and executes chain actions, if any
+  class APIAction {
+    protected: 
+       std::string  desc;
+       // first element is the api function name
+       std::vector<std::string> param;
+       APIHandler *handler;
+       Cond condition;
+       RetCond returnCondition;
+       std::vector<std::string> conditionArg;
+       std::vector<APIAction*> chain;
+    public:
+       APIAction();
+       APIAction(std::string desc, std::vector<std::string> param, APIHandler *handler, RetCond retCond=TRUE);
+       APIAction(std::string desc, std::vector<std::string> param, Cond condition, std::vector<std::string> conditionArg, 
+                APIHandler *handler, RetCond retCond=TRUE);
+       std::vector<std::string> getParams();
+       RetCond getReturnCond();
+       virtual bool assignsRetValue();
+       virtual bool setsArgs();
+       void addChainAction(APIAction *action);
+       virtual void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid = -1);
+       virtual void print();
+  };
+
+
+  class APIBlock : public APIAction {
+    protected:
+       std::vector<APIAction*> body;
+    public:
+       APIBlock();
+       void addNextAction(APIAction *action);
+       virtual bool assignsRetValue();
+       virtual bool setsArgs();       
+       virtual void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid = -1);  
+       virtual void print();
+  };
+
+
+  /*
+  class MutexAPIHandler : public APIHandler {
     private:
      std::set<std::string> initSet;
      std::map<std::string, std::string> initMap;
@@ -44,23 +124,19 @@ namespace klee {
      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, int tid);
     
   };
+  
 
-  class RefCountAPIHandler {
-    private:
-     std::set<std::string> initSet;
-     std::map<std::string, std::string> initMap;
-     std::map<std::string, std::string> getputMap;
-     std::set<std::string> putSet; 
-     bool handle(std::map<ref<Expr>, int> &stateModel, std::string fname, std::vector< ref<Expr> > &arguments);
+  class RefCountAPIHandler : public APIHandler {
     public:      
      RefCountAPIHandler();
-     void addGetPut(std::string getf, std::string putf, std::string initf="");
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments);      
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, int tid);      
+     bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, int tid=-1);      
+     bool assignsRetValue();
 
   };
  
-  class RegistrationAPIHandler {
+
+  
+  class RegistrationAPIHandler : public APIHandler {
     private:
      std::map<std::string, std::string> regAPIMap;
      std::map<std::string, std::string> unregAPIMap;
@@ -75,57 +151,39 @@ namespace klee {
      bool getDisabled(std::string unreg, std::set<std::string> &q);  
   };
 
-  class ResourceAllocReleaseAPIHandler {
-    private:
-     std::map<std::string, std::string> resAPIMap;
-     std::map<std::string, std::string> revresAPIMap;
-     bool handle(std::map<ref<Expr>, int> &stateModel, std::string fname, std::vector< ref<Expr> > &arguments);
+  class ResourceAllocReleaseAPIHandler : public APIHandler {
    public:
       ResourceAllocReleaseAPIHandler();
-      void addResAllocDealloc(std::string regf, std::string unregf);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments); 
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, int tid); 
+      bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, int tid=-1); 
   };
 
-  class SetGetAPIHandler {
-   private:
-     std::map<std::string, std::string> setgetAPIMap;
-     std::map<std::string, std::string> getsetAPIMap;
-     bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction /* null if set*/ *target);
+  class SetGetAPIHandler : public APIHandler {
    public:
      SetGetAPIHandler();
-     void addSetGet(std::string set, std::string get);
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);
+     bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);
   };   
+*/
 
-
-   class AllocAPIHandler {
-    private:
-      std::map<std::string, int> allocAPIMap;  
-      std::map<std::string, bool> allocAPIMapInit;  
-      std::map<std::string, bool> allocAPIMapSym;
-      std::map<std::string, bool> allocAPIMapRet;
-      bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+   class AllocAPIHandler : public APIHandler {
     public:
       AllocAPIHandler();
-      void addAllocate(std::string alloc, int param, bool zeroMemory, bool sym, bool ret);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, bool &retstat);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, bool &retstat, int tid);       
+      virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+                   KInstruction *target, int tid=-1);     
+      virtual bool assignsRetValue(APIAction &action);
+  
    };
 
-   class FreeAPIHandler {
-     private:
-       std::map<std::string, int> freeAPI;
-       bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+   class FreeAPIHandler : public APIHandler {
     public:
       FreeAPIHandler();
-      void addFree(std::string fapi, int param);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);       
+      virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+                   KInstruction *target, int tid=-1);       
+      virtual bool assignsRetValue(APIAction &action);
+  
    };
 
-   class ReadWriteAPIHandler {
+   /*
+   class ReadWriteAPIHandler : public APIHandler {
     private:
      std::set<std::string> readAPI;
      std::set<std::string> writeAPI;
@@ -140,42 +198,31 @@ namespace klee {
       bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
       bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);
    };
+  */
 
-
-   class IgnoreAPIHandler {
-    private:
-     std::set<std::string> ignoreAPI;
-     bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+   class IgnoreAPIHandler : public APIHandler {
     public:
      IgnoreAPIHandler();
-     void addIgnore(std::string ignore);
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid); 
+     virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+                              KInstruction *target, int tid=-1); 
+     virtual bool assignsRetValue(APIAction &action);
    };
 
-   class CallbackAPIHandler {
-    private:
-     // for now we handle at most one callback from a given API 
-     std::map<std::string, std::string> cbAPI;
-     bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
+   /*
+   class CallbackAPIHandler : public APIHandler {
     public:
      CallbackAPIHandler();
-     void addCallback(std::string api, std::string cb);
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
-     bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);               
+     bool interpret(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);               
    };
+   */
 
-   class SideEffectAPIHandler {
-     private:
-      std::map<std::string, std::set<std::string> > sideEffectAPI;
-      bool handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
-      ref<Expr> eval(ExecutionState &state,  const llvm::DataLayout &dl, llvm::Function *f, 
-                         std::vector< ref<Expr> > &arguments, std::string expr, bool address);
+   class SideEffectAPIHandler : public APIHandler {
      public:
       SideEffectAPIHandler(); 
-      void addAPIUpdateExpr(std::string api, std::string expr);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target);
-      bool handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid);         
+      virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+                                KInstruction *target, int tid=-1);         
+      virtual bool assignsRetValue(APIAction &action);
+     
    };
 
   /* SYSREL EXTENSION */ 

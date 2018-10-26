@@ -146,6 +146,29 @@ private:
 public:
   TimingSolver *solver;
   MemoryManager *memory;
+
+  const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
+
+  void symbolizeArguments(ExecutionState &state, 
+                                  KInstruction *target,
+                                  llvm::Function *function,
+                                  std::vector< ref<Expr> > &arguments) ;
+
+  void symbolizeArgumentsThread(ExecutionState &state, 
+                                  KInstruction *target,
+                                  llvm::Function *function,
+                                  std::vector< ref<Expr> > &arguments, int tid) ;
+
+
+  const MemoryObject *symbolizeReturnValue(ExecutionState &state, 
+                                  KInstruction *target,
+                                  llvm::Function *function);
+
+
+  const MemoryObject *symbolizeReturnValueThread(ExecutionState &state, 
+                                  KInstruction *target,
+                                  llvm::Function *function, int tid);
+
 private:
 /* SYSREL extension */
   std::set<ExecutionState*> states;
@@ -198,6 +221,12 @@ private:
   /// Map of globals to their bound address. This also includes
   /// globals that have no representative object (i.e. functions).
   std::map<const llvm::GlobalValue*, ref<ConstantExpr> > globalAddresses;
+
+  /* SYSREL extension */
+  /// Map of globals to their bound address. This also includes
+  /// globals that have no representative object (i.e. functions).
+  std::map<ref<ConstantExpr>, const llvm::GlobalValue*> globalAddressesRev;
+  /* SYSREL extension */
 
   /// The set of legal function addresses, used to validate function
   /// pointers. We use the actual Function* address as the function address.
@@ -432,12 +461,15 @@ private:
                       const std::vector< ref<Expr> > &conditions,
 			    std::vector<ExecutionState*> &result, int tid);
   /* SYSREL extension */
+public:
   // Fork current and return states in which condition holds / does
   // not hold, respectively. One of the states is necessarily the
   // current state, and one of the states may be null.
   StatePair fork(ExecutionState &current, ref<Expr> condition, bool isInternal);
   /* SYSREL extension */
   StatePair forkThread(ExecutionState &current, ref<Expr> condition, bool isInternal, int tid) ;
+
+private:
   /* SYSREL extension */
   /// Add the given (boolean) condition as a constraint on state. This
   /// function is a wrapper around the state's addConstraint function

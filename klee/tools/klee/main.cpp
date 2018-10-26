@@ -86,7 +86,8 @@ std::set<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
 bool progModel = false;
-std::set<std::string> assemblyFunctions;
+APIHandler *apiHandler = NULL;
+/*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
 MutexAPIHandler*  mutexAPIHandler = NULL;
@@ -98,6 +99,7 @@ IgnoreAPIHandler *ignoreAPIHandler = NULL;
 CallbackAPIHandler *callbackAPIHandler = NULL;
 FreeAPIHandler *freeAPIHandler = NULL;
 SideEffectAPIHandler *sideEffectAPIHandler = NULL;
+*/
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
@@ -1056,6 +1058,8 @@ void readLazySingles(const char *name) {
   }
 }
 
+/*
+
 void readProgModelSpec(const char *name) {
   regAPIHandler = new RegistrationAPIHandler();
   resADAPIHandler = new ResourceAllocReleaseAPIHandler();
@@ -1192,6 +1196,7 @@ void readProgModelSpec(const char *name) {
      cf.close();
   }
 }
+*/
 
 Sequential *readLCMConfig(const char *name) {
   std::fstream cf(name, std::fstream::in);
@@ -1702,7 +1707,7 @@ int main(int argc, char **argv, char **envp) {
   if (ProgModelSpec.c_str()) {
      moduleHandle = finalModule; 
      progModel = true;
-     readProgModelSpec(ProgModelSpec.c_str());
+     APIHandler::readProgModelSpec(ProgModelSpec.c_str());
   }
 
   /* end SYSREL extension */

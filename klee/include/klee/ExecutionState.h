@@ -174,6 +174,7 @@ class ExecutionState {
 public:
   typedef std::vector<StackFrame> stack_ty;
   /* SYSREL extension begin */
+  std::map<ref<Expr>,int> lockModel;
   std::map<ref<Expr>,int> stateModel;
   std::map<ref<Expr>, ref<Expr> > assocModel; 
   std::map<std::string, long int> returnValueModel;
