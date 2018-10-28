@@ -178,6 +178,7 @@ public:
   std::map<ref<Expr>,int> stateModel;
   std::map<ref<Expr>, ref<Expr> > assocModel; 
   std::map<std::string, long int> returnValueModel;
+  std::map<ref<Expr>, int> refCountModel;
   std::map<llvm::Type*, ref<Expr> > typeToAddr;
   bool hasLCM();
   int getLCMState();
@@ -218,7 +219,9 @@ public:
   
 int initiateAsync(llvm::Function *f);
   int scheduleAsync(MemoryManager *memory);
-  int setPreemptable(int tid, bool value); 
+  int setPreemptable(int tid, bool value);
+  void setRefCount(ref<Expr>,int); 
+  int getRefCount(ref<Expr>); 
   /* SYSREL extension end */
   // Execution - Control Flow specific
 

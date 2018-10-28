@@ -252,7 +252,8 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
 // if origType is an embeddedType and the corresponding object does not exist yet, 
 // recursive calls with the embedding type as the allocType is made 
 const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState &state, llvm::Instruction *inst, 
-         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym) {
+         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, 
+         ref<Expr> &resaddr, bool &sym) {
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   allocType->print(rso); 

@@ -280,9 +280,13 @@ private:
   // @brief buffer to store logs before flushing to file
   llvm::raw_string_ostream debugLogBuffer;
 
+/* SYSREL extension */ 
+public:
   llvm::Function* getTargetFunction(llvm::Value *calledVal,
                                     ExecutionState &state);
-  
+
+private:  
+/* SYSREL extension */
   void executeInstruction(ExecutionState &state, KInstruction *ki);
 
   /* SYSREL extension */

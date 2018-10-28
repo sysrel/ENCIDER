@@ -4236,7 +4236,8 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
-                  const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
+                  const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, 
+                              state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
                   //MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count, laddr); 
                   mo->name = rso2str;
                   if (mksym)

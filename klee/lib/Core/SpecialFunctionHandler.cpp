@@ -30,6 +30,8 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/CallSite.h"
+
 
 #include <errno.h>
 #include <sstream>
@@ -61,6 +63,7 @@ extern Interpreter *theInterpreter;
 extern const Module * moduleHandle;
 extern KModule *kmoduleExt;
 extern std::string getTypeName(llvm::Type*);
+extern bool isLazyInit(Type *t, bool &single, int &count);
 
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
@@ -79,6 +82,8 @@ AllocAPIHandler *APIHandler::allocAPIHandler = NULL;
 FreeAPIHandler *APIHandler::freeAPIHandler = NULL;
 IgnoreAPIHandler *APIHandler::ignoreAPIHandler = NULL;
 SideEffectAPIHandler *APIHandler::sideEffectAPIHandler = NULL;
+RefCountAPIHandler *APIHandler::refcountAPIHandler = NULL;
+CallbackAPIHandler *APIHandler::callbackAPIHandler = NULL;
 std::map<std::string, std::set<APIAction*>> APIHandler::apiModel;
 /* SYSREL EXTENSION */
 
@@ -953,40 +958,53 @@ bool MutexAPIHandler::handle(std::map<ref<Expr>, int> &stateModel, std::string f
   return false;
 }
 
+*/
 
 RefCountAPIHandler::RefCountAPIHandler() {}
 
+bool RefCountAPIHandler::assignsRetValue() {
+  return false;   
+}
 
+bool RefCountAPIHandler::interpret(APIAction &action, ExecutionState &state, 
+    std::vector< ref<Expr> > &arguments, KInstruction *target, int tid){   
 
-bool RefCountAPIHandler::handle(std::map<ref<Expr>, int> &stateModel, std::string fname, std::vector< ref<Expr> > &arguments){   
-
-   if (initSet.find(fname) != initSet.end()) {
-      ConstantExpr *ce = dyn_cast<ConstantExpr>(arguments[1]);
-      if (ce) {   
-         stateModel[arguments[0]] = ce->getZExtValue();
-      }
-      else assert(false && "Unexpected symbolic value to ref count init function\n");
-      return true;
-   }
-   else if (getputMap.find(fname) != getputMap.end()) {
-      if (initMap.find(fname) == initMap.end())
-         stateModel[arguments[0]] = 1;
-      else
-         stateModel[arguments[0]] = stateModel[arguments[0]] + 1;
-     return true;
-   }
-   else if (putSet.find(fname) != putSet.end()) {
-     if (stateModel.find(arguments[0]) == stateModel.end())
-        assert(false && "Refcount decrement without an increment\n");
-     stateModel[arguments[0]] = stateModel[arguments[0]] - 1;
-     if (stateModel[arguments[0]] < 0)
-        assert(false && "refcount became negative \n");
-     return true;
-   }
-   return false;
+  std::vector<std::string> par = action.getParams();
+  std::string api = par[0];
+  std::string op = par[1];
+  const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
+  llvm::CallSite cs(target->inst);
+  Value *fp = cs.getCalledValue();
+  Function *caller = ((Executor*)theInterpreter)->getTargetFunction(fp, state);
+  ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, par[2], target, false);
+  llvm::outs() << "memory object at base addr " << refobjaddr  << "\n";
+  int value = std::stoi(par[3]);
+  std::string onzerocb = par[4]; 
+ 
+  if (op == "set") {
+     state.setRefCount(refobjaddr, value);
+     assert(value >= 0 && "Negative refcount value set!");
+     llvm::outs() << "refcount set to " << value << "\n";
+  }
+  else if (op == "inc") {
+     int cv = state.getRefCount(refobjaddr);
+     state.setRefCount(refobjaddr, cv + value);
+     llvm::outs() << "refcount set to " << cv + value << "\n";
+  }
+  else if (op == "dec") {
+     int cv = state.getRefCount(refobjaddr);
+     state.setRefCount(refobjaddr, cv - value);
+     assert(cv - value >= 0 && "Negative refcount encountered in decrement!");
+     llvm::outs() << "refcount set to " << cv - value << "\n";
+     if (cv - value == 0) {
+        if (onzerocb != "none") 
+           llvm::outs() << "executing callback " << onzerocb << " on zero refcount\n";
+           executeCallback(state, onzerocb, arguments, target, tid); 
+     }
+  }
 };
 
-
+/*
      
 RegistrationAPIHandler::RegistrationAPIHandler() {}
 
@@ -1295,21 +1313,25 @@ bool IgnoreAPIHandler::assignsRetValue(APIAction &action) {
   return false;
 }
 
-/*
-
-CallbackAPIHandler::CallbackAPIHandler() {}
-
-bool CallbackAPIHandler::handle(ExecutionState &state, int tid, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
-   if (cbAPI.find(fname) == cbAPI.end())
-      return false;
-   llvm::outs() << "calling callback " << cbAPI[fname] << "\n";
-   Function *f = kmoduleExt->module->getFunction(cbAPI[fname]);
+void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std::vector< ref<Expr> > &arguments, 
+         KInstruction *target, int tid) {
+   const Function *f = NULL;
+   if (cbexpr.find("arg") == 0) {
+      llvm::CallSite cs(target->inst);
+      Value *fp = cs.getCalledValue();
+      Function *caller = ((Executor*)theInterpreter)->getTargetFunction(fp, state);
+      const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
+      ref<Expr> cbaddr = eval(state,  dl, caller, arguments, cbexpr, target, false) ;
+      f = ((Executor*)theInterpreter)->getFunctionFromAddress(cbaddr);
+   }
+   else 
+      f = kmoduleExt->module->getFunction(cbexpr);
    assert(f && "Callback function not defined!\n");
-   llvm::outs() << "simulating callback " << cbAPI[fname] << " with return instr " << (*state.prevPC->inst) << "\n";   
-   KFunction *kf = kmoduleExt->functionMap[f];      
+   llvm::outs() << "calling callback " << f->getName() << "\n";
+   Function *ncf = target->inst->getParent()->getParent()->getParent()->getFunction(f->getName());
+   KFunction *kf = kmoduleExt->functionMap[ncf];      
    state.pushFrame(state.prevPC, kf);
    state.pc = kf->instructions;
-
 
    StatsTracker * statsTracker = ((Executor*)theInterpreter)->getStatsTracker();
    if (statsTracker) {
@@ -1320,32 +1342,32 @@ bool CallbackAPIHandler::handle(ExecutionState &state, int tid, std::string fnam
    }
    // allocate symbolic arguments
    ((Executor*)theInterpreter)->initArgsAsSymbolic(state, kf->function);
+
+}  
+
+CallbackAPIHandler::CallbackAPIHandler() {}
+
+bool CallbackAPIHandler::assignsRetValue(APIAction &action) {
+  return false;
+}
+
+
+bool CallbackAPIHandler::interpret(APIAction &action, ExecutionState &state, 
+      std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {
+   std::vector<std::string> par = action.getParams();
+   executeCallback(state, par[1], arguments, target, tid); 
    return true; 
 }
  
-void CallbackAPIHandler::addCallback(std::string api, std::string cb) {
-   if (cbAPI.find(api) != cbAPI.end()) {
-       llvm::errs() << "WARNING:  " << api << "->" << cbAPI[api] << " (API->callback) overwritten!\n";
-   }
-   cbAPI[api] = cb;
-}
-
-bool CallbackAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target) {
-   return handle(state, -1, fname, arguments, target);
-}
-     
-bool CallbackAPIHandler::handle(ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {              
-   return handle(state, tid, fname, arguments, target);
-}
-*/
 
 SideEffectAPIHandler::SideEffectAPIHandler() {}
 
 // syntax argi([-> | .]fieldindex)+
+// we assume that argi holds base address of the memory object pointed by that pointer type argument
 // to do: handle the * operator
 ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Function *f, 
-     std::vector< ref<Expr> > &arguments, std::string expr, bool address) {
-// try {
+     std::vector< ref<Expr> > &arguments, std::string expr, KInstruction *target, bool address) {
+
     auto pos = expr.find("arg");
     if (pos == std::string::npos) {
        llvm::outs() <<  expr << "\n";
@@ -1381,6 +1403,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
     int last = 0;
     std::string field;
     int fieldIndex; 
+    ref<Expr> addressRes = cur;
     while (i < expr.length()) {
         llvm::errs() <<"parsing loop \n";
         if ((expr[i] == '-' || expr[i] == '.')) {
@@ -1388,19 +1411,6 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
               assert(0 && "Dereferencing into a non-struct type pointer!\n");
            if (expr[i] == '-') {
               assert(expr[i+1] == '>' && "Unexpected dereferencing operator in the update expression!\n");
-              /*bool asuccess;
-              ObjectPair op;
-              ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
-              if (!state.addressSpace.resolveOne(state, ((Executor*)(theInterpreter))->solver, cur, op, asuccess)) {
-                 cur = ((Executor*)(theInterpreter))->toConstant(state, cur, "resolveOne failure");
-                 asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(cur), op);
-              }
-              ((Executor*)(theInterpreter))->solver->setTimeout(0);             
-              if (asuccess) {
-                 cur = op.second->read(0,op.first->size);
-                // read the field string           
-              }
-              else assert(0 && "Could not find memory object for update expression!");*/
               i = i + 2;
            }
            else  i = i + 1;
@@ -1418,8 +1428,42 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
               cur = AddExpr::create(ConstantExpr::create(offset, Expr::Int64), cur);
               llvm::outs() << "computed addr " << cur << "\n";
               t = st->getElementType(fieldIndex);
-              if (t->isPointerTy())
-                 t = t->getPointerElementType();  
+              if (t->isPointerTy()) {
+                 t = t->getPointerElementType();
+                 // load the pointer object and update cur with the base address
+                 bool asuccess;
+                 ObjectPair op;
+                 ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
+                 if (!state.addressSpace.resolveOne(state, ((Executor*)(theInterpreter))->solver, cur, op, asuccess)) {
+                    cur = ((Executor*)(theInterpreter))->toConstant(state, cur, "resolveOne failure");
+                    asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(cur), op);
+                 }
+                 ((Executor*)(theInterpreter))->solver->setTimeout(0);             
+                 if (asuccess) {
+                    addressRes = cur;
+                    cur = op.second->read(0,op.first->size);
+                    // read the field string           
+                 }
+                 else {
+                   llvm::Type *rallocType;
+                   ref<Expr> resaddr; 
+                   bool sym;
+                   int count = 0;
+                   bool singleInstance = false;
+                   bool lazyInitTemp = isLazyInit(t, singleInstance, count);
+                   const MemoryObject *mo = ((Executor*)(theInterpreter))->memory->allocateLazyForTypeOrEmbedding(state, target->inst, 
+                              t, t, singleInstance, count, rallocType, resaddr, sym);
+                   mo->name = "sym_" + getTypeName(t); 
+                   if (sym) {
+                      ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name);  
+                   }
+                   ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, cur, resaddr, 0);
+                   addressRes = cur;
+                   cur = resaddr;
+                   llvm::outs() << "lazy initializing, new object at " << resaddr << " while evaluating expression\n";
+                 }
+
+              }  
               std::string type_str;
               llvm::raw_string_ostream rso(type_str);
               t->print(rso);
@@ -1431,18 +1475,19 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
            assert(0 && "Unexpected dereferencing operator in the update expression!\n");
         }
     } 
-    return cur;   
- //}
- //catch (std::invalid_argument e) {
-   //    assert(0 && "argument index not a number in the update expression!\n");
- //}     
+    if (address)
+       return addressRes;
+    else
+       return cur;   
 }
 
 bool SideEffectAPIHandler::assignsRetValue(APIAction &action) {
      return false;
 }
 
-bool SideEffectAPIHandler::interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {
+bool SideEffectAPIHandler::interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+      KInstruction *target, int tid) {
+
    std::vector<std::string> pars = action.getParams();
    std::string fname = pars[0];
    llvm::outs() << "Handling side-effect api " << fname << "\n";
@@ -1457,8 +1502,10 @@ bool SideEffectAPIHandler::interpret(APIAction &action, ExecutionState &state, s
       rhs = ltrim(rtrim(rhs));
       llvm::outs() << "lhs=" << lhs << "\n";
       llvm::outs() << "rhs=" << rhs << "\n";
-      ref<Expr> addr = eval(state, dl, f, arguments, lhs, true);
-      ref<Expr> value = eval(state, dl, f, arguments, rhs, false);
+      ref<Expr> addr = eval(state, dl, f, arguments, lhs, target, true);
+      ref<Expr> value = eval(state, dl, f, arguments, rhs, target, false);
+      llvm::outs() << "addr=" << addr << "\n";
+      llvm::outs() << "value=" << value << "\n";
       // write value to addr
       bool asuccess;
       ObjectPair op; 
@@ -1622,6 +1669,15 @@ void APIHandler::addAction(std::string api, APIAction *action) {
   apiModel[api] = set;
 }
 
+void read(std::istringstream& iss, std::vector<std::string> &par) {
+     std::string item = "";
+     while(getline(iss, item, ',')) {
+       item = ltrim(rtrim(item));
+       par.push_back(item);
+    }
+      
+}
+
 void APIHandler::readProgModelSpec(const char *name) {
   //regAPIHandler = new RegistrationAPIHandler();
   //resADAPIHandler = new ResourceAllocReleaseAPIHandler();
@@ -1631,153 +1687,108 @@ void APIHandler::readProgModelSpec(const char *name) {
   allocAPIHandler = new AllocAPIHandler();
   //readWriteAPIHandler = new ReadWriteAPIHandler();
   ignoreAPIHandler = new IgnoreAPIHandler();
-  //callbackAPIHandler = new CallbackAPIHandler();
+  callbackAPIHandler = new CallbackAPIHandler();
+  refcountAPIHandler = new RefCountAPIHandler();
   freeAPIHandler = new FreeAPIHandler();
   sideEffectAPIHandler = new SideEffectAPIHandler();
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
      std::string line, desc, data;
+     APIBlock *apiblock = NULL;
+     std::string mainapi = ""; 
+     RetCond rcond = TRUE; 
      while(std::getline(cf,line)) { 
        std::istringstream iss(line);
        getline(iss, desc, ':');
        getline(iss, data);
        llvm::outs() << desc << ":" << data << "\n";
-       if (desc.find("assembly") != std::string::npos) {
+       if (desc.find("apiblock") != std::string::npos) {
+          std::string rcondst;
+          std::istringstream iss2(data);
+          getline(iss2, mainapi, ',');
+          getline(iss2, rcondst, ','); 
+          mainapi = ltrim(rtrim(mainapi));
+          rcondst = ltrim(rtrim(rcondst));
+          if (rcondst == "zero")
+             rcond = ZERO;
+          else if (rcondst == "ltzero")
+             rcond = LTZERO;
+          else if (rcondst == "lteqzero")
+             rcond = LTEQZERO;
+          else if (rcondst == "gtzero")
+             rcond = GTZERO;
+          else if (rcondst == "gteqzero")
+             rcond = GTEQZERO;
+          else if (rcondst == "nonzero")
+             rcond = NOTZERO;
+          apiblock = new APIBlock();
+       }
+       else if (desc.find("endapiblock") != std::string::npos) {
+          addAction(mainapi, apiblock);  
+          mainapi = "";        
+          apiblock = NULL;
+       } 
+       else if (desc.find("assembly") != std::string::npos) {
           std::string afunc;
           afunc = ltrim(rtrim(data));
           assemblyFunctions.insert(afunc);
           llvm::outs() << "assembly " << afunc << "\n"; 
        }
-       else if (desc.find("side-effect") != std::string::npos) {
-          std::string api, expr;
-          std::istringstream iss2(data);
-          getline(iss2, api, ',');
-          getline(iss2, expr, ',');
-          api = ltrim(rtrim(api));
-          expr = ltrim(rtrim(expr));
-          llvm::outs() << "registering sideeffect expr " << expr << " for " << api << "\n";
+       else {
           std::vector<std::string> par;
-          par.push_back(api);
-          par.push_back(expr);
-          APIAction *a = new APIAction(desc,par,sideEffectAPIHandler);
-          addAction(api,a);
-       }
-       /*else if (desc.find("register,deregister[enable]") != std::string::npos) {
-          std::string reg, unreg, el, enabled; 
           std::istringstream iss2(data);
-          getline(iss2, reg, ',');
-          getline(iss2, unreg, ',');
-          getline(iss2, el, ',');
-          std::set<std::string> enabledSet;
-          if (el.find("[]") == std::string::npos) {
-             std::istringstream iss3(el);
-             while (getline(iss3, enabled, ',')) {
-               enabledSet.insert(enabled);
-             }
-          } 
-          regAPIHandler->addRegUnreg(ltrim(rtrim(reg)), ltrim(rtrim(unreg)), enabledSet);          
-       }
-       else if (desc.find("alloc,dealloc") != std::string::npos) {
-         std::string alloc, dealloc;
-         std::istringstream iss2(data);
-         getline(iss2, alloc, ',');
-         getline(iss2, dealloc, ',');
-         std::vector<std::string> param;
-          param.push_back(a
-         resADAPIHandler->addResAllocDealloc(ltrim(rtrim(alloc)), ltrim(rtrim(dealloc)));   
-       }
-       else if (desc.find("acquire,release,init") != std::string::npos) {
-         std::string acq, rel, init;
-         std::istringstream iss2(data);
-         getline(iss2, acq, ',');
-         getline(iss2, rel, ',');
-         getline(iss2, init, ',');
-         mutexAPIHandler->addInitAcqRel(ltrim(rtrim(acq)), ltrim(rtrim(rel)), ltrim(rtrim(init)));
-       / 
-       else if (desc.find("get,put,init") != std::string::npos) {
-         std::string get, put, init;
-         std::istringstream iss2(data);
-         getline(iss2, get, ',');
-         getline(iss2, put, ',');
-         getline(iss2, init, ',');
-         refcountAPIHandler->addGetPut(ltrim(rtrim(get)), ltrim(rtrim(put)), ltrim(rtrim(init)));
-       }
-       else if (desc.find("set,get") != std::string::npos) {
-         std::string get, set, init;
-         std::istringstream iss2(data);
-         getline(iss2, set, ',');
-         getline(iss2, get, ',');
-         set = ltrim(rtrim(set));
-         get = ltrim(rtrim(get));
-         setgetAPIHandler->addSetGet(set, get);        
-         llvm::outs() << " set/get interface: " << set << " " << get << "\n";
-       }*/
-       else if (desc.find("alloc,parameter,initzero,symbolic,return") != std::string::npos) {
-         std::string alloc, param, init, sym, ret;
-         std::istringstream iss2(data);
-         getline(iss2, alloc, ',');
-         getline(iss2, param, ',');
-         getline(iss2, init, ',');
-         getline(iss2, sym, ',');
-         getline(iss2, ret, ',');
-         alloc = ltrim(rtrim(alloc));
-         param = ltrim(rtrim(param));
-         init = ltrim(rtrim(init)) ;
-         sym =  ltrim(rtrim(sym));
-         ret = ltrim(rtrim(ret));
-         std::vector<std::string> par;
-         par.push_back(alloc);
-         par.push_back(param);
-         par.push_back(init);
-         par.push_back(sym);
-         par.push_back(ret); 
-         APIAction *a = new APIAction(desc,par,allocAPIHandler);
-         addAction(alloc,a);
-         llvm::outs() << " alloc,parameter,initzero,sym interface " << alloc << " " << param  << " " << init << " " << sym << " " << ret << "\n";
-       }
-       else if (desc.find("free,parameter") != std::string::npos) {
-         std::string freeapi,  param;
-         std::istringstream iss2(data);
-         getline(iss2, freeapi, ',');
-         getline(iss2, param, ',');
-         freeapi = ltrim(rtrim(freeapi));
-         param = ltrim(rtrim(param)); 
-         std::vector<std::string> par;
-         par.push_back(freeapi);
-         par.push_back(param);
-         APIAction *a = new APIAction(desc, par, freeAPIHandler);
-         addAction(freeapi,a);
-         llvm::outs() << " free,parameter interface " << freeapi << " " << param << "\n"; 
-       }
-       /*else if (desc.find("callback") !=  std::string::npos) {
-         std::string api, cb;
-         std::istringstream iss2(data);
-         getline(iss2, api, ',');
-         getline(iss2, cb, ',');
-         callbackAPIHandler->addCallback(ltrim(rtrim(api)), ltrim(rtrim(cb))); 
-         llvm::outs() << "callback interface " << api << " " << cb << "\n"; 
-       }
-       else if (desc.find("write") != std::string::npos) {
-          if (desc.find("write,source,dest") != std::string::npos) {
-             std::string writer, source, dest;
-             std::istringstream iss2(data);
-             getline(iss2, writer, ',');
-             getline(iss2, source, ',');
-             getline(iss2, dest, ',');
-             readWriteAPIHandler->addWrite(ltrim(rtrim(writer)), std::stoi(ltrim(rtrim(source))),
-                      std::stoi(ltrim(rtrim(dest))));
+          read(iss2, par);
+          APIAction *a = NULL;
+          if (desc.find("side-effect") != std::string::npos) {
+             if (par.size() == 1)
+                par.insert(par.begin(), mainapi);
+             a = new APIAction(desc,par,sideEffectAPIHandler);
+             llvm::outs() << "registering sideeffect expr "; a->print();
+             assert(par.size() == 2 && "Incorrect number of params for side-effect spec!");
           }
-          else readWriteAPIHandler->addWrite(ltrim(rtrim(data)));
-       }
-       else if (desc.find("read") != std::string::npos) {
-         readWriteAPIHandler->addRead(ltrim(rtrim(data)));
-       }*/
-       else if (desc.find("ignore") != std::string::npos) {
-         data = ltrim(rtrim(data));
-         std::vector<std::string> par;
-         par.push_back(data);
-         APIAction *a = new APIAction(desc,par,ignoreAPIHandler);
-         addAction(data,a);
+          else if (desc.find("alloc,parameter,initzero,symbolic,return") != std::string::npos) {
+             if (par.size() == 4)
+                par.insert(par.begin(), mainapi); 
+             a = new APIAction(desc,par,allocAPIHandler);
+             llvm::outs() << " alloc,parameter,initzero,sym interface "; a->print();
+             assert(par.size() == 5 && "Incorrect number of params for alloc spec!"); 
+          }
+          else if (desc.find("free,parameter") != std::string::npos) {
+             if (par.size() == 1)
+                par.insert(par.begin(), mainapi); 
+             a = new APIAction(desc, par, freeAPIHandler);
+             llvm::outs() << " free,parameter interface "; a->print(); 
+             assert(par.size() == 2 && "Incorrect number of params for free spec!");
+          }
+          else if (desc.find("refcount,op,expr,value,onzerocb") != std::string::npos) {
+             if (par.size() == 4)
+                par.insert(par.begin(), mainapi); 
+             a = new APIAction(desc, par, refcountAPIHandler);
+             llvm::outs() << " refcount,op,expr,value,onzerocb interface "; a->print();
+             assert(par.size() == 5 && "Incorrect number of params for refcount spec!");
+          }
+          else if (desc.find("callback") !=  std::string::npos) {
+             if (par.size() == 1)
+                par.insert(par.begin(), mainapi); 
+             a = new APIAction(desc, par, callbackAPIHandler); 
+             llvm::outs() << "callback interface "; a->print();
+             assert(par.size() == 2 && "Incorrect number of params for callback spec!");
+          }
+          else if (desc.find("ignore") != std::string::npos) {
+             if (par.size() == 0)
+                par.insert(par.begin(), mainapi); 
+             a = new APIAction(desc,par,ignoreAPIHandler);
+             llvm::outs() << "ignore interface "; a->print();
+             assert(par.size() == 1 && "Incorrect number of params for ignore spec!");
+          }
+          if (apiblock) {
+             if (a)
+                apiblock->addNextAction(a, rcond);
+          }
+          else {
+             if (a)
+                addAction(par[0],a);
+          }
        }
      }
      llvm::outs() << "Parsed Prog Model Spec \n";      
@@ -1808,17 +1819,6 @@ APIAction::APIAction(std::string desc, std::vector<std::string> param, APIHandle
    this->param = param;
    this->handler = handler;
    returnCondition = retCond;
-   condition = NONE;
-}
-
-APIAction::APIAction(std::string desc, std::vector<std::string> param, Cond condition, std::vector<std::string> conditionArg,
-                APIHandler *handler, RetCond retCond) {
-   this->desc = desc;
-   this->param = param;
-   this->handler = handler;
-   this->condition = condition;
-   this->conditionArg = conditionArg;
-   returnCondition = retCond;
 }
 
 std::vector<std::string> APIAction::getParams() {
@@ -1827,6 +1827,10 @@ std::vector<std::string> APIAction::getParams() {
 
 RetCond APIAction::getReturnCond() {
    return returnCondition;
+}
+
+void APIAction::setReturnCond(RetCond rt) {
+  returnCondition = rt;
 }
        
 bool APIAction::assignsRetValue() {
@@ -1837,9 +1841,6 @@ bool APIAction::setsArgs() {
    return handler->setsArgs();
 }
 
-void  APIAction::addChainAction(APIAction *action) {
-   chain.push_back(action);
-}
 
 void APIAction::execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid) {
   handler->interpret(*this, state, arguments, target, tid);
@@ -1854,9 +1855,11 @@ void APIAction::print() {
 }
 
 APIBlock::APIBlock() : APIAction() {
+  returnCondition = TRUE;
 }
 
-void APIBlock::addNextAction(APIAction *action) {
+void APIBlock::addNextAction(APIAction *action, RetCond rcond) {
+   action->setReturnCond(rcond);
    body.push_back(action);
 }
 

@@ -1025,5 +1025,15 @@ int ExecutionState::setPreemptable(int tid, bool value) {
   else return -1;
 } 
 
+void ExecutionState::setRefCount(ref<Expr> addr,int value) {
+   refCountModel[addr] = value; 
+}
+
+int ExecutionState::getRefCount(ref<Expr> addr) {
+   if (refCountModel.find(addr) == refCountModel.end())
+      refCountModel[addr] = 0;
+   return refCountModel[addr];
+}
+
 /* SYSREL */
 
