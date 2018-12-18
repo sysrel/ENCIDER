@@ -179,6 +179,8 @@ public:
   std::map<ref<Expr>, ref<Expr> > assocModel; 
   std::map<std::string, long int> returnValueModel;
   std::map<ref<Expr>, int> refCountModel;
+  std::map<std::string, ref<Expr> > symbolDefs;
+  std::map<std::string, llvm::Type *> symbolTypes;
   std::map<llvm::Type*, ref<Expr> > typeToAddr;
   bool hasLCM();
   int getLCMState();
@@ -194,6 +196,10 @@ public:
   void printPC();
   int getID();
   bool lcmCompletesWith(std::string);
+  void addSymbolDef(std::string, ref<Expr>);
+  ref<Expr> getSymbolDef(std::string);
+  void addSymbolType(std::string, llvm::Type*);
+  llvm::Type *getSymbolType(std::string);  
   std::map<llvm::Type *, MemoryObject *> lazyInitSingleInstances;
   /* SYSREL extension begin */
 private:

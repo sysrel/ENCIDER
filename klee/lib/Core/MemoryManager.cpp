@@ -36,6 +36,7 @@ extern std::map<llvm::Type*, std::set<llvm::Type*> >  embeddingTypes;
 extern std::string getTypeName(llvm::Type*);
 extern bool isEmbeddedType(llvm::Type *t);
 extern Interpreter *theInterpreter;
+extern bool isAllocTypeLazyInit(llvm::Type *t, bool &single, int &count) ;
 /* SYSREL EXTENSION */
 
 namespace {
@@ -299,7 +300,10 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            llvm::StructType *set = dyn_cast<llvm::StructType>(et);
            assert(set);
            ref<Expr> sub;
-           const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, isSingle, count, rallocType, sub, sym);
+           int etcount = 1;
+           bool etisSingle;
+           bool ilz = isAllocTypeLazyInit(et, etisSingle, etcount);
+           const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, etisSingle, etcount, rallocType, sub, sym);
            if (mo) {
               const llvm::DataLayout &dl = moduleHandle->getDataLayout();
               const llvm::StructLayout *sl =  dl.getStructLayout(set);

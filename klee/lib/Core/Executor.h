@@ -503,6 +503,7 @@ private:
     return state.threads[tid].stack.back().locals[kf->getArgRegister(index)];
   }
   /* SYSREL extension */
+  public:
   Cell& getDestCell(ExecutionState &state,
                     KInstruction *target) {
     return state.stack.back().locals[target->dest];
@@ -514,7 +515,6 @@ private:
     return state.threads[tid].stack.back().locals[target->dest];
   }
   /* SYSREL extension */
-  public:
   void bindLocal(KInstruction *target, 
                  ExecutionState &state, 
                  ref<Expr> value);

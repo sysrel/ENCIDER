@@ -35,6 +35,7 @@ namespace klee {
   class FreeAPIHandler;
   class IgnoreAPIHandler;
   class SideEffectAPIHandler;
+  class TerminateAPIHandler;
   class CallbackAPIHandler;
   class RefcountAPIHandler;
   class APIAction;
@@ -51,9 +52,12 @@ namespace klee {
                      std::vector< ref<Expr> > &arguments, std::string expr, KInstruction *target, bool address);
     void executeCallback(ExecutionState &state, std::string cbexpr, std::vector< ref<Expr> > &arguments, 
          KInstruction *target, int tid=-1) ;
-
+    static std::map<std::string, APIAction*> symbolTable;
     public:
      static void addAction(std::string, APIAction *action);
+     static void addSubblock(std::string, APIAction *action);
+     static APIAction* lookup(std::string);
+     static TerminateAPIHandler* terminateAPIHandler;
      static SideEffectAPIHandler *sideEffectAPIHandler;
      static  std::map<std::string, std::set<APIAction*>> apiModel;
      static IgnoreAPIHandler *ignoreAPIHandler;
@@ -66,7 +70,7 @@ namespace klee {
                                std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);
      APIHandler();
      virtual bool interpret(APIAction &action, ExecutionState &state, 
-        std::vector< ref<Expr> > &arguments, KInstruction *target,int tid);
+        std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term,  int tid);
      virtual bool assignsRetValue(APIAction &action);
      bool setsArgs();
   };
@@ -81,16 +85,20 @@ namespace klee {
        std::vector<std::string> param;
        APIHandler *handler;
        RetCond returnCondition;
+       bool terminated;
     public:
        APIAction();
        APIAction(std::string desc, std::vector<std::string> param, APIHandler *handler, RetCond retCond=TRUE);
+       bool hasTerminated();
+       void terminate();
        std::vector<std::string> getParams();
        RetCond getReturnCond();
        void setReturnCond(RetCond rt);
        virtual bool assignsRetValue();
        virtual bool setsArgs();
        void addChainAction(APIAction *action);
-       virtual void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid = -1);
+       virtual void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target, bool &term, int tid = -1);
        virtual void print();
   };
 
@@ -103,7 +111,8 @@ namespace klee {
        void addNextAction(APIAction *action, RetCond rc=TRUE);
        virtual bool assignsRetValue();
        virtual bool setsArgs();       
-       virtual void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid = -1);  
+       virtual void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target, bool &term, int tid = -1);  
        virtual void print();
   };
 
@@ -129,7 +138,7 @@ namespace klee {
     public:      
      RefCountAPIHandler();
      virtual bool interpret(APIAction &action,ExecutionState &state,  
-          std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);      
+          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, int tid=-1);      
      virtual bool assignsRetValue();
 
   };
@@ -154,13 +163,13 @@ namespace klee {
   class ResourceAllocReleaseAPIHandler : public APIHandler {
    public:
       ResourceAllocReleaseAPIHandler();
-      bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, int tid=-1); 
+      bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, bool &term, int tid=-1); 
   };
 
   class SetGetAPIHandler : public APIHandler {
    public:
      SetGetAPIHandler();
-     bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);
+     bool interpret(APIAction &action,ExecutionState &state, std::string fname, std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, int tid=-1);
   };   
 */
 
@@ -168,7 +177,7 @@ namespace klee {
     public:
       AllocAPIHandler();
       virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-                   KInstruction *target, int tid=-1);     
+                   KInstruction *target, bool &term, int tid=-1);     
       virtual bool assignsRetValue(APIAction &action);
   
    };
@@ -177,7 +186,7 @@ namespace klee {
     public:
       FreeAPIHandler();
       virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-                   KInstruction *target, int tid=-1);       
+                   KInstruction *target, bool &term, int tid=-1);       
       virtual bool assignsRetValue(APIAction &action);
   
    };
@@ -204,7 +213,7 @@ namespace klee {
     public:
      IgnoreAPIHandler();
      virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-                              KInstruction *target, int tid=-1); 
+                              KInstruction *target, bool &term, int tid=-1); 
      virtual bool assignsRetValue(APIAction &action);
    };
 
@@ -212,7 +221,8 @@ namespace klee {
    class CallbackAPIHandler : public APIHandler {
     public:
      CallbackAPIHandler();
-     virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);              
+     virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+                             KInstruction *target, bool &term, int tid=-1);              
      virtual bool assignsRetValue(APIAction &action); 
    };
    
@@ -221,9 +231,17 @@ namespace klee {
      public:
       SideEffectAPIHandler(); 
       virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-                                KInstruction *target, int tid=-1);         
+                                KInstruction *target, bool &term, int tid=-1);         
       virtual bool assignsRetValue(APIAction &action);
      
+   };
+
+   class TerminateAPIHandler : public APIHandler {
+    public:
+     TerminateAPIHandler();
+     virtual bool interpret(APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+                                KInstruction *target, bool &term, int tid=-1);         
+     virtual bool assignsRetValue(APIAction &action);
    };
 
   /* SYSREL EXTENSION */ 

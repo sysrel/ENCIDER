@@ -18,6 +18,7 @@
 
 #include "Memory.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -204,6 +205,8 @@ ExecutionState::ExecutionState(const ExecutionState& state):
   if (LifeCycleModelState::lcm)
     lcmState = new LifeCycleModelState(*state.lcmState);
   typeToAddr = state.typeToAddr;
+  refCountModel = state.refCountModel;
+  symbolDefs = state.symbolDefs;
   lazyInitSingleInstances = state.lazyInitSingleInstances;
   /* SYSREL */ 
 }
@@ -1034,6 +1037,27 @@ int ExecutionState::getRefCount(ref<Expr> addr) {
       refCountModel[addr] = 0;
    return refCountModel[addr];
 }
+
+void ExecutionState::addSymbolDef(std::string sym, ref<Expr> value) {
+  symbolDefs[sym] = value;
+}
+ 
+ref<Expr> ExecutionState::getSymbolDef(std::string sym) {
+  if (symbolDefs.find(sym) != symbolDefs.end())
+     return symbolDefs[sym];
+  return NULL;
+}
+
+void ExecutionState::addSymbolType(std::string sym, llvm::Type *t) {
+  symbolTypes[sym] = t;
+}
+ 
+llvm::Type *ExecutionState::getSymbolType(std::string sym) {
+  if (symbolTypes.find(sym) != symbolTypes.end())
+     return symbolTypes[sym];
+  return NULL;
+}
+
 
 /* SYSREL */
 

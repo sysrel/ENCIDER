@@ -3810,7 +3810,9 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    ObjectState *sos = bindObjectInState(state, sm, true, array);
                    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
-                   wos->write(ConstantExpr::alloc(0, Expr::Int64), result);
+                   // compute offset: base - op.first->getBaseExpr() 
+                   ref<Expr> offsetexpr = SubExpr::create(base, op.first->getBaseExpr());
+                   wos->write(offsetexpr, result);
                    llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n"; 
                }
                else llvm::outs() << "Couldn't resolve address during lazy init arg: " << base << " for function " << function->getName() << "\n";
@@ -3837,14 +3839,20 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
     ref<Expr> laddr;
     llvm::Type *rType;
     bool mksym; 
-    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), function->getReturnType(),  
+    llvm::Type *retType = function->getReturnType();
+    llvm::Type *allocType = retType;
+    if (retType->isPointerTy())
+       allocType = retType->getPointerElementType();
+    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, allocType, allocType,  
           isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
-    //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1, laddr);
     mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
     if (mksym)
        executeMakeSymbolic(state, mo, mo->name);
-    executeMemoryOperation(state, false, laddr, 0, target);
+    if (allocType == retType)
+       executeMemoryOperation(state, false, laddr, 0, target);
+    else 
+       bindLocal(target, state, laddr);
     return mo;
 }
 
