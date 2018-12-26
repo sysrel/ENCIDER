@@ -87,6 +87,7 @@ std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
 bool progModel = false;
 APIHandler *apiHandler = NULL;
+std::map<std::string, std::vector<std::string> > inferenceClue;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -114,7 +115,24 @@ inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
     return s;
 }
 
-
+void readInferenceClue(const char *fname) {
+   std::fstream rc(fname, std::fstream::in);
+   if (rc.is_open()) {
+      std::string line;
+      while(std::getline(rc,line)) {
+          std::string  embeddedType, embeddingType;
+          std::istringstream iss(line);
+          getline(iss, embeddedType, ',');
+          getline(iss, embeddingType);
+          std::vector<std::string> inf;
+          if (inferenceClue.find(embeddedType) != inferenceClue.end())
+             inf = inferenceClue[embeddedType];
+          inf.push_back(embeddingType);
+          inferenceClue[embeddedType] = inf;
+      } 
+   }
+   else llvm::errs() << "Couldn't open file " << fname << "\n";
+}
 /* end SYSREL extension */
 
 namespace {
@@ -148,6 +166,10 @@ namespace {
 
   cl::opt<std::string>
   ProgModelSpec("prog-model-spec", cl::desc("Programming Model Spec File, enables related checks and enforcements\n"));
+
+  cl::opt<std::string>
+  InferenceClue("infer-clue-spec", cl::desc("Inference Clue Spec File, embedded type and embedding type pairs\n"));
+
   /* SYSREL extension */
 
   cl::opt<std::string>
@@ -1703,6 +1725,9 @@ int main(int argc, char **argv, char **envp) {
      llvm::outs() << "lazy single spec file? " << LazySingle.c_str() << "\n";
      if (LazySingle.c_str())
         readLazySingles(LazySingle.c_str()); 
+
+     if (InferenceClue.c_str())
+        readInferenceClue(InferenceClue.c_str());
   }
 
   if (ProgModelSpec.c_str()) {

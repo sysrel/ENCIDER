@@ -37,6 +37,7 @@ extern std::string getTypeName(llvm::Type*);
 extern bool isEmbeddedType(llvm::Type *t);
 extern Interpreter *theInterpreter;
 extern bool isAllocTypeLazyInit(llvm::Type *t, bool &single, int &count) ;
+extern std::map<std::string, std::vector<std::string> > inferenceClue;
 /* SYSREL EXTENSION */
 
 namespace {
@@ -265,6 +266,17 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
 
  }
 
+bool isAnInferenceClue(std::string embeddedType, std::string embeddingType) {
+   if (inferenceClue.find(embeddedType) != inferenceClue.end()) {
+      std::vector<std::string> inf = inferenceClue[embeddedType];
+      for(int i=0; i<inf.size(); i++)
+         if (inf[i] == embeddingType)
+            return true;
+      return false;
+   }
+   return false;
+}
+
 // in the very first call allocType is the same as origType
 // if origType is an embeddedType and the corresponding object does not exist yet, 
 // recursive calls with the embedding type as the allocType is made 
@@ -328,10 +340,12 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
      std::string hintS(hint);
      for(auto et : embset) {
            std::string es2 = getTypeName(et);
-           if (hint != "" && es1.find("struct.device") != std::string::npos && es2.find(hintS) == std::string::npos)
+           if (inferenceClue.find(es1) != inferenceClue.end() && !isAnInferenceClue(es1, es2))
+              continue;
+           /*if (hint != "" && es1.find("struct.device") != std::string::npos && es2.find(hintS) == std::string::npos)
               continue;
            else if (hint == "" && es1.find("struct.device") != std::string::npos && es2.find("struct.usb_device") == std::string::npos)
-              continue;                   
+              continue;*/                   
            llvm::StructType *set = dyn_cast<llvm::StructType>(et);
            assert(set);
            ref<Expr> sub;
