@@ -53,7 +53,7 @@ public:
   MemoryObject *simulateMalloc(ExecutionState &state, ref<Expr> size);
   MemoryObject *allocateForLazyInit(ExecutionState &state, llvm::Instruction *inst, llvm::Type *t, bool isSingle, int count);
   const MemoryObject *allocateLazyForTypeOrEmbedding(ExecutionState &state, llvm::Instruction *inst, 
-         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym) ;
+         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym,const char *hint ="") ;
   const MemoryObject *allocateLazyForTypeOrEmbeddingSimple(ExecutionState &state, llvm::Instruction *inst, 
          llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym) ;
   MemoryObject *getInstanceForType(ExecutionState &state, llvm::Type *t);

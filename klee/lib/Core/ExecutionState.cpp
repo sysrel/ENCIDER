@@ -206,6 +206,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     lcmState = new LifeCycleModelState(*state.lcmState);
   typeToAddr = state.typeToAddr;
   refCountModel = state.refCountModel;
+  refCountStack = state.refCountStack;
   symbolDefs = state.symbolDefs;
   lazyInitSingleInstances = state.lazyInitSingleInstances;
   /* SYSREL */ 
@@ -481,6 +482,14 @@ void ExecutionState::dumpStack(llvm::raw_ostream &out) const {
     out << "\n";
     target = sf.caller;
   }
+
+  /* SYSREL extension */
+  for(auto refrec : refCountStack) {
+     out << "refcount history of " << refrec.first << "\n";
+     for(int i=0; i<refrec.second.size(); i++)
+        out << refrec.second[i] << "\n";
+  }
+  /* SYSREL extension */
 }
 
 
@@ -1058,6 +1067,40 @@ llvm::Type *ExecutionState::getSymbolType(std::string sym) {
   return NULL;
 }
 
+void ExecutionState::recordAlloc(ref<Expr> address) {
+  alloced.insert(address);
+}
+
+void ExecutionState::recordFree(ref<Expr> address) {
+  freed.insert(address);
+}
+
+void ExecutionState::check() {
+   for(auto rfm : refCountModel) {
+      if (rfm.second > 0)
+         llvm::errs() << "Positive refcount for " << rfm.first << ":" << rfm.second << "\n";
+      else if (rfm.second < 0)
+         llvm::errs() << "Negative refcount for " << rfm.first << ":" << rfm.second << "\n";
+      else 
+         llvm::errs() << "Zero refcount for " << rfm.first << ":" << rfm.second << "\n";
+   }
+ 
+   llvm::errs() << "Memory leaks:\n";
+   for(auto al : alloced) {
+      if (freed.find(al) == freed.end())
+         llvm::errs() << al << "\n";
+   } 
+   llvm::errs() << "Memory leaks end:\n";
+  
+}
+
+void ExecutionState::recordRefcountOp(ref<Expr> addr, std::string record) {
+  std::vector<std::string> stack;
+  if (refCountStack.find(addr) != refCountStack.end())
+     stack = refCountStack[addr];
+  stack.push_back(record);
+  refCountStack[addr] = stack;
+}
 
 /* SYSREL */
 

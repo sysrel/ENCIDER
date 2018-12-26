@@ -82,7 +82,7 @@ std::string entryFunctionName;
 bool lazyInit = false;
 bool lazySpec = false;
 int numLazyInst = 20;
-std::set<std::string> lazyInits;
+std::vector<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
 bool progModel = false;
@@ -1034,7 +1034,8 @@ void readFrameworkDts(const char *name) {
      while(std::getline(cf,line)) { 
        std::istringstream iss(line);
        getline(iss, dts, ',');
-       lazyInits.insert(dts);
+       //lazyInits.insert(dts);
+       lazyInits.push_back(dts);
        getline(iss, counts, ',');
        count = atoi(counts.c_str());
        lazyInitNumInstances[dts] = count;

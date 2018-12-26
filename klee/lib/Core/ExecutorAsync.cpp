@@ -111,7 +111,7 @@ extern std::string getAsyncFunction(std::string fn);
 extern bool lazyInit;
 extern bool lazySpec;
 extern int numLazyInst;
-extern std::set<std::string> lazyInits;
+extern std::vector<std::string> lazyInits;
 extern std::set<std::string> lazyInitSingles;
 extern std::map<std::string, int> lazyInitNumInstances;
 
@@ -1354,7 +1354,7 @@ void Executor::executeInstructionThread(ExecutionState &state, KInstruction *ki,
       count = Expr::createZExtToPointerWidth(count);
       size = MulExpr::create(size, count);
     }
-    executeAllocThread(state, size, true, ki, false, 0, tid);
+    executeAllocThread(state, size, true, ki, tid);
     break;
   }
 
@@ -2329,8 +2329,10 @@ void Executor::executeAllocThread(ExecutionState &state,
                             ref<Expr> size,
                             bool isLocal,
                             KInstruction *target,
+                            int tid,
                             bool zeroMemory,
-                            const ObjectState *reallocFrom, int tid) {
+                            bool record,
+                            const ObjectState *reallocFrom) {
 
   llvm::outs() << "tid=" << tid << "\n";
   size = toUnique(state, size);
@@ -2342,6 +2344,10 @@ void Executor::executeAllocThread(ExecutionState &state,
                          allocSite, allocationAlignment);
 
     /* SYSREL extension */
+ 
+   if  (record)
+       state.recordAlloc(mo->getBaseExpr());
+
    if (lazyInit) {
     Type *t = target->inst->getType();
     if (t->isPointerTy()) {
@@ -2425,7 +2431,7 @@ void Executor::executeAllocThread(ExecutionState &state,
       (void) success;
       if (res) {
         executeAllocThread(*fixedSize.second, tmp, isLocal,
-                     target, zeroMemory, reallocFrom, tid);
+                     target, tid, zeroMemory, record, reallocFrom);
       } else {
         // See if a *really* big value is possible. If so assume
         // malloc will fail for it, so lets fork and return 0.
@@ -2454,7 +2460,7 @@ void Executor::executeAllocThread(ExecutionState &state,
 
     if (fixedSize.first) // can be zero when fork fails
       executeAllocThread(*fixedSize.first, example, isLocal, 
-                   target, zeroMemory, reallocFrom, tid);
+                   target, tid, zeroMemory, record, reallocFrom);
   }
 }
 
@@ -2469,7 +2475,12 @@ void Executor::executeFreeThread(ExecutionState &state,
   if (zeroPointer.second) { // address != 0
     ExactResolutionList rl;
     resolveExactThread(*zeroPointer.second, address, rl, "free", tid);
+
+    /* SYSREL extension */
+    state.recordFree(address);
+    /* SYSREL extension */
     
+
     for (Executor::ExactResolutionList::iterator it = rl.begin(), 
            ie = rl.end(); it != ie; ++it) {
       const MemoryObject *mo = it->first.first;

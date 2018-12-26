@@ -113,7 +113,10 @@ public:
     ReadOnly,
     ReportError,
     User,
-    Unhandled
+    Unhandled,
+    /* SYSREL extension */
+    NegativeRefcount
+   /* SYSREL extension */
   };
 public:
   KModule *kmodule;
@@ -300,7 +303,7 @@ private:
 
   public:
   /* SYSREL extension */
-  void initArgsAsSymbolic(ExecutionState &state, llvm::Function *f); 
+  void initArgsAsSymbolic(ExecutionState &state, llvm::Function *f, bool nosym=false); 
   /* SYSREL extension */
 
   private:
@@ -400,14 +403,17 @@ private:
                     bool isLocal,
                     KInstruction *target,
                     bool zeroMemory=false,
+                    bool record = false,
                     const ObjectState *reallocFrom=0);
   /* SYSREL extension */
   void executeAllocThread(ExecutionState &state,
                             ref<Expr> size,
                             bool isLocal,
                             KInstruction *target,
-                            bool zeroMemory,
-				    const ObjectState *reallocFrom, int tid);
+                            int tid,
+                            bool zeroMemory=false,
+                            bool record=false,
+				    const ObjectState *reallocFrom=0);
   /* SYSREL extension */
   /// Free the given address with checking for errors. If target is
   /// given it will be bound to 0 in the resulting states (this is a
@@ -597,6 +603,7 @@ private:
   /* SYSREL extension */
   void terminateStateOnExitThread(ExecutionState &state, int tid);
   /* SYSREL extension */
+public:
   // call error handler and terminate state
   void terminateStateOnError(ExecutionState &state, const llvm::Twine &message,
                              enum TerminateReason termReason,

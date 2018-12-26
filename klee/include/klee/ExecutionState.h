@@ -179,6 +179,7 @@ public:
   std::map<ref<Expr>, ref<Expr> > assocModel; 
   std::map<std::string, long int> returnValueModel;
   std::map<ref<Expr>, int> refCountModel;
+  std::map<ref<Expr>, std::vector<std::string> > refCountStack;
   std::map<std::string, ref<Expr> > symbolDefs;
   std::map<std::string, llvm::Type *> symbolTypes;
   std::map<llvm::Type*, ref<Expr> > typeToAddr;
@@ -199,6 +200,8 @@ public:
   void addSymbolDef(std::string, ref<Expr>);
   ref<Expr> getSymbolDef(std::string);
   void addSymbolType(std::string, llvm::Type*);
+  void recordRefcountOp(ref<Expr>, std::string);
+  void check(); 
   llvm::Type *getSymbolType(std::string);  
   std::map<llvm::Type *, MemoryObject *> lazyInitSingleInstances;
   /* SYSREL extension begin */
@@ -212,6 +215,8 @@ private:
   int id;
   bool waitingForThreadsToTerminate;
   LifeCycleModelState *lcmState;
+  std::set<ref<Expr> > alloced;
+  std::set<ref<Expr> > freed;
   /* SYSREL extension begin */
 public:
   /* SYSREL extension begin */
@@ -345,6 +350,8 @@ public:
   void dumpStack(llvm::raw_ostream &out) const;
   /* SYSREL extension */
   void dumpStackThread(llvm::raw_ostream &out) const;
+  void recordAlloc(ref<Expr>);
+  void recordFree(ref<Expr>);
   /* SYSREL extension */
 };
 }

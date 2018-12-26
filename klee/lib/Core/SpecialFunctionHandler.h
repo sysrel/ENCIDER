@@ -38,6 +38,7 @@ namespace klee {
   class TerminateAPIHandler;
   class CallbackAPIHandler;
   class RefcountAPIHandler;
+  class ReturnAPIHandler;
   class APIAction;
   class APIBlock;
 
@@ -65,9 +66,11 @@ namespace klee {
      static FreeAPIHandler *freeAPIHandler;
      static RefCountAPIHandler *refcountAPIHandler;
      static CallbackAPIHandler *callbackAPIHandler;
+     static ReturnAPIHandler *returnAPIHandler;
      static void readProgModelSpec(const char *name);
      static bool handle(ExecutionState &state, std::vector<ExecutionState*> &branches, std::string fname, 
                                std::vector< ref<Expr> > &arguments, KInstruction *target, int tid=-1);
+     static bool handles(std::string fname);
      APIHandler();
      virtual bool interpret(APIAction &action, ExecutionState &state, 
         std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term,  int tid);
@@ -133,6 +136,16 @@ namespace klee {
     
   };
   */ 
+
+  class ReturnAPIHandler : public APIHandler {
+    public:      
+     ReturnAPIHandler();
+     virtual bool interpret(APIAction &action,ExecutionState &state,  
+          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, int tid=-1);      
+     virtual bool assignsRetValue();
+
+  };
+
 
   class RefCountAPIHandler : public APIHandler {
     public:      

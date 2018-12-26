@@ -221,7 +221,23 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
            ((Executor*)theInterpreter)->solver->setTimeout(0);             
            if (asuccess) {      
               rallocType = allocType;
-              resaddr = op.first->getBaseExpr();
+              if (origType == allocType) 
+                 resaddr = state.typeToAddr[allocType];  
+              else {
+                llvm::StructType *set = dyn_cast<llvm::StructType>(allocType);
+                assert(set);
+                const llvm::DataLayout &dl = moduleHandle->getDataLayout();
+                const llvm::StructLayout *sl =  dl.getStructLayout(set);
+                unsigned i = 0;
+                for(; i< set->getNumElements(); i++) {                   
+                    if (set->getElementType(i) == origType) {
+                       llvm::outs() << "matched element " << i << " to type " << getTypeName(origType) << "\n";
+                        break;
+                    }
+                }
+                assert(i >=0  && i < set->getNumElements());
+                resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), op.first->getBaseExpr());
+              }
               llvm::outs() << "returning address " << op.first->getBaseExpr() << " as embedded type ancestor instance " << rso.str() << "\n"; 
               sym = false;
               return op.first;
@@ -254,7 +270,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
 // recursive calls with the embedding type as the allocType is made 
 const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState &state, llvm::Instruction *inst, 
          llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, 
-         ref<Expr> &resaddr, bool &sym) {
+         ref<Expr> &resaddr, bool &sym, const char * hint) {
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   allocType->print(rso); 
@@ -268,7 +284,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            return state.lazyInitSingleInstances[allocType];
         }
         if (isEmbeddedType(origType) && state.typeToAddr.find(allocType) != state.typeToAddr.end()) {
-           bool asuccess;
+            bool asuccess;
            ObjectPair op;
            ((Executor*)theInterpreter)->solver->setTimeout(((Executor*)theInterpreter)->coreSolverTimeout);
            if (!state.addressSpace.resolveOne(state, ((Executor*)theInterpreter)->solver, state.typeToAddr[allocType], op, asuccess)) {
@@ -278,7 +294,23 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            ((Executor*)theInterpreter)->solver->setTimeout(0);             
            if (asuccess) {      
               rallocType = allocType;
-              resaddr = op.first->getBaseExpr();
+              if (origType == allocType) 
+                 resaddr = state.typeToAddr[allocType];  
+              else {
+                llvm::StructType *set = dyn_cast<llvm::StructType>(allocType);
+                assert(set);
+                const llvm::DataLayout &dl = moduleHandle->getDataLayout();
+                const llvm::StructLayout *sl =  dl.getStructLayout(set);
+                unsigned i = 0;
+                for(; i< set->getNumElements(); i++) {                   
+                    if (set->getElementType(i) == origType) {
+                       llvm::outs() << "matched element " << i << " to type " << getTypeName(origType) << "\n";
+                        break;
+                    }
+                }
+                assert(i >=0  && i < set->getNumElements());
+                resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), op.first->getBaseExpr());
+              }
               llvm::outs() << "returning address " << op.first->getBaseExpr() << " as embedded type ancestor instance " << rso.str() << "\n"; 
               sym = false;
               return op.first;
@@ -293,9 +325,12 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            llvm::errs() << "Warning: Single instance embedded type has multiple embedders!\n";
      }
      std::string es1 = getTypeName(allocType);
+     std::string hintS(hint);
      for(auto et : embset) {
            std::string es2 = getTypeName(et);
-           if (es1.find("struct.device") != std::string::npos && es2.find("struct.usb_device") == std::string::npos)
+           if (hint != "" && es1.find("struct.device") != std::string::npos && es2.find(hintS) == std::string::npos)
+              continue;
+           else if (hint == "" && es1.find("struct.device") != std::string::npos && es2.find("struct.usb_device") == std::string::npos)
               continue;                   
            llvm::StructType *set = dyn_cast<llvm::StructType>(et);
            assert(set);
@@ -303,6 +338,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            int etcount = 1;
            bool etisSingle;
            bool ilz = isAllocTypeLazyInit(et, etisSingle, etcount);
+           llvm::outs() << "Chose embedded type " << es2 << " etcount= " << etcount << "\n";      
            const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, etisSingle, etcount, rallocType, sub, sym);
            if (mo) {
               const llvm::DataLayout &dl = moduleHandle->getDataLayout();
@@ -315,7 +351,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
                  }
               }
               assert(i >=0  && i < set->getNumElements());
-              resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), sub);
+              resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), mo->getBaseExpr());
               llvm::outs() << "instance for embedded type found at " << resaddr << " after adding offset " 
                            << sl->getElementOffset(i) << " for element " << i << " to addr " << mo->getBaseExpr() << "\n";
               return mo;
@@ -484,6 +520,7 @@ MemoryObject *MemoryManager::allocate(uint64_t size, bool isLocal,
                                        allocSite, this);
 
   llvm::outs() << "Allocated object of size " << size << " at address " << address << "\n";
+  llvm::outs() << "Basexpr=" << res->getBaseExpr() << "\n";
 
   objects.insert(res);
   return res;

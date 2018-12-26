@@ -144,7 +144,7 @@ bool isAssemblyFunc(std::string name) {
 extern bool lazyInit;
 extern bool lazySpec;
 extern int numLazyInst;
-extern std::vector<std::string> lazyInits;
+extern std::set<std::string> lazyInits;
 extern std::set<std::string> lazyInitSingles;
 extern std::map<std::string, int> lazyInitNumInstances;
 //std::set<std::string> embeddedTypes;
@@ -219,7 +219,6 @@ bool isLazySingle(std::string typestr, std::string pointertype="**") {
 
 
 bool isLazyInit(Type *t, bool &single, int &count) {
-  int origvalue = count;
   std::string pointertype = "**"; 
   count = 0;
   std::string type_str;
@@ -228,27 +227,18 @@ bool isLazyInit(Type *t, bool &single, int &count) {
   std::istringstream iss(rso.str());
   std::string typestr;
   getline(iss, typestr, ' ');
-  /*for(auto el : lazyInits) 
+  for(auto el : lazyInits) 
      if (typestr.find(el+pointertype) != std::string::npos) {
         count = lazyInitNumInstances[el];
         single = isLazySingle(typestr);
         return true;
      }
-  */
-  for(int i=0; i<lazyInits.size(); i++) 
-     if (typestr.find(lazyInits[i]+pointertype) != std::string::npos) {
-        count = lazyInitNumInstances[lazyInits[i]];
-        single = isLazySingle(typestr);
-        return true;
-     }
-  count = origvalue;
   single = false;
   return false;
 }
 
 bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
   //std::string pointertype = "*"; 
-  int origvalue = count;
   count = 0;
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
@@ -256,27 +246,18 @@ bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
   std::istringstream iss(rso.str());
   std::string typestr;
   getline(iss, typestr, ' ');
-  /*for(auto el : lazyInits) {
-     llvm::outs() << typestr << " vs " << el <<"\n";
+  for(auto el : lazyInits) {
      if (typestr.find(el) != std::string::npos) {
         count = lazyInitNumInstances[el];
         single = isLazySingle(typestr); 
         return true;
      }
-  }*/
-  for(int i=0; i<lazyInits.size(); i++) {
-     if (typestr.find(lazyInits[i]) != std::string::npos) {
-        count = lazyInitNumInstances[lazyInits[i]];
-        single = isLazySingle(typestr); 
-        return true;
-     }
   }
-  count = origvalue;
   single = false;
   return false;
 }
 
-void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, std::set<std::string> &visited) {
+void collectEmbeddedPointerTypes(Type *t, std::set<std::string> &lazyTypes, std::set<std::string> &visited) {
 
      bool pointerType = false;
      if (t->isPointerTy()) {
@@ -297,8 +278,7 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
         if (visited.find(ltypename) == visited.end()) {
            visited.insert(ltypename);
            if (pointerType) {
-              //lazyTypes.insert(ltypename);
-              lazyTypes.push_back(ltypename);
+              lazyTypes.insert(ltypename);
               lazyInitNumInstances[ltypename] = numLazyInst;
               //llvm::outs() << "lazy type: " << ltypename << " extracted\n";
            }
@@ -310,8 +290,7 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
      else if (t->getPrimitiveSizeInBits()) {
         if (pointerType) {
            //llvm::outs() << "lazy type: " << rso.str() << " extracted\n";
-           //lazyTypes.insert(rso.str());
-           lazyTypes.push_back(rso.str());
+           lazyTypes.insert(rso.str());
            lazyInitNumInstances[rso.str()] = numLazyInst;
         }
      }
@@ -546,7 +525,6 @@ const char *Executor::TerminateReasonNames[] = {
   [ ReportError ] = "reporterror",
   [ User ] = "user",
   [ Unhandled ] = "xxx",
-  [ NegativeRefcount ] = "negrefcount",
 };
 
 /* SYSREL extension */
@@ -2135,8 +2113,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       break;
 
     if (isa<InlineAsm>(fp)) {
-       terminateStateOnExecError(state, "inline assembly is unsupported");
-       break;
+      terminateStateOnExecError(state, "inline assembly is unsupported");
+      break;
     }
     // evaluate arguments
     std::vector< ref<Expr> > arguments;
@@ -2594,9 +2572,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           if (st) {
              std::string tname = getTypeName(t); 
              state.typeToAddr[t] = result;
-                         
-
-             llvm::outs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
+             llvm::outs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << "\n";
           }
        }
     } 
@@ -3340,12 +3316,6 @@ void Executor::continueState(ExecutionState &state){
 }
 
 void Executor::terminateState(ExecutionState &state) {
-  /* SYSREL extension */
-  llvm::errs() << "Checking the state at the end of path\n"; 
-  state.check();
-  /* SYSREL extension */
-
-
   if (replayKTest && replayPosition!=replayKTest->numObjects) {
     klee_warning_once(replayKTest,
                       "replay did not consume all objects in test input.");
@@ -3623,14 +3593,9 @@ void Executor::callExternalFunction(ExecutionState &state,
       klee_warning_once(function, "%s", os.str().c_str());
   }
 
-   /* SYSREL EXTENSION */
-  bool success = false;
-  if (!APIHandler::handles(function->getName())) {
-     success = externalDispatcher->executeCall(function, target->inst, args);
+  bool success = externalDispatcher->executeCall(function, target->inst, args);
 
-  llvm::outs() << "external dispatcher result for " << function->getName() << " " << success << "\n";
- } 
- /* SYSREL EXTENSION */
+  llvm::outs() << "external dispatcher result for " << function->getName() << " " << success << "\n"; 
 
   if (!success) {
 
@@ -3947,7 +3912,6 @@ void Executor::executeAlloc(ExecutionState &state,
                             bool isLocal,
                             KInstruction *target,
                             bool zeroMemory,
-                            bool record,
                             const ObjectState *reallocFrom) {
   llvm::outs() << "Alloc'ing...\n";
   size = toUnique(state, size);
@@ -3960,10 +3924,6 @@ void Executor::executeAlloc(ExecutionState &state,
                          allocSite, allocationAlignment);
 
     /* SYSREL extension */
-
-   if (record)
-      state.recordAlloc(mo->getBaseExpr());
-
    if (lazyInit) {
     Type *t = target->inst->getType();
     if (t->isPointerTy()) {
@@ -4052,7 +4012,7 @@ void Executor::executeAlloc(ExecutionState &state,
       (void) success;
       if (res) {
         executeAlloc(*fixedSize.second, tmp, isLocal,
-                     target, zeroMemory, record, reallocFrom);
+                     target, zeroMemory, reallocFrom);
       } else {
         // See if a *really* big value is possible. If so assume
         // malloc will fail for it, so lets fork and return 0.
@@ -4068,15 +4028,6 @@ void Executor::executeAlloc(ExecutionState &state,
         
         if (hugeSize.second) {
 
-          /* SYSREL extension */
-          if (lazyInit) {
-             llvm::errs() << "concretized symbolic size as 10\n"; 
-              executeAlloc(*hugeSize.second, ConstantExpr::create(10,64), isLocal, 
-                   target, zeroMemory, record, reallocFrom);
-
-         }
-         else {
-         /* SYSREL extension */
           std::string Str;
           llvm::raw_string_ostream info(Str);
           ExprPPrinter::printOne(info, "  size expr", size);
@@ -4084,21 +4035,20 @@ void Executor::executeAlloc(ExecutionState &state,
           info << "  unbound example: " << tmp << "\n";
           terminateStateOnError(*hugeSize.second, "concretized symbolic size",
                                 Model, NULL, info.str());
-         }
         }
       }
     }
 
     if (fixedSize.first) // can be zero when fork fails
       executeAlloc(*fixedSize.first, example, isLocal, 
-                   target, zeroMemory, record, reallocFrom);
+                   target, zeroMemory, reallocFrom);
   }
 }
 
 void Executor::executeFree(ExecutionState &state,
                            ref<Expr> address,
                            KInstruction *target) {
-  llvm::errs() << "Executing free " << address << " from function " << state.prevPC->inst->getParent()->getParent()->getName() << "\n"; 
+  llvm::outs() << "Executing free " << address << " from function " << state.prevPC->inst->getParent()->getParent()->getName() << "\n"; 
 
 
   StatePair zeroPointer = fork(state, Expr::createIsZero(address), true);
@@ -4123,10 +4073,6 @@ void Executor::executeFree(ExecutionState &state,
                               getAddressInfo(*it->second, address));
       } else {
          llvm::outs() << "In free, unbinding obj at address "  << mo->getBaseExpr() << "\n";
-
-         /* SYSREL extension */
-         state.recordFree(mo->getBaseExpr());
-         /* SYSREL extension */
 
         it->second->addressSpace.unbindObject(mo);
         if (target)
@@ -4502,7 +4448,7 @@ void Executor::executeMakeSymbolic(ExecutionState &state,
 
 /* SYSREL EXTENSION */
 
-void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool nosym) {
+void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc) {
    KFunction *kf = kmodule->functionMap[entryFunc];
    unsigned int ind = 0;
    for(llvm::Function::arg_iterator ai = entryFunc->arg_begin(); ai != entryFunc->arg_end(); ai++) {
@@ -4550,9 +4496,8 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                               count, rType, laddr, mksym);
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
-              llvm::outs() << "to be made symbolic? " << mksym << "\n";
               mo->name = entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind);
-              if (!nosym && mksym)
+              if (mksym)
                  executeMakeSymbolic(state, mo, entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind)); 
               bindArgument(kf, ind, state, laddr);
               llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << laddr << 

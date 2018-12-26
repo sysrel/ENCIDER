@@ -105,6 +105,11 @@ namespace {
   UseCallPaths("use-call-paths",
 	       cl::init(true),
                cl::desc("Enable calltree tracking for instruction level statistics (default=on)"));
+
+  cl::opt<bool>
+  ScopeBasedCov("scope-based-cov",
+               cl::init(false),
+               cl::desc("Enable coverage w.r.t. the functions executed at least once"));
   
 }
 
@@ -277,6 +282,37 @@ StatsTracker::~StatsTracker() {
 }
 
 void StatsTracker::done() {
+
+  /* SYSREL extension */
+  // This code enables code and branch coverage w.r.t. to the executed functions only
+  // It adjusts the uncovered instructions and total number of branches by 
+  // subtracting those contributed by the not executed functions
+ if (ScopeBasedCov) {
+  llvm::outs() << "Num functions executed= " << visited.size() << "\n";
+  KModule *km = executor.kmodule;
+  for (std::vector<KFunction*>::iterator it = km->functions.begin(), 
+         ie = km->functions.end(); it != ie; ++it) {
+    KFunction *kf = *it;
+
+   if (visited.find(kf->function) == visited.end()) {
+      
+    for (unsigned i=0; i<kf->numInstructions; ++i) {
+      KInstruction *ki = kf->instructions[i];
+
+      if (OutputIStats) {
+        if (instructionIsCoverable(ki->inst))
+           stats::uncoveredInstructions += (uint64_t)-1; // decrement op not overloaded!
+      }
+      
+        if (BranchInst *bi = dyn_cast<BranchInst>(ki->inst))
+          if (!bi->isUnconditional())
+            numBranches += (uint64_t)-1; // decrement op not overloaded!
+    }
+   }
+  }
+ }
+  /* SYSREL extension */
+
   if (statsFile)
     writeStatsLine();
 
@@ -409,8 +445,15 @@ void StatsTracker::stepInstructionThread(ExecutionState &es, int tid) {
 
 /* Should be called _after_ the es->pushFrame() */
 void StatsTracker::framePushed(ExecutionState &es, StackFrame *parentFrame) {
-  if (OutputIStats) {
+
+  /* SYSREL extension */
     StackFrame &sf = es.stack.back();
+    visited.insert(sf.kf->function);
+  /* SYSREL extension */
+
+  if (OutputIStats) {
+    //StackFrame &sf = es.stack.back();
+
 
     if (UseCallPaths) {
       CallPathNode *parent = parentFrame ? parentFrame->callPathNode : 0;
@@ -438,8 +481,14 @@ void StatsTracker::framePushed(ExecutionState &es, StackFrame *parentFrame) {
 /* SYSREL extension */
 /* Should be called _after_ the es->pushFrameThread() */
 void StatsTracker::framePushedThread(ExecutionState &es, StackFrame *parentFrame, int tid) {
+
+  /* SYSREL extension */
+    StackFrame &sf = es.stack.back();
+    visited.insert(sf.kf->function);
+  /* SYSREL extension */
+
   if (OutputIStats) {
-    StackFrame &sf = es.threads[tid].stack.back();
+    //StackFrame &sf = es.threads[tid].stack.back();
 
     if (UseCallPaths) {
       CallPathNode *parent = parentFrame ? parentFrame->callPathNode : 0;

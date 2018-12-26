@@ -56,6 +56,11 @@ namespace klee {
     void writeStatsLine();
     void writeIStats();
 
+    /* SYSREL extension */
+    std::set<llvm::Function*> visited;
+    /* SYSREL extension */
+
+
   public:
     StatsTracker(Executor &_executor, std::string _objectFilename,
                  bool _updateMinDistToUncovered);
