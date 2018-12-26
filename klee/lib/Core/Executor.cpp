@@ -1544,6 +1544,17 @@ void Executor::executeCall(ExecutionState &state,
     if (InvokeInst *ii = dyn_cast<InvokeInst>(i))
       transferToBasicBlock(ii->getNormalDest(), i->getParent(), state);
   } else {
+
+       /* SYSREL extension */
+       // Handle certain functions in a special way, e.g., those that have inline assembly
+       if (lazyInit && APIHandler::handles(f->getName())) {
+          callExternalFunction(state, ki, f, arguments);
+          return;
+       }
+       /* SYSREL extension */
+
+
+
     // FIXME: I'm not really happy about this reliance on prevPC but it is ok, I
     // guess. This just done to avoid having to pass KInstIterator everywhere
     // instead of the actual instruction, since we can't make a KInstIterator
