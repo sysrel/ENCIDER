@@ -1389,7 +1389,11 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
    else 
       f = kmoduleExt->module->getFunction(cbexpr);
    llvm::errs() << "callback expr: " << cbexpr << "\n";
-   assert(f && "Callback function not defined!\n");
+   if (!f) {
+      //assert(f && "Callback function not defined!\n");
+      llvm::errs() << "WARNING: Callback function not defined!\n";
+      return;
+   }
    llvm::outs() << "calling callback " << f->getName() << "\n";
    Function *ncf = target->inst->getParent()->getParent()->getParent()->getFunction(f->getName());
    KFunction *kf = kmoduleExt->functionMap[ncf];      
