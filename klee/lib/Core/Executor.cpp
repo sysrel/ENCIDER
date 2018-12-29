@@ -3846,6 +3846,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                 if (asuccess) {      
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal, 
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
+                   llvm::outs() << "Symbolizing argument of function " << function->getName() << ", address=" << sm->getBaseExpr() << "\n"; 
                    unsigned id = 0;
                    std::string name = "shadow";
                    std::string uniqueName = name;
@@ -4559,6 +4560,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               bool mksym;
               const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance, 
                               count, rType, laddr, mksym);
+              llvm::outs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";

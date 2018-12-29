@@ -31,7 +31,7 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/CallSite.h"
-
+#include "llvm/IR/TypeFinder.h"
 
 #include <errno.h>
 #include <sstream>
@@ -1196,6 +1196,47 @@ bool AllocAPIHandler::assignsRetValue(APIAction &action) {
 bool AllocAPIHandler::interpret(APIAction &action, ExecutionState &state,
          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, int tid) {
     std::vector<std::string> par = action.getParams();
+    if (par[0] == "anonymous") {
+       llvm::TypeFinder StructTypes;
+       StructTypes.run(*(((Executor*)theInterpreter)->kmodule->module), true);
+       bool found = true;
+       Type *t = NULL;
+       for (auto *STy : StructTypes) {
+          if (getTypeName(STy) == par[1]) {
+             found = true;
+             t = STy;
+             break;
+          }
+       }
+       if (found) {
+          bool sym = (par[3] == "true");
+          const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
+          size_t allocationAlignment = dl.getPrefTypeAlignment(t);
+          size_t allocationSize = dl.getTypeAllocSize(t);
+          MemoryObject *mo = ((Executor*)(theInterpreter))->memory->allocate(allocationSize, false, true,
+                         target->inst, allocationAlignment);
+          if (!mo) {
+             llvm::outs() << "Could not allocate memory object while handling anonymous alloc API!\n";
+             return false;
+          }
+          llvm::outs() << "Allocated memory object at " << mo->getBaseExpr() << " to handle anonymous alloc " << par[5] << "\n"; 
+
+          state.addSymbolDef(par[5], mo->getBaseExpr());
+          state.addSymbolType(par[5], t);
+     
+          if (sym) {
+             mo->name = "anonymous_" + par[5];
+             if (tid == -1) {
+                ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name);
+             } 
+             else {
+                ((Executor*)(theInterpreter))->executeMakeSymbolicThread(state, mo, mo->name, tid); 
+             }
+          }        
+          return true;
+       }
+       assert(false && "Could not find anonymous alloc type!");
+    }
     std::string fname = par[0];
     llvm::outs() << "Handling alloc api " << fname << " in thread " << tid << "\n";
     llvm::outs() << "Target instruction " << (*target->inst) << "\n";
@@ -1205,6 +1246,7 @@ bool AllocAPIHandler::interpret(APIAction &action, ExecutionState &state,
        assert(false && "Expected a call instruction for allocation API!\n");
     int param = std::stoi(par[1]);
     bool sym = (par[3] == "true");
+
     if (!sym) {
        if (tid == -1)  
           ((Executor*)(theInterpreter))->executeAlloc(state, arguments[param], false, target, zeroMemory, true);
@@ -1264,6 +1306,19 @@ bool FreeAPIHandler::interpret(APIAction &action, ExecutionState &state,
           std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, int tid) {
      std::vector<std::string> pars = action.getParams();
      llvm::outs() << "Handling free api " << pars[0] << "\n";
+
+     if (pars[0] == "anonymous") {
+        Function *f = kmoduleExt->module->getFunction(pars[0]);
+        const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
+        ref<Expr> addr = eval(state, dl, f, arguments, pars[1], target, true); 
+        llvm::errs() << "Freeing address " << addr << " as anonymous free of function";         
+        if (tid == -1)  
+           ((Executor*)(theInterpreter))->executeFree(state, addr, target);
+        else
+           ((Executor*)(theInterpreter))->executeFreeThread(state, addr, target, tid);      
+        return true;
+     }
+
      int arg =  std::stoi(pars[1]);
      if (tid == -1)  
          ((Executor*)(theInterpreter))->executeFree(state, arguments[arg], target);
@@ -1454,10 +1509,19 @@ SideEffectAPIHandler::SideEffectAPIHandler() : APIHandler() {}
 // we assume that argi holds base address of the memory object pointed by that pointer type argument
 // to do: handle the * operator
 ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Function *f, 
-     std::vector< ref<Expr> > &arguments, std::string expr, KInstruction *target, bool address) {
+     std::vector< ref<Expr> > &arguments, std::string oexpr, KInstruction *target, bool address) {
 
-   if (expr == "NULL")
+   if (oexpr == "NULL")
       return Expr::createPointer(0);
+
+   std::string expr;
+
+   if (oexpr[0] == '&') {
+      address = true;
+      expr = oexpr.substr(1);
+   }
+   else expr = oexpr;
+
    llvm::errs() << "In SE eval for " <<  expr << "\n";
    std::string hint("struct.usb_interface");
    ref<Expr> cur;
@@ -1967,12 +2031,26 @@ void APIHandler::readProgModelSpec(const char *name) {
              llvm::outs() << "registering sideeffect expr "; a->print();
              assert(par.size() == 2 && "Incorrect number of params for side-effect spec!");
           }
+          else if (desc == "anon_alloc,type,initzero,symbolic,return,symname") {
+            if (par.size() == 5)
+               par.insert(par.begin(), "anonymous");
+            a = new APIAction(desc,par,allocAPIHandler);
+            llvm::outs() << "anon_alloc,type,sym,symname"; a->print();
+            assert(par.size() == 6 && "Incorrect number of params for anonymous alloc spec!");  
+          }
           else if (desc == "alloc,parameter,initzero,symbolic,return,symname") {
              if (par.size() == 5)
                 par.insert(par.begin(), mainapi); 
              a = new APIAction(desc,par,allocAPIHandler);
              llvm::outs() << " alloc,parameter,initzero,sym interface "; a->print();
              assert(par.size() == 6 && "Incorrect number of params for alloc spec!"); 
+          }
+          else if (desc == "anon_free,parameter") {
+             if (par.size() == 1)
+                par.insert(par.begin(), "anonymous");
+             a = new APIAction(desc, par, freeAPIHandler);
+             llvm::outs() << "anon_free,parameter interface "; a->print();
+             assert(par.size() == 2 && "Incorrect number of params for anonymous free spec!"); 
           }
           else if (desc == "free,parameter") {
              if (par.size() == 1)
