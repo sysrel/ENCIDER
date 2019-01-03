@@ -101,7 +101,10 @@ ExecutionState::ExecutionState(KFunction *kf) :
     coveredNew(false),
     forkDisabled(false),
     ptreeNode(0),
-    steppedInstructions(0){
+    steppedInstructions(0), 
+    /* SYSREL */
+    pmstack(0) {
+   /* SYSREL */
   pushFrame(0, kf);
   /* SYSREL */
   threadsQueue.push(-1);
@@ -123,6 +126,7 @@ ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
   id = counter++;
   if (LifeCycleModelState::lcm)
     lcmState = new LifeCycleModelState();
+  pmstack.clear();
   /* SYSREL */  
 }
 
@@ -208,7 +212,10 @@ ExecutionState::ExecutionState(const ExecutionState& state):
   refCountModel = state.refCountModel;
   refCountStack = state.refCountStack;
   symbolDefs = state.symbolDefs;
+  symbolTypes = state.symbolTypes;
+  symIdCounters = state.symIdCounters;
   lazyInitSingleInstances = state.lazyInitSingleInstances;
+  pmstack = state.pmstack;
   /* SYSREL */ 
 }
 
@@ -924,7 +931,7 @@ Async::Async(ExecutionState *state, Function *f, int tid,  MemoryManager *memory
            bool mksym;
            const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(*state, prevPC->inst, at, at, singleInstance, count, rType, laddr, mksym);
            //MemoryObject *mo = memory->allocateForLazyInit(*state, prevPC->inst, at, singleInstance, count, laddr);
-           mo->name = std::string("arg_") + std::to_string(ind);
+           mo->name = state->getUnique(f->getName()) + std::string("arg_") + std::to_string(ind);
            Executor *exe = (Executor*)theInterpreter;
            if (mksym)
               exe->executeMakeSymbolicThread(*state, mo, std::string("arg_") + std::to_string(ind), tid); 
@@ -1101,6 +1108,138 @@ void ExecutionState::recordRefcountOp(ref<Expr> addr, std::string record) {
   stack.push_back(record);
   refCountStack[addr] = stack;
 }
+
+std::string ExecutionState::getUnique(std::string n) {
+  if (symIdCounters.find(n) == symIdCounters.end()) {
+     symIdCounters[n] = 0;
+     return n + "_0";
+  }
+  long int v = symIdCounters[n];
+  symIdCounters[n] = ++v;
+  return n + "_" + std::to_string(symIdCounters[n]);    
+}
+
+
+PMFrame::PMFrame() {
+   action = APIAction();
+   currentAction = -1;
+   target = NULL;
+   this->tid = -1;  
+   callback = "";
+   std::vector< ref<Expr> > a(0);
+   args = a;
+}
+
+PMFrame::PMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
+          KInstruction *target, int tid) {
+  action = a;
+  currentAction = 0;
+  this->target = target; 
+  args = arguments;
+  this->tid = tid; 
+  callback = "";
+}
+
+PMFrame::PMFrame(const PMFrame &pf) {
+  action = pf.action;
+  currentAction = pf.currentAction;
+  target = pf.target; 
+  args = pf.args;
+  tid = pf.tid; 
+  callback = pf.callback;
+}
+
+void PMFrame::execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target,   bool &term, bool &comp, int tid) {
+
+  action.execute(*this, state, args, target, term, comp, tid);
+
+}
+
+void PMFrame::setCallback(std::string cb) {
+  callback = cb;
+}
+
+void PMFrame::setPMAction(int cn) {
+  currentAction = cn;
+}
+
+void ExecutionState::pushPMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
+          KInstruction *target, int tid) {
+   PMFrame pf(a, arguments, target, tid);
+   pmstack.push_back(pf);
+}
+
+void ExecutionState::popPMFrame() {
+   int i;
+   if ((i=pmstack.size()) > 0) {
+      pmstack.pop_back();
+   }
+}
+
+
+bool ExecutionState::isPMStackEmpty() {
+   return (pmstack.size() == 0);
+}
+
+void ExecutionState::executePM() {
+  if (isPMStackEmpty())
+     return;
+  int top = pmstack.size() - 1;
+  if (pmstack[top].callback != "") {
+     llvm::errs() << "skipping rest of the APIAction to wait for the callback to finish!\n";
+     return;
+  } 
+  llvm::errs() << "Executing PMFrame, callback=" << pmstack[top].callback << "\n";
+  bool term;
+  bool comp;
+  pmstack[top].execute(*this, pmstack[top].args, pmstack[top].target,term, comp, pmstack[top].tid);
+  if (term || comp) {
+     llvm::errs() << "APIAction completed\n"; pmstack[top].action.print();
+     popPMFrame(); 
+  }   
+}
+
+void ExecutionState::setPMCallback(std::string cbn) {
+  if (isPMStackEmpty())
+     assert(false);
+  int top = pmstack.size() - 1;
+  if (pmstack[top].callback != "")
+     assert(false);
+  pmstack[top].setCallback(cbn);
+}
+
+std::string ExecutionState::getPMCallback() {
+  if (isPMStackEmpty())
+     return "";
+  int top = pmstack.size() - 1;
+  return pmstack[top].callback;  
+}
+
+void ExecutionState::checkAndSetPMCallbackCompleted(std::string cbn) {
+   if (getPMCallback() == cbn) {
+      llvm::errs() << "API callback " << cbn << " completed!\n";
+      setPMCallback("");
+      // Has the APIAction completed?
+      if (getPMAction() >= getPMNumActions())
+         popPMFrame(); 
+   }
+}
+
+int ExecutionState::getPMAction() {
+    if (isPMStackEmpty())
+       return -1;
+    int top = pmstack.size() - 1;
+    return pmstack[top].currentAction;
+}
+
+int ExecutionState::getPMNumActions() {
+    if (isPMStackEmpty())
+       return 0;
+    int top = pmstack.size() - 1;
+    return pmstack[top].action.getNumActions();
+}
+
 
 /* SYSREL */
 

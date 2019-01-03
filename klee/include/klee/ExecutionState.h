@@ -12,7 +12,7 @@
 /* SYSREL extension */
 #include "llvm/IR/Function.h"
 #include <queue>
-
+#include "../../lib/Core/SpecialFunctionHandler.h"
 /* SYSREL extension */
 #include "klee/Constraints.h"
 #include "klee/Expr.h"
@@ -22,6 +22,7 @@
 // FIXME: We do not want to be exposing these? :(
 #include "../../lib/Core/AddressSpace.h"
 #include "klee/Internal/Module/KInstIterator.h"
+
 
 #include <map>
 #include <set>
@@ -166,7 +167,32 @@ public:
   bool isCompleted();
   bool completesWith(std::string);
 };
+
+class PMFrame {
+  private:
+   int currentAction;
+   APIAction action;
+   KInstruction *target;
+   std::vector<ref<Expr> > args;
+   int tid;
+   std::string callback;
+   friend class ExecutionState;
+  public:
+    PMFrame();
+    PMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target, int tid=-1);
+    PMFrame(const PMFrame&);
+    void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target, bool &term, bool &comp, int tid=-1);
+    void setCallback(std::string);
+    void setPMAction(int);
+
+};
+
+
 /* SYSREL extension end */
+
+
 
 
 /// @brief ExecutionState representing a path under exploration
@@ -183,6 +209,18 @@ public:
   std::map<std::string, ref<Expr> > symbolDefs;
   std::map<std::string, llvm::Type *> symbolTypes;
   std::map<llvm::Type*, ref<Expr> > typeToAddr;
+  std::map<std::string, long int> symIdCounters;
+  std::vector<PMFrame> pmstack;
+  void pushPMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target, int tid=-1);
+  void popPMFrame();
+  bool isPMStackEmpty();
+  int getPMAction();
+  int getPMNumActions();
+  void executePM();
+  void setPMCallback(std::string cbn);
+  std::string getPMCallback();
+  void checkAndSetPMCallbackCompleted(std::string cbn);
   bool hasLCM();
   int getLCMState();
   bool lcmCompleted();
@@ -228,11 +266,12 @@ public:
   bool preemptable = false; 
   std::map<std::string,AsyncInfo> initiatedAsync;
   
-int initiateAsync(llvm::Function *f);
+  int initiateAsync(llvm::Function *f);
   int scheduleAsync(MemoryManager *memory);
   int setPreemptable(int tid, bool value);
   void setRefCount(ref<Expr>,int); 
   int getRefCount(ref<Expr>); 
+  std::string getUnique(std::string);
   /* SYSREL extension end */
   // Execution - Control Flow specific
 

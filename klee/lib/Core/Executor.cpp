@@ -1042,6 +1042,8 @@ void Executor::branch(ExecutionState &state,
 
 Executor::StatePair 
 Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
+
+
   Solver::Validity res;
   std::map< ExecutionState*, std::vector<SeedInfo> >::iterator it = 
     seedMap.find(&current);
@@ -1265,6 +1267,7 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
       return StatePair(0, 0);
     }
 
+    llvm::outs() << "forked both branches for condition " << condition << "\n";
     return StatePair(trueState, falseState);
   }
 }
@@ -1766,6 +1769,12 @@ static inline const llvm::fltSemantics * fpWidthToSemantics(unsigned width) {
 }
 
 void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
+
+  /* SYSREL extension */
+  // First check if any programming model related action to be executed
+  state.executePM();
+  /* SYSREL extension */  
+
   Instruction *i = ki->inst;
   switch (i->getOpcode()) {
     // Control flow
@@ -1775,7 +1784,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Instruction *caller = kcaller ? kcaller->inst : 0;
     bool isVoidReturn = (ri->getNumOperands() == 0);
     ref<Expr> result = ConstantExpr::alloc(0, Expr::Bool);
-    
+
+    /* SYSREL EXTENSION */
+    state.checkAndSetPMCallbackCompleted(ri->getParent()->getParent()->getName());
+    /* SYSREL EXTENSION */
+
     llvm::outs() << "handling return for function " << ri->getParent()->getParent()->getName()  << "\n";
     if (!isVoidReturn) {
       result = eval(ki, 0, state).value;
@@ -3893,11 +3906,13 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
        allocType = retType->getPointerElementType();
     mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, allocType, allocType,  
           isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
-    mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
+    mo->name = "%sym" + std::to_string(target->dest) + "_" + state.getUnique(function->getName().str());
     llvm::outs() << "mo=" << mo << "\n";
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
-    if (mksym)
+    if (mksym) {
+       llvm::outs() << "symbolizing return value \n";
        executeMakeSymbolic(state, mo, mo->name);
+    }
     if (allocType == retType)
        executeMemoryOperation(state, false, laddr, 0, target);
     else 
@@ -4321,7 +4336,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, 
                               state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
                   //MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count, laddr); 
-                  mo->name = rso2str;
+                  mo->name = state.getUnique(rso2str);
                   if (mksym)
                      executeMakeSymbolic(state, mo, rso2str);
                   llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
@@ -4564,7 +4579,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
-              mo->name = entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind);
+              mo->name = state.getUnique(entryFunc->getName().str()) + std::string("_arg_") + std::to_string(ind);
               if (!nosym && mksym)
                  executeMakeSymbolic(state, mo, entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind)); 
               bindArgument(kf, ind, state, laddr);
@@ -4579,7 +4594,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         Instruction *inst = &*(entryFunc->begin()->begin());
         const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
         MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
-        mo->name = entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind);
+        mo->name = state.getUnique(entryFunc->getName().str()) + std::string("_arg_") + std::to_string(ind);
         unsigned id = 0;
         std::string name = "shadow";
         std::string uniqueName = name;
