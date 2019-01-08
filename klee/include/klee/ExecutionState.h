@@ -171,7 +171,7 @@ public:
 class PMFrame {
   private:
    int currentAction;
-   APIAction action;
+   APIAction *action;
    KInstruction *target;
    std::vector<ref<Expr> > args;
    int tid;
@@ -179,11 +179,10 @@ class PMFrame {
    friend class ExecutionState;
   public:
     PMFrame();
-    PMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
+    PMFrame(APIAction *a, std::vector< ref<Expr> > &arguments, 
              KInstruction *target, int tid=-1);
     PMFrame(const PMFrame&);
-    void execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-             KInstruction *target, bool &term, bool &comp, int tid=-1);
+    void execute(ExecutionState &state, bool &term, bool &comp);
     void setCallback(std::string);
     void setPMAction(int);
 
@@ -210,8 +209,8 @@ public:
   std::map<std::string, llvm::Type *> symbolTypes;
   std::map<llvm::Type*, ref<Expr> > typeToAddr;
   std::map<std::string, long int> symIdCounters;
-  std::vector<PMFrame> pmstack;
-  void pushPMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
+  std::vector<PMFrame*> pmstack;
+  void pushPMFrame(APIAction *a, std::vector< ref<Expr> > arguments, 
              KInstruction *target, int tid=-1);
   void popPMFrame();
   bool isPMStackEmpty();
@@ -391,6 +390,7 @@ public:
   void dumpStackThread(llvm::raw_ostream &out) const;
   void recordAlloc(ref<Expr>);
   void recordFree(ref<Expr>);
+  bool isFreed(ref<Expr>); 
   /* SYSREL extension */
 };
 }

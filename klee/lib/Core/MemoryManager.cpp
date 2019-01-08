@@ -207,6 +207,10 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
         if (state.lazyInitSingleInstances.find(allocType) != state.lazyInitSingleInstances.end()) {
            rallocType = allocType;
            resaddr = state.lazyInitSingleInstances[allocType]->getBaseExpr();
+           if (state.isFreed(resaddr)) {
+              llvm::errs() << "Single instance use after free!\n";
+              ((Executor*)theInterpreter)->terminateStateOnError(state, "Single instance use after free!", Executor::Ptr);
+           }
            llvm::outs() << "returning address " << state.lazyInitSingleInstances[allocType]->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
            sym = false;
            return state.lazyInitSingleInstances[allocType];
@@ -259,7 +263,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
 
      if (isSingle) {
         state.lazyInitSingleInstances[allocType] = mo;
-        llvm::outs() << "storing address " << mo->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+        llvm::errs() << "storing address " << mo->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
      }
      sym = true;
      return mo;
@@ -291,7 +295,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
         if (state.lazyInitSingleInstances.find(allocType) != state.lazyInitSingleInstances.end()) {
            rallocType = allocType;
            resaddr = state.lazyInitSingleInstances[allocType]->getBaseExpr();
-           llvm::outs() << "returning address " << state.lazyInitSingleInstances[allocType]->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+           llvm::errs() << "returning address " << state.lazyInitSingleInstances[allocType]->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
            sym = false;
            return state.lazyInitSingleInstances[allocType];
         }

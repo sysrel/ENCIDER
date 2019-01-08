@@ -101,7 +101,9 @@ ExecutionState::ExecutionState(KFunction *kf) :
     coveredNew(false),
     forkDisabled(false),
     ptreeNode(0),
-    steppedInstructions(0) {
+    steppedInstructions(0), 
+    /* SYSREL */
+    pmstack(0) {
    /* SYSREL */
   pushFrame(0, kf);
   /* SYSREL */
@@ -112,7 +114,6 @@ ExecutionState::ExecutionState(KFunction *kf) :
   if (LifeCycleModelState::lcm)
     lcmState = new LifeCycleModelState();
   else lcmState = NULL;
-  pmstack.clear();
   /* SYSREL */  
 }
 
@@ -214,8 +215,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
   symbolTypes = state.symbolTypes;
   symIdCounters = state.symIdCounters;
   lazyInitSingleInstances = state.lazyInitSingleInstances;
-  for(auto pmf : pmstack) 
-     pmstack.push_back(new PMFrame(*pmf));
+  pmstack = state.pmstack;
   /* SYSREL */ 
 }
 
@@ -1082,10 +1082,6 @@ void ExecutionState::recordFree(ref<Expr> address) {
   freed.insert(address);
 }
 
-bool ExecutionState::isFreed(ref<Expr> address) {
-  return (freed.find(address) != freed.end());
-}
-
 void ExecutionState::check() {
    for(auto rfm : refCountModel) {
       if (rfm.second > 0)
@@ -1125,21 +1121,21 @@ std::string ExecutionState::getUnique(std::string n) {
 
 
 PMFrame::PMFrame() {
-   action = NULL;
+   action = APIAction();
    currentAction = -1;
    target = NULL;
    this->tid = -1;  
    callback = "";
-   args.clear();
+   std::vector< ref<Expr> > a(0);
+   args = a;
 }
 
-PMFrame::PMFrame(APIAction *a, std::vector< ref<Expr> > &arguments, 
+PMFrame::PMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
           KInstruction *target, int tid) {
   action = a;
   currentAction = 0;
   this->target = target; 
-  for(auto a: arguments)
-    args.push_back(a);
+  args = arguments;
   this->tid = tid; 
   callback = "";
 }
@@ -1148,16 +1144,15 @@ PMFrame::PMFrame(const PMFrame &pf) {
   action = pf.action;
   currentAction = pf.currentAction;
   target = pf.target; 
-  for(auto a: pf.args)
-    args.push_back(a);
+  args = pf.args;
   tid = pf.tid; 
   callback = pf.callback;
 }
 
-void PMFrame::execute(ExecutionState &state, bool &term, bool &comp) {
+void PMFrame::execute(ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+             KInstruction *target,   bool &term, bool &comp, int tid) {
 
-  llvm::errs() << "PMFrame's action:\n "; action->print();
-  action->execute(*this, state, args, target, term, comp, tid);
+  action.execute(*this, state, args, target, term, comp, tid);
 
 }
 
@@ -1169,10 +1164,9 @@ void PMFrame::setPMAction(int cn) {
   currentAction = cn;
 }
 
-void ExecutionState::pushPMFrame(APIAction *a, std::vector< ref<Expr> > arguments, 
+void ExecutionState::pushPMFrame(APIAction a, std::vector< ref<Expr> > &arguments, 
           KInstruction *target, int tid) {
-   PMFrame *pf = new PMFrame(a, arguments, target, tid);
-   llvm::errs() << "pushing to PM stack of size=" << pmstack.size() << "\n";
+   PMFrame pf(a, arguments, target, tid);
    pmstack.push_back(pf);
 }
 
@@ -1183,7 +1177,7 @@ void ExecutionState::popPMFrame() {
    }
 }
 
-// post: either the stack is emptied or the top frame is waiting for a callback to finish
+
 bool ExecutionState::isPMStackEmpty() {
    return (pmstack.size() == 0);
 }
@@ -1192,38 +1186,34 @@ void ExecutionState::executePM() {
   if (isPMStackEmpty())
      return;
   int top = pmstack.size() - 1;
-  if (pmstack[top]->callback != "") {
+  if (pmstack[top].callback != "") {
      llvm::errs() << "skipping rest of the APIAction to wait for the callback to finish!\n";
      return;
   } 
-  llvm::errs() << "Executing PMFrame, callback=" << pmstack[top]->callback << "\n";
+  llvm::errs() << "Executing PMFrame, size=" << callback=" << pmstack[top].callback << "\n";
   bool term;
   bool comp;
-  pmstack[top]->execute(*this, term, comp);
+  pmstack[top].execute(*this, pmstack[top].args, pmstack[top].target,term, comp, pmstack[top].tid);
   if (term || comp) {
-     llvm::errs() << "APIAction completed\n"; pmstack[top]->action->print();
+     llvm::errs() << "APIAction completed\n"; pmstack[top].action.print();
      popPMFrame(); 
   }   
-  // in case an apisubblock frame is on the stack
-  executePM();
 }
 
 void ExecutionState::setPMCallback(std::string cbn) {
   if (isPMStackEmpty())
      assert(false);
   int top = pmstack.size() - 1;
-  if (cbn != "" && pmstack[top]->callback != "") {
-     llvm::errs() << "callback is already set to " << pmstack[top]->callback << "\n";
+  if (pmstack[top].callback != "")
      assert(false);
-  }
-  pmstack[top]->setCallback(cbn);
+  pmstack[top].setCallback(cbn);
 }
 
 std::string ExecutionState::getPMCallback() {
   if (isPMStackEmpty())
      return "";
   int top = pmstack.size() - 1;
-  return pmstack[top]->callback;  
+  return pmstack[top].callback;  
 }
 
 void ExecutionState::checkAndSetPMCallbackCompleted(std::string cbn) {
@@ -1240,14 +1230,14 @@ int ExecutionState::getPMAction() {
     if (isPMStackEmpty())
        return -1;
     int top = pmstack.size() - 1;
-    return pmstack[top]->currentAction;
+    return pmstack[top].currentAction;
 }
 
 int ExecutionState::getPMNumActions() {
     if (isPMStackEmpty())
        return 0;
     int top = pmstack.size() - 1;
-    return pmstack[top]->action->getNumActions();
+    return pmstack[top].action.getNumActions();
 }
 
 

@@ -968,13 +968,13 @@ bool MutexAPIHandler::handle(std::map<ref<Expr>, int> &stateModel, std::string f
 
 ReturnAPIHandler::ReturnAPIHandler() : APIHandler() {}
 
-bool ReturnAPIHandler::interpret(PMFrame &pmf, APIAction &action,ExecutionState &state,  
+bool ReturnAPIHandler::interpret(PMFrame &pmf, APIAction *action,ExecutionState &state,  
           std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
 
   comp = true;
-  std::vector<std::string> par = action.getParams();
+  std::vector<std::string> par = action->getParams();
   std::string api = par[0];
-  if (par[1].find("arg") != std::string::npos) {
+  if (par[1].find("arg") != std::string::npos || par[1].find("alloc") != std::string::npos) {
      const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
      llvm::CallSite cs(target->inst);
      Value *fp = cs.getCalledValue();
@@ -985,28 +985,29 @@ bool ReturnAPIHandler::interpret(PMFrame &pmf, APIAction &action,ExecutionState 
      llvm::outs() << "returning value " << refobjaddr << "\n";
      ((Executor*)(theInterpreter))->bindLocal(target, state, refobjaddr);
   }
-  else {
+  else {     
      int val = std::stoi(par[1]);
      ((Executor*)(theInterpreter))->bindLocal(target, state, ConstantExpr::create(val, Expr::Int64)); 
   }  
   return true;
 }
      
-bool ReturnAPIHandler::assignsRetValue() {
+bool ReturnAPIHandler::assignsRetValue(APIAction *action) {
+  llvm::errs() << "return API handler..\n";
   return true;
 }
 
 
 RefCountAPIHandler::RefCountAPIHandler() : APIHandler() {}
 
-bool RefCountAPIHandler::assignsRetValue() {
+bool RefCountAPIHandler::assignsRetValue(APIAction *action) {
   return false;   
 }
 
-bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, 
+bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
     std::vector< ref<Expr> > &arguments, KInstruction *target, bool &temp, bool &comp, int tid){   
 
-  std::vector<std::string> par = action.getParams();
+  std::vector<std::string> par = action->getParams();
   std::string api = par[0];
   std::string op = par[1];
   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
@@ -1054,7 +1055,15 @@ bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionSta
              assert(action);
              bool term2 = false;
              if (action) {
-                state.pushPMFrame(*action, arguments, target, tid);
+                llvm::errs() << "args before pushing frame for apisubblock\n";
+                for(auto a: arguments) 
+                   llvm::errs() << "arg " << a << "\n";    
+
+                std::vector<ref<Expr> > ar;
+                for(auto a: arguments) 
+                   ar.push_back(a);
+
+                state.pushPMFrame(action, ar, target, tid);
                 comp = false;
                 // old way of doing things.. 
                 //action->execute(state, arguments, target, term2, comp, tid);
@@ -1200,16 +1209,16 @@ bool SetGetAPIHandler::handle(ExecutionState &state, std::string fname, std::vec
 AllocAPIHandler::AllocAPIHandler() : APIHandler() {
 }
 
-bool AllocAPIHandler::assignsRetValue(APIAction &action) {
-     std::vector<std::string> pars = action.getParams();
+bool AllocAPIHandler::assignsRetValue(APIAction *action) {
+     std::vector<std::string> pars = action->getParams();
      llvm::outs() << "Alloc API assigns to return value? " << pars[4] << "entered\n";
      return (pars[4] == "true");   
 }
 
-bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state,
+bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state,
          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
     comp = true;
-    std::vector<std::string> par = action.getParams();
+    std::vector<std::string> par = action->getParams();
     if (par[0] == "anonymous") {
        llvm::TypeFinder StructTypes;
        StructTypes.run(*(((Executor*)theInterpreter)->kmodule->module), true);
@@ -1279,7 +1288,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState 
     int param = std::stoi(par[1]); 
     llvm::errs() << "size=" << arguments[param] << " vs " << ConstantExpr::create(0,32) << "\n"; 
     if (arguments[param] == ConstantExpr::create(0,32)) {
-       llvm::errs() << "Skipping 0 size alloc API: \n"; action.print(); 
+       llvm::errs() << "Skipping 0 size alloc API: \n"; action->print(); 
        return true;
     }
     bool sym = (par[3] == "true");
@@ -1309,7 +1318,8 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState 
        else assert(false && "Alloc API param type must be a double-pointer!\n");
     }
     else {
-       const llvm::Value *allocSite = state.prevPC->inst;
+       //const llvm::Value *allocSite = state.prevPC->inst;
+       const llvm::Value *allocSite = target->inst;
        allocationAlignment = ((Executor*)(theInterpreter))->getAllocationAlignment(allocSite);
        ConstantExpr *constexp = dyn_cast<ConstantExpr>(arguments[param]);
        if (constexp)
@@ -1359,19 +1369,19 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState 
 
 FreeAPIHandler::FreeAPIHandler() : APIHandler() {}
 
-bool FreeAPIHandler::assignsRetValue(APIAction &action) {
+bool FreeAPIHandler::assignsRetValue(APIAction *action) {
   return false;
 }
 
        
-bool FreeAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, 
+bool FreeAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
           std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
      comp = true;
-     std::vector<std::string> pars = action.getParams();
+     std::vector<std::string> pars = action->getParams();
      llvm::outs() << "Handling free api " << pars[0] << "\n";
 
      if (pars[0] == "anonymous") {
-        Function *f = kmoduleExt->module->getFunction(action.getFunctionName());
+        Function *f = kmoduleExt->module->getFunction(action->getFunctionName());
         const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
         ref<Expr> addr = eval(state, dl, f, arguments, pars[1], target, true); 
         llvm::errs() << "Freeing address " << addr << " as anonymous free of function";         
@@ -1481,15 +1491,15 @@ IgnoreAPIHandler::IgnoreAPIHandler() : APIHandler() {
 }
 
 
-bool IgnoreAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, 
+bool IgnoreAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
            std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
     comp = true;
-    std::vector<std::string> pars = action.getParams();
+    std::vector<std::string> pars = action->getParams();
     llvm::outs() << "Handling ignore api " << pars[0] << "\n";
     return true;
 }
 
-bool IgnoreAPIHandler::assignsRetValue(APIAction &action) {
+bool IgnoreAPIHandler::assignsRetValue(APIAction *action) {
   return false;
 }
 
@@ -1516,6 +1526,7 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
    }
    llvm::errs() << "calling callback " << f->getName() << "\n";
    state.setPMCallback(f->getName());
+   comp = false; 
    Function *ncf = target->inst->getParent()->getParent()->getParent()->getFunction(f->getName());
    KFunction *kf = kmoduleExt->functionMap[ncf];      
    state.pushFrame(state.prevPC, kf);
@@ -1530,20 +1541,18 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
    }
    // allocate symbolic arguments
    ((Executor*)theInterpreter)->initArgsAsSymbolic(state, kf->function, true);
-   state.setPMCallback(f->getName());
-   comp = false; 
           
 }  
 
 CallbackAPIHandler::CallbackAPIHandler() : APIHandler() {}
 
-bool CallbackAPIHandler::assignsRetValue(APIAction &action) {
+bool CallbackAPIHandler::assignsRetValue(APIAction *action) {
   return false;
 }
 
-bool APIHandler::checkCondition(APIAction &action, ExecutionState &state, 
+bool APIHandler::checkCondition(APIAction *action, ExecutionState &state, 
       std::vector< ref<Expr> > &arguments, std::string cexpr, KInstruction *target) {
-  std::vector<std::string> par = action.getParams();
+  std::vector<std::string> par = action->getParams();
   bool negate = false;
   if (cexpr[0] == '!') {
      negate = true;
@@ -1557,9 +1566,9 @@ bool APIHandler::checkCondition(APIAction &action, ExecutionState &state,
   else return (result != Expr::createPointer(0));
 }
 
-bool CallbackAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, 
+bool CallbackAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
       std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
-   std::vector<std::string> par = action.getParams();
+   std::vector<std::string> par = action->getParams();
    bool cond = true;
    if (par.size() == 3) {
       // check the condition
@@ -1575,12 +1584,12 @@ bool CallbackAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionSta
 
 TerminateAPIHandler::TerminateAPIHandler() : APIHandler() {}
 
-bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, 
+bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
                                 std::vector< ref<Expr> > &arguments, 
                                 KInstruction *target, bool &term, bool &comp, int tid) {
   comp = true;
-  llvm::errs() << "Handling terminate api\n " ; action.print();
-  std::vector<std::string>  par = action.getParams();
+  llvm::errs() << "Handling terminate api\n " ; action->print();
+  std::vector<std::string>  par = action->getParams();
   std::string texpr = par[1];
   Function *f = kmoduleExt->module->getFunction(par[0]);
   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
@@ -1590,7 +1599,7 @@ bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionSt
   return true;
 }       
 
-bool TerminateAPIHandler::assignsRetValue(APIAction &action) {
+bool TerminateAPIHandler::assignsRetValue(APIAction *action) {
   return false;
 }
 
@@ -1605,6 +1614,20 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
 
    if (oexpr == "NULL")
       return Expr::createPointer(0);
+
+   /*
+   CallSite cs(target->inst);
+   unsigned numArgs = cs.arg_size();
+   std::vector< ref<Expr> > args;
+   args.reserve(numArgs);
+
+   for (unsigned j=0; j<numArgs; ++j) {
+      // to do: use the async version when tid is not -1!
+      args.push_back(((Executor*)(theInterpreter))->eval(target, j+1, state).value);
+      llvm::errs() << "arg " << j << " : " << args[j] << "\n";
+   }
+   */
+
 
    std::string expr;
 
@@ -1786,14 +1809,14 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
        return cur;   
 }
 
-bool SideEffectAPIHandler::assignsRetValue(APIAction &action) {
+bool SideEffectAPIHandler::assignsRetValue(APIAction *action) {
      return false;
 }
 
-bool SideEffectAPIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+bool SideEffectAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
       KInstruction *target, bool &term, bool &comp, int tid) {
    comp = true;
-   std::vector<std::string> pars = action.getParams();
+   std::vector<std::string> pars = action->getParams();
    std::string fname = pars[0];
    llvm::outs() << "Handling side-effect api " << fname << "\n";
    Function *f = kmoduleExt->module->getFunction(fname);
@@ -1840,7 +1863,7 @@ APIAction* APIHandler::lookup(std::string label) {
   return NULL;
 }
 
-bool APIHandler::assignsRetValue(APIAction &action) {
+bool APIHandler::assignsRetValue(APIAction *action) {
   return false;
 }
 
@@ -1889,8 +1912,12 @@ bool APIHandler::handle(ExecutionState &state,
      if (apiModel[fname].size() > 1)
         assert(false && "Cannot interpret an API in multiple ways in the same state!");
 
+     std::vector<ref<Expr> > ar;
+     for(auto a: arguments) 
+        ar.push_back(a);
+
      for(auto action : apiModel[fname]) {
-        state.pushPMFrame(*action, arguments, target, tid);
+        state.pushPMFrame(action, ar, target, tid);
      }
 
      /* old way of doing things..
@@ -2012,12 +2039,16 @@ bool APIHandler::handle(ExecutionState &state,
          }
       } 
     
+      std::vector<ref<Expr> > ar;
+      for(auto a: arguments) 
+         ar.push_back(a);
+
       for(auto action : apiModel[fname]) {
          llvm::outs() << "checking branches in the partition " << action->getReturnCond() << "\n";
          action->print();
          for(auto branch : partition[action->getReturnCond()]) {
             if (branch) {
-               branch->pushPMFrame(*action, arguments, target, tid);
+               branch->pushPMFrame(action, ar, target, tid);
             }
          }
       }
@@ -2260,7 +2291,7 @@ void APIHandler::readProgModelSpec(const char *name) {
 }
 
 
-bool APIHandler::interpret(PMFrame &pmf, APIAction &action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
+bool APIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
             KInstruction *target, bool &term, bool &comp, int tid) {
      llvm::outs() << "Superclass interpret should not be executing!\n";
      return true;
@@ -2333,7 +2364,8 @@ std::string APIAction::getFunctionName() {
 
        
 bool APIAction::assignsRetValue() {
-   return handler->assignsRetValue(*this);
+   llvm::errs() << "Checking return value with the handler..\n";
+   return handler->assignsRetValue(this);
 }
 
 bool APIAction::setsArgs() {
@@ -2343,19 +2375,24 @@ bool APIAction::setsArgs() {
 
 void APIAction::execute(PMFrame &pmf, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
           KInstruction *target, bool &term, bool &comp, int tid) {
-  handler->interpret(pmf, *this, state, arguments, target, term, comp, tid);
+  handler->interpret(pmf, this, state, arguments, target, term, comp, tid);
 }
 
 void APIAction::print() {
-   llvm::outs() << desc << ":" ;
+   llvm::errs() << desc << ":" ;
    for(auto p : param) {
-      llvm::outs() << p << ",";
+      llvm::errs() << p << ",";
    }
-   llvm::outs() << "\n";
+   llvm::errs() << "\n";
 }
 
 APIBlock::APIBlock() : APIAction() {
   returnCondition = TRUE;
+}
+
+APIBlock::APIBlock(const APIBlock &ab) : APIAction(ab) {
+  body = ab.body;
+  returnCondition = ab.returnCondition;
 }
 
 void APIBlock::addNextAction(APIAction *action, RetCond rcond) {
@@ -2364,9 +2401,13 @@ void APIBlock::addNextAction(APIAction *action, RetCond rcond) {
 }
 
 bool APIBlock::assignsRetValue() {
-   for(auto action : body) {
-       if (action->assignsRetValue())
+   llvm::errs() << "Checking return value for " << desc << "\n";
+   for(auto a : body) {
+       a->print();
+       if (a->assignsRetValue()) {
+          llvm::errs() << "Assigns return value!\n";
           return true;
+       }
    }
    return false;
 }

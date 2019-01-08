@@ -1267,7 +1267,6 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
       return StatePair(0, 0);
     }
 
-    llvm::outs() << "forked both branches for condition " << condition << "\n";
     return StatePair(trueState, falseState);
   }
 }
@@ -1770,10 +1769,6 @@ static inline const llvm::fltSemantics * fpWidthToSemantics(unsigned width) {
 
 void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
-  /* SYSREL extension */
-  // First check if any programming model related action to be executed
-  state.executePM();
-  /* SYSREL extension */  
 
   Instruction *i = ki->inst;
   switch (i->getOpcode()) {
@@ -3183,8 +3178,11 @@ void Executor::run(ExecutionState &initialState) {
       ExecutionState &state = *lastState;
       KInstruction *ki = state.pc;
       stepInstruction(state);
-
       executeInstruction(state, ki);
+      /* SYSREL extension */
+      // First check if any programming model related action to be executed
+      state.executePM();
+      /* SYSREL extension */  
       processTimers(&state, MaxInstructionTime * numSeeds);
       updateStates(&state);
 
@@ -3259,6 +3257,10 @@ void Executor::run(ExecutionState &initialState) {
        llvm::outs() << "after step instruction for the main thread\n"; 
        ki->inst->dump(); 
        executeInstruction(state, ki);
+       /* SYSREL extension */
+       // First check if any programming model related action to be executed
+       state.executePM();
+       /* SYSREL extension */  
        llvm::outs() << "after execute instruction for the main thread\n";   
        processTimers(&state, MaxInstructionTime);
 
@@ -3277,6 +3279,10 @@ void Executor::run(ExecutionState &initialState) {
       KInstruction *ki = state.pc;
       stepInstruction(state);
       executeInstruction(state, ki);
+      /* SYSREL extension */
+      // First check if any programming model related action to be executed
+      state.executePM();
+      /* SYSREL extension */  
       processTimers(&state, MaxInstructionTime);
       checkMemoryUsage();
       updateStates(&state);
@@ -3873,6 +3879,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr() 
                    ref<Expr> offsetexpr = SubExpr::create(base, op.first->getBaseExpr());
+                   llvm::errs() << "offsetexpr=" << offsetexpr << "result=" << result << " width=" << getWidthForLLVMType(bt) << " sm->size=" << sm->size << " targetsize=" << op.first->size << "\n";
                    wos->write(offsetexpr, result);
                    llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n"; 
                }
@@ -4336,6 +4343,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, 
                               state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
                   //MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count, laddr); 
+                  llvm::errs() << "mem obj addr=" << laddr << "\n";
                   mo->name = state.getUnique(rso2str);
                   if (mksym)
                      executeMakeSymbolic(state, mo, rso2str);

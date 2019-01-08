@@ -491,11 +491,13 @@ private:
   // Used for testing.
   ref<Expr> replaceReadWithSymbolic(ExecutionState &state, ref<Expr> e);
 
+public:
   const Cell& eval(KInstruction *ki, unsigned index, 
                    ExecutionState &state) const;
   /* SYSREL extension */
   const Cell& evalThread(KInstruction *ki, unsigned index, 
 				 ExecutionState &state, int tid) const;
+private:
   /* SYSREL extension */
   Cell& getArgumentCell(ExecutionState &state,
                         KFunction *kf,

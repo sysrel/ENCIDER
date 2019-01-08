@@ -240,7 +240,6 @@ double WeightedRandomSearcher::getWeight(ExecutionState *es) {
     uint64_t md2u;
     if (!asyncMode || es->rtid < 0) {
        llvm::outs() << "main thread es->rtid=" << es->rtid << "\n";
-       llvm::outs() << es->pc->inst << "\n";
        if (!es->getWaitingForThreadsToTerminate()) { // otherwise pc is not valid
           md2u = computeMinDistToUncovered(es->pc,
                                               es->stack.back().minDistToUncoveredOnReturn);
