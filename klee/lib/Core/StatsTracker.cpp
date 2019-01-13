@@ -309,7 +309,7 @@ void StatsTracker::done() {
       
         if (BranchInst *bi = dyn_cast<BranchInst>(ki->inst))
           if (!bi->isUnconditional())
-            numBranches += (uint64_t)-1; // decrement op not overloaded!
+            numBranches--; 
     }
    }
   }
