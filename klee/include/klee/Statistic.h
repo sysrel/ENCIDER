@@ -60,6 +60,12 @@ namespace klee {
 
     /// operator+= - Increment the statistic by \arg addend.
     Statistic &operator +=(const uint64_t addend);
+
+    /* SYSREL extension */
+    /// operator+= - Decrement the statistic by \arg addend.
+    Statistic &operator -=(const uint64_t addend);
+    /* SYSREL extension */
+
   };
 }
 

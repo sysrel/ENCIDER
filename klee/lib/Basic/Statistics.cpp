@@ -79,6 +79,13 @@ Statistic &Statistic::operator +=(const uint64_t addend) {
   return *this;
 }
 
+/* SYSREL extension */
+Statistic &Statistic::operator -=(const uint64_t addend) {
+  theStatisticManager->decrementStatistic(*this, addend);
+  return *this;
+}
+/* SYSREL extension */
+
 uint64_t Statistic::getValue() const {
   return theStatisticManager->getValue(*this);
 }

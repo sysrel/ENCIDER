@@ -254,6 +254,8 @@ StatsTracker::StatsTracker(Executor &_executor, std::string _objectFilename,
     }
   }
 
+  llvm::errs() << "Uncov init=" << stats::uncoveredInstructions << "\n";
+
   if (OutputStats) {
     statsFile = executor.interpreterHandler->openOutputFile("run.stats");
     assert(statsFile && "unable to open statistics trace file");
@@ -291,29 +293,32 @@ void StatsTracker::done() {
   // It adjusts the uncovered instructions and total number of branches by 
   // subtracting those contributed by the not executed functions
  if (ScopeBasedCov) {
-  llvm::outs() << "Num functions executed= " << visited.size() << "\n";
+  llvm::outs() << "Num functions executed= " << visited.size() << "\n";  
   KModule *km = executor.kmodule;
   for (std::vector<KFunction*>::iterator it = km->functions.begin(), 
          ie = km->functions.end(); it != ie; ++it) {
     KFunction *kf = *it;
 
    if (visited.find(kf->function) == visited.end()) {
-      
     for (unsigned i=0; i<kf->numInstructions; ++i) {
       KInstruction *ki = kf->instructions[i];
 
       if (OutputIStats) {
-        if (instructionIsCoverable(ki->inst))
-           stats::uncoveredInstructions += (uint64_t)-1; // decrement op not overloaded!
+        if (kf->trackCoverage && instructionIsCoverable(ki->inst)) {
+           stats::uncoveredInstructions -= 1; 
+        }
       }
       
+      if (kf->trackCoverage) {
         if (BranchInst *bi = dyn_cast<BranchInst>(ki->inst))
           if (!bi->isUnconditional())
             numBranches--; 
+     }
     }
    }
   }
  }
+
   /* SYSREL extension */
 
   if (statsFile)
@@ -367,7 +372,11 @@ void StatsTracker::stepInstruction(ExecutionState &es) {
 	es.coveredNew = true;
         es.instsSinceCovNew = 1;
 	++stats::coveredInstructions;
-	stats::uncoveredInstructions += (uint64_t)-1;
+	//stats::uncoveredInstructions += (uint64_t)-1;
+	stats::uncoveredInstructions -= 1;
+        /* SYSREL extension */
+        visited.insert(inst->getParent()->getParent());
+        /* SYSREL extension */      
       }
     }
   }
@@ -427,7 +436,11 @@ void StatsTracker::stepInstructionThread(ExecutionState &es, int tid) {
         es.coveredNew = true;
         es.instsSinceCovNew = 1;
         ++stats::coveredInstructions;
-        stats::uncoveredInstructions += (uint64_t)-1;
+        //stats::uncoveredInstructions += (uint64_t)-1;
+        stats::uncoveredInstructions -= 1;
+        /* SYSREL extension */
+        visited.insert(inst->getParent()->getParent());
+        /* SYSREL extension */
       }
     }
   }
@@ -449,13 +462,10 @@ void StatsTracker::stepInstructionThread(ExecutionState &es, int tid) {
 /* Should be called _after_ the es->pushFrame() */
 void StatsTracker::framePushed(ExecutionState &es, StackFrame *parentFrame) {
 
-  /* SYSREL extension */
-    StackFrame &sf = es.stack.back();
-    visited.insert(sf.kf->function);
-  /* SYSREL extension */
+
 
   if (OutputIStats) {
-    //StackFrame &sf = es.stack.back();
+    StackFrame &sf = es.stack.back();
 
 
     if (UseCallPaths) {
@@ -485,13 +495,9 @@ void StatsTracker::framePushed(ExecutionState &es, StackFrame *parentFrame) {
 /* Should be called _after_ the es->pushFrameThread() */
 void StatsTracker::framePushedThread(ExecutionState &es, StackFrame *parentFrame, int tid) {
 
-  /* SYSREL extension */
-    StackFrame &sf = es.stack.back();
-    visited.insert(sf.kf->function);
-  /* SYSREL extension */
 
   if (OutputIStats) {
-    //StackFrame &sf = es.threads[tid].stack.back();
+    StackFrame &sf = es.threads[tid].stack.back();
 
     if (UseCallPaths) {
       CallPathNode *parent = parentFrame ? parentFrame->callPathNode : 0;

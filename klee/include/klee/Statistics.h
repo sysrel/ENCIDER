@@ -62,6 +62,9 @@ namespace klee {
     
     void registerStatistic(Statistic &s);
     void incrementStatistic(Statistic &s, uint64_t addend);
+    /* SYSREL extenson */
+    void decrementStatistic(Statistic &s, uint64_t addend);
+    /* SYSREL extenson */
     uint64_t getValue(const Statistic &s) const;
     void incrementIndexedValue(const Statistic &s, unsigned index, 
                                uint64_t addend) const;
@@ -84,6 +87,21 @@ namespace klee {
       }
     }
   }
+
+
+  /* SYSREL extension */
+  inline void StatisticManager::decrementStatistic(Statistic &s, 
+                                                   uint64_t val) {
+    if (enabled) {
+      globalStats[s.id] -= val;
+      if (indexedStats) {
+        indexedStats[index*stats.size() + s.id] -= val;
+        if (contextStats)
+          contextStats->data[s.id] -= val;
+      }
+    }
+  }
+  /* SYSREL extension */
 
   inline StatisticRecord *StatisticManager::getContext() {
     return contextStats;
