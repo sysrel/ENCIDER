@@ -170,6 +170,7 @@ namespace {
   cl::opt<std::string>
   InferenceClue("infer-clue-spec", cl::desc("Inference Clue Spec File, embedded type and embedding type pairs\n"));
 
+
   /* SYSREL extension */
 
   cl::opt<std::string>

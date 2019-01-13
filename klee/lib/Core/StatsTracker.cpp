@@ -106,10 +106,13 @@ namespace {
 	       cl::init(true),
                cl::desc("Enable calltree tracking for instruction level statistics (default=on)"));
 
+  /* SYSREL extension */
+
   cl::opt<bool>
   ScopeBasedCov("scope-based-cov",
                cl::init(false),
                cl::desc("Enable coverage w.r.t. the functions executed at least once"));
+  /* SYSREL extension */
   
 }
 

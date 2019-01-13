@@ -1220,6 +1220,40 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
     comp = true;
     std::vector<std::string> par = action->getParams();
     if (par[0] == "anonymous") {
+       if (!par[1].empty() && std::all_of(par[1].begin(), par[1].end(), ::isdigit)) {
+          // spec with size
+          size_t allocationSize = std::stoi(par[1]);
+          Type *t = llvm::IntegerType::get(((Executor*)theInterpreter)->kmodule->module->getContext(),8);
+          bool sym = (par[3] == "true");
+          const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
+          size_t allocationAlignment = dl.getPrefTypeAlignment(t);
+          MemoryObject *mo = ((Executor*)(theInterpreter))->memory->allocate(allocationSize, false, false,
+                         target->inst, allocationAlignment);
+          if (!mo) {
+             llvm::outs() << "Could not allocate memory object while handling anonymous alloc API!\n";
+             return false;
+          }
+          llvm::errs() << "Allocated memory object of size " << allocationSize << " at " << mo->getBaseExpr() << " to handle anonymous alloc " << par[5] << "\n"; 
+
+          state.addSymbolDef(par[5], mo->getBaseExpr());
+          state.addSymbolType(par[5], t);
+          if (sym) {
+             mo->name = state.getUnique("anonymous") + "_" + par[5];
+             if (tid == -1) {
+                ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);
+             } 
+             else {
+                ((Executor*)(theInterpreter))->executeMakeSymbolicThread(state, mo, mo->name, tid); 
+             }
+          }        
+          else {
+             ObjectState *os = ((Executor*)(theInterpreter))->bindObjectInState(state, mo, false, 0);
+             if (par[2] == "true")
+                os->initializeToZero();
+          }
+          return true;
+          
+       }
        llvm::TypeFinder StructTypes;
        StructTypes.run(*(((Executor*)theInterpreter)->kmodule->module), true);
        bool found = false;
@@ -1265,14 +1299,16 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
           if (sym) {
              mo->name = state.getUnique("anonymous") + "_" + par[5];
              if (tid == -1) {
-                ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name);
+                ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);
              } 
              else {
                 ((Executor*)(theInterpreter))->executeMakeSymbolicThread(state, mo, mo->name, tid); 
              }
           }        
           else {
-             ((Executor*)(theInterpreter))->bindObjectInState(state, mo, false, 0);
+             ObjectState *os = ((Executor*)(theInterpreter))->bindObjectInState(state, mo, false, 0);
+             if (par[2] == "true")
+                os->initializeToZero();
           }
           return true;
        }
@@ -1349,7 +1385,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
         mo->name = state.getUnique(fname) + "_" + std::to_string(param);
 
        if (tid == -1) {
-          ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name);
+          ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);
           ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, arguments[param], mo->getBaseExpr(), 0);
        } 
        else {
@@ -1357,7 +1393,11 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
           ((Executor*)(theInterpreter))->executeMemoryOperationThread(state, true, arguments[param], mo->getBaseExpr(), 0, tid); 
        }
     }
-    else ((Executor*)(theInterpreter))->bindObjectInState(state, mo, false, 0);
+    else { 
+       ObjectState *os = ((Executor*)(theInterpreter))->bindObjectInState(state, mo, false, 0);
+       if (par[2] == "true")
+          os->initializeToZero();
+    }
 
     if (retAssign) {
        ((Executor*)(theInterpreter))->bindLocal(target, state, mo->getBaseExpr());
@@ -1615,6 +1655,11 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
    if (oexpr == "NULL")
       return Expr::createPointer(0);
 
+   if (!oexpr.empty() && std::all_of(oexpr.begin(), oexpr.end(), ::isdigit)) {
+      int val = std::stoi(oexpr);
+      return ConstantExpr::create(val,64);
+   }
+
    /*
    CallSite cs(target->inst);
    unsigned numArgs = cs.arg_size();
@@ -1769,7 +1814,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
                    mo->name = "sym_" + state.getUnique(getTypeName(t)); 
                    if (sym) {
                       llvm::errs() << "lazy initializing, new object at " << resaddr << " while evaluating expression\n";
-                      ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name);  
+                      ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);  
                       ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, cur, resaddr, 0);
                       addressRes = cur;
                       cur = resaddr;
@@ -1788,6 +1833,23 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
                  }
 
               }  
+              else {
+                 bool asuccess;
+                 ObjectPair op;
+                 ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
+                 if (!state.addressSpace.resolveOne(state, ((Executor*)(theInterpreter))->solver, cur, op, asuccess)) {
+                    cur = ((Executor*)(theInterpreter))->toConstant(state, cur, "resolveOne failure");
+                    asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(cur), op);
+                 }
+                 ((Executor*)(theInterpreter))->solver->setTimeout(0);             
+                 if (asuccess) {
+                    addressRes = cur;
+                    ref<Expr> offsetExpr = SubExpr::create(cur, op.first->getBaseExpr()); 
+                    cur = op.second->read(offsetExpr,Context::get().getPointerWidth()/*dl.getPointerTypeSizeInBits(ptrtype)*/);
+                    llvm::errs() << "after updating with the value, cur=" << cur << "\n";
+                    // read the field string           
+                 }                 
+              }
               t = fieldType;
               std::string type_str;
               llvm::raw_string_ostream rso(type_str);
@@ -2208,6 +2270,13 @@ void APIHandler::readProgModelSpec(const char *name) {
                 par.insert(par.begin(), mainapi); 
              a = new APIAction(desc,par,allocAPIHandler);
              llvm::outs() << " alloc,parameter,initzero,sym interface "; a->print();
+             assert(par.size() == 6 && "Incorrect number of params for alloc spec!"); 
+          }
+          else if (desc == "anon_alloc,size,initzero,symbolic,return,symname") {
+             if (par.size() == 5)
+                par.insert(par.begin(), "anonymous"); 
+             a = new APIAction(desc,par,allocAPIHandler);
+             llvm::outs() << " alloc,size,initzero,sym interface "; a->print();
              assert(par.size() == 6 && "Incorrect number of params for alloc spec!"); 
           }
           else if (desc == "anon_free,parameter") {

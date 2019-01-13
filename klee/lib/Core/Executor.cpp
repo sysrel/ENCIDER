@@ -68,6 +68,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Process.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/DerivedTypes.h"
 
 #if LLVM_VERSION_CODE < LLVM_VERSION(3, 5)
 #include "llvm/Support/CallSite.h"
@@ -100,6 +101,11 @@ using namespace klee;
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
 
+cl::opt<bool> 
+InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"), 
+             cl::init(false));
+
+
 extern std::set<std::string> assemblyFunctions;
 
 KModule *kmoduleExt; 
@@ -109,19 +115,6 @@ extern bool asyncMode;
 extern std::vector<std::string> asyncFunc;
 extern std::vector<std::string> enabledFunc;
 extern APIHandler *apiHandler;
-/*
-extern RegistrationAPIHandler  *regAPIHandler;
-extern ResourceAllocReleaseAPIHandler *resADAPIHandler;
-extern MutexAPIHandler*  mutexAPIHandler;
-extern RefCountAPIHandler *refcountAPIHandler;
-extern SetGetAPIHandler *setgetAPIHandler;
-extern AllocAPIHandler *allocAPIHandler;
-extern FreeAPIHandler *freeAPIHandler;
-extern ReadWriteAPIHandler *readWriteAPIHandler;
-extern IgnoreAPIHandler *ignoreAPIHandler;
-extern CallbackAPIHandler *callbackAPIHandler;
-extern SideEffectAPIHandler *sideEffectAPIHandler;
-*/
 extern bool progModel;
 
 std::string getAsyncFunction(std::string fn) {
@@ -303,6 +296,12 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
               //llvm::outs() << "lazy type: " << ltypename << " extracted\n";
            }
            for(unsigned i=0; i < st->getNumElements(); i++) {
+              /*Type *temp = st->getElementType(i);
+              if (temp->isPointerTy()) {
+                 temp = temp->getPointerElementType(); 
+                 if (temp->isFunctionTy())
+                    llvm::errs() << "Function pointer field " << i << " of " << getTypeName(st) << "\n";
+              }*/
               collectEmbeddedPointerTypes(st->getElementType(i), lazyTypes, visited);
            }
         }
@@ -3918,7 +3917,7 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
     if (mksym) {
        llvm::outs() << "symbolizing return value \n";
-       executeMakeSymbolic(state, mo, mo->name);
+       executeMakeSymbolic(state, mo, mo->name, allocType, true);
     }
     if (allocType == retType)
        executeMemoryOperation(state, false, laddr, 0, target);
@@ -4330,13 +4329,13 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else 
                      assert(false && "Expected a pointer type for lazy init");
-                  llvm::outs() << "Yes!\n";
-                  llvm::outs() << "original load result: " << result << "\n";
+                  llvm::errs() << "Yes!\n";
+                  llvm::errs() << "original load result: " << result << "\n";
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
-                  llvm::outs() << "Allocating memory for type " << rso2str << " of size " << "\n"; 
+                  llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n"; 
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -4346,7 +4345,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   llvm::errs() << "mem obj addr=" << laddr << "\n";
                   mo->name = state.getUnique(rso2str);
                   if (mksym)
-                     executeMakeSymbolic(state, mo, rso2str);
+                     executeMakeSymbolic(state, mo, rso2str, t, true);
                   llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
                   forcedOffset = true;
                   executeMemoryOperation(state, true, address, laddr, 0);
@@ -4460,7 +4459,9 @@ void Executor::executeMemoryOperation(ExecutionState &state,
 
 void Executor::executeMakeSymbolic(ExecutionState &state, 
                                    const MemoryObject *mo,
-                                   const std::string &name) {
+                                   const std::string &name,  
+                                   Type *t,
+                                   bool clrFncPtr) {
   // Create a new object state for the memory object (instead of a copy).
   if (!replayKTest) {
     // Find a unique name for this array.  First try the original name,
@@ -4471,8 +4472,12 @@ void Executor::executeMakeSymbolic(ExecutionState &state,
       uniqueName = name + "_" + llvm::utostr(++id);
     }
     const Array *array = arrayCache.CreateArray(uniqueName, mo->size);
-    bindObjectInState(state, mo, false, array);
+    ObjectState *os = bindObjectInState(state, mo, false, array);
     state.addSymbolic(mo, array);
+    /* SYSREL extension */
+    if (clrFncPtr)
+       clearFunctionPointers(mo, os, t); 
+    /* SYSREL extension */
     
     std::map< ExecutionState*, std::vector<SeedInfo> >::iterator it = 
       seedMap.find(&state);
@@ -4537,6 +4542,33 @@ void Executor::executeMakeSymbolic(ExecutionState &state,
 
 /* SYSREL EXTENSION */
 
+void Executor::clearFunctionPointers(const MemoryObject *mo, ObjectState *os, Type *at) {
+    if (!InitFuncPtrs)
+       return;
+    llvm::StructType *st = dyn_cast<llvm::StructType>(at);
+    if (st) {
+       llvm::errs() << "Struct type=" << getTypeName(st) << "\n";
+       const llvm::DataLayout &dl = kmodule->module->getDataLayout();
+       const llvm::StructLayout *sl =  dl.getStructLayout(st);
+       for(unsigned i=0; i < st->getNumElements(); i++) {
+          Type *temp = st->getElementType(i);
+          llvm::errs() << "field " << i << " offset= " << sl->getElementOffset(i) << " type=" << getTypeName(temp) << " typeid=" << temp->getTypeID() << " vs " << llvm::Type::FunctionTyID << "\n";
+          if (temp->isPointerTy()) {
+             temp = temp->getPointerElementType(); 
+             llvm::errs() << "pointer element of field" << i << " offset= " << sl->getElementOffset(i) << " type=" << getTypeName(temp) << " typeid=" << temp->getTypeID() << " vs " << llvm::Type::FunctionTyID << "\n";
+             // The second condition is to deal with a bug in the clang compiler..
+             // Otherwise, some function pointers are not recognized. This may have a side effect of concretizing 
+             // some of the symbolic pointers and hence preventing lazy initialization of such pointer fields..
+             if (temp->isFunctionTy() || getTypeName(temp) == "{}") {
+                llvm::errs() << "Setting function pointer field " << i << " of (out of " << st->getNumElements() << ")" << getTypeName(st) << "\n";
+                llvm::errs() << "base addr=" << mo->getBaseExpr() << " offset " << sl->getElementOffset(i) << " type " << getTypeName(temp) << "\n";
+                os->write(ConstantExpr::create(sl->getElementOffset(i), 64), Expr::createPointer(0));
+             }
+          }
+       }       
+    }
+}
+
 void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool nosym) {
    KFunction *kf = kmodule->functionMap[entryFunc];
    unsigned int ind = 0;
@@ -4588,8 +4620,11 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
               mo->name = state.getUnique(entryFunc->getName().str()) + std::string("_arg_") + std::to_string(ind);
-              if (!nosym && mksym)
-                 executeMakeSymbolic(state, mo, entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind)); 
+              if (!nosym && mksym) {
+                 executeMakeSymbolic(state, mo, 
+                                     entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind),
+                                     at, true);
+              }
               bindArgument(kf, ind, state, laddr);
               llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << laddr << 
                                                                 " (in " << mo->getBaseExpr() << ")\n";

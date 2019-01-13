@@ -123,7 +123,8 @@ public:
   /* SYSREL extension */
   void executeMakeSymbolicThread(ExecutionState &state, 
                                    const MemoryObject *mo,
-				 const std::string &name, int tid);
+				   const std::string &name,
+                                   int tid);
   /* SYSREL extension */
 
   /* SYSREL extension */
@@ -452,9 +453,10 @@ private:
                                       ref<Expr> address,
                                       ref<Expr> value /* undef if read */,
 					      KInstruction *target /* undef if write */, int tid) ;
+  void clearFunctionPointers(const MemoryObject *mo, ObjectState *os, llvm::Type *at);
   /* SYSREL extension */  
   void executeMakeSymbolic(ExecutionState &state, const MemoryObject *mo,
-                           const std::string &name);
+                           const std::string &name, llvm::Type *t=NULL, bool clrFncPtr = false);
 
 
    private:
