@@ -1751,7 +1751,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
        }
   }
 
-
+    bool exprParsed = false;
     int last = 0;
     std::string field;
     int fieldIndex; 
@@ -1773,6 +1773,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
               while (i < expr.length() && expr[i] != '-' && expr[i] != '.') {
                 i++;
               }  
+              exprParsed =  (i == expr.length());
               field = expr.substr(last, i);
               fieldIndex = std::stoi(field); 
               Type *fieldType = st->getElementType(fieldIndex);
@@ -1833,7 +1834,8 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
                  }
 
               }  
-              else {
+              else if (exprParsed) {
+                 // done reading the expression; should read the value and note the address
                  bool asuccess;
                  ObjectPair op;
                  ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
@@ -1849,7 +1851,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
                     llvm::errs() << "after updating with the value, cur=" << cur << "\n";
                     // read the field string           
                  }                 
-              }
+              } // otherwise keep dereferencing
               t = fieldType;
               std::string type_str;
               llvm::raw_string_ostream rso(type_str);
