@@ -144,6 +144,8 @@ extern std::map<std::string, int> lazyInitNumInstances;
 std::set<Type*> embeddedTypes;
 //std::map<std::string, std::set<std::string> >  embeddings;
 std::map<Type*, std::set<Type*> >  embeddingTypes;
+bool singleSuccessor = true;
+
 
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
@@ -1911,6 +1913,15 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
       if (branches.second)
         transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
+
+      /* SYSREL extension */
+      if (branches.first && branches.second) {
+         singleSuccessor = false;
+         branches.first->executePM();
+         branches.second->executePM();  
+      } 
+      /* SYSREL extension */
+
     }
     break;
   }
@@ -3177,10 +3188,14 @@ void Executor::run(ExecutionState &initialState) {
       ExecutionState &state = *lastState;
       KInstruction *ki = state.pc;
       stepInstruction(state);
+      /* SYSREL extension */
+      singleSuccessor = true;
+      /* SYSREL extension */
       executeInstruction(state, ki);
       /* SYSREL extension */
       // First check if any programming model related action to be executed
-      state.executePM();
+      if (singleSuccessor)
+         state.executePM();
       /* SYSREL extension */  
       processTimers(&state, MaxInstructionTime * numSeeds);
       updateStates(&state);
@@ -3241,7 +3256,7 @@ void Executor::run(ExecutionState &initialState) {
        KInstruction *kia = state.threads[tid].pc;
        stepInstructionThread(state, tid);
        llvm::outs() << "after step instruction for thread " << tid << "..\n";
-       kia->inst->dump();
+       kia->inst->dump();      
        executeInstructionThread(state, kia, tid);
        llvm::outs() << "after execute instruction for thread " << tid << "..\n";
        processTimers(&state, MaxInstructionTime);
@@ -3255,10 +3270,14 @@ void Executor::run(ExecutionState &initialState) {
        stepInstruction(state);
        llvm::outs() << "after step instruction for the main thread\n"; 
        ki->inst->dump(); 
+       /* SYSREL extension */
+       singleSuccessor = true;
+       /* SYSREL extension */
        executeInstruction(state, ki);
        /* SYSREL extension */
        // First check if any programming model related action to be executed
-       state.executePM();
+       if (singleSuccessor)
+           state.executePM();
        /* SYSREL extension */  
        llvm::outs() << "after execute instruction for the main thread\n";   
        processTimers(&state, MaxInstructionTime);
@@ -3277,10 +3296,12 @@ void Executor::run(ExecutionState &initialState) {
     /* SYSREL */
       KInstruction *ki = state.pc;
       stepInstruction(state);
+      singleSuccessor = true;
       executeInstruction(state, ki);
       /* SYSREL extension */
       // First check if any programming model related action to be executed
-      state.executePM();
+      if (singleSuccessor)
+         state.executePM();
       /* SYSREL extension */  
       processTimers(&state, MaxInstructionTime);
       checkMemoryUsage();

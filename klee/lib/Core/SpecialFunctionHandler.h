@@ -60,6 +60,7 @@ namespace klee {
     public:
      static void addAction(std::string, APIAction *action);
      static void addSubblock(std::string, APIAction *action);
+     static APIAction *getSubblock(std::string);
      static APIAction* lookup(std::string);
      static TerminateAPIHandler* terminateAPIHandler;
      static SideEffectAPIHandler *sideEffectAPIHandler;

@@ -1545,6 +1545,23 @@ bool IgnoreAPIHandler::assignsRetValue(APIAction *action) {
 
 void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std::vector< ref<Expr> > &arguments, 
          KInstruction *target, bool &comp, int tid) {
+   llvm::outs() << "cbexpr= " << cbexpr << "\n";
+   APIAction *sub = APIHandler::getSubblock(cbexpr);
+   if (sub) {
+      llvm::outs() << "executing subblock " << cbexpr << " on condition\n";
+      bool term2 = false;
+      llvm::errs() << "args before pushing frame for apisubblock\n";
+      for(auto a: arguments) 
+         llvm::errs() << "arg " << a << "\n";    
+
+      std::vector<ref<Expr> > ar;
+      for(auto a: arguments) 
+         ar.push_back(a);
+
+      state.pushPMFrame(sub, ar, target, tid);
+      comp = false;
+      return;
+   } 
    const Function *f = NULL;
    if (cbexpr.find("arg") == 0 || cbexpr.find("alloc") == 0) {
       llvm::CallSite cs(target->inst);
@@ -1594,13 +1611,19 @@ bool APIHandler::checkCondition(APIAction *action, ExecutionState &state,
       std::vector< ref<Expr> > &arguments, std::string cexpr, KInstruction *target) {
   std::vector<std::string> par = action->getParams();
   bool negate = false;
+  bool address = true;
   if (cexpr[0] == '!') {
      negate = true;
      cexpr = cexpr.substr(1);
   }
+  if (cexpr[0] == '*') {
+     address = false;
+     cexpr = cexpr.substr(1);   
+  }
   Function *f = kmoduleExt->module->getFunction(par[0]);
   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();  
-  ref<Expr> result = eval(state, dl, f, arguments, cexpr, target, true);
+  ref<Expr> result = eval(state, dl, f, arguments, cexpr, target, address);
+  llvm::errs() << "condition eval " << cexpr << "=" << result << "\n"; 
   if (!negate)
      return (result == Expr::createPointer(0));
   else return (result != Expr::createPointer(0));
@@ -1631,10 +1654,15 @@ bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSt
   llvm::errs() << "Handling terminate api\n " ; action->print();
   std::vector<std::string>  par = action->getParams();
   std::string texpr = par[1];
+  bool address = true;
+  if (texpr[0] == '*') {
+     address = false;
+     texpr = texpr.substr(1);
+  }
   Function *f = kmoduleExt->module->getFunction(par[0]);
   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
-  ref<Expr> res = eval(state, dl, f, arguments, texpr, target, false);
-  llvm::errs() << "Time to terminate? " << res << " vs " << Expr::createPointer(0) << "\n";
+  ref<Expr> res = eval(state, dl, f, arguments, texpr, target, address);
+  llvm::errs() << "Time to terminate? " << res << " vs " << Expr::createPointer(0) << " " << texpr << "address=? " << address <<  " \n";
   term = (res == Expr::createPointer(0));
   return true;
 }       
@@ -1683,6 +1711,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
    else expr = oexpr;
 
    llvm::errs() << "In SE eval for " <<  expr << "\n";
+   bool modelsymbol = false;
    std::string hint("struct.usb_interface");
    ref<Expr> cur;
    llvm::Type *t = NULL;
@@ -1724,6 +1753,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
           assert(0 && "expression does not refer to an argument or an alloc symbol");
        }
        else {
+          modelsymbol = true;
           for(i = pos + 5; expr[i] != '-' && expr[i] != '.' && i < expr.length() ; i++) ;
           std::string symb;
           if (i == expr.length()) 
@@ -1756,9 +1786,11 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
     std::string field;
     int fieldIndex; 
     ref<Expr> addressRes = cur;
+    bool simple = true;
     while (i < expr.length()) {
         llvm::errs() <<"parsing loop \n";
         if ((expr[i] == '-' || expr[i] == '.')) {
+           simple = false;
            if (!st)
               assert(0 && "Dereferencing into a non-struct type pointer!\n");
            if (expr[i] == '-') {
@@ -1869,8 +1901,29 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
     } 
     if (address)
        return addressRes;
-    else
-       return cur;   
+    else {
+       if (modelsymbol && simple) {
+          bool asuccess;
+          ObjectPair op;
+          ((Executor*)(theInterpreter))->solver->setTimeout(((Executor*)(theInterpreter))->coreSolverTimeout);
+          if (!state.addressSpace.resolveOne(state, ((Executor*)(theInterpreter))->solver, cur, op, asuccess)) {
+             cur = ((Executor*)(theInterpreter))->toConstant(state, cur, "resolveOne failure");
+             asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(cur), op);
+          }
+          ((Executor*)(theInterpreter))->solver->setTimeout(0);             
+          if (asuccess) {
+             addressRes = cur;
+             ref<Expr> offsetExpr = SubExpr::create(cur, op.first->getBaseExpr()); 
+             cur = op.second->read(offsetExpr,Context::get().getPointerWidth()/*dl.getPointerTypeSizeInBits(ptrtype)*/);
+             llvm::errs() << "after updating with the value, cur=" << cur << "\n";
+                    // read the field string           
+             return cur;
+          }
+          assert(false && "Model symbol couldn't be read!");
+       }
+       else  
+          return cur;   
+    }
 }
 
 bool SideEffectAPIHandler::assignsRetValue(APIAction *action) {
@@ -2151,6 +2204,12 @@ void APIHandler::addSubblock(std::string label, APIAction *action) {
    symbolTable[label] = action;
 }
 
+APIAction *APIHandler::getSubblock(std::string label) {
+   if (symbolTable.find(label) == symbolTable.end())
+      return NULL;
+   return symbolTable[label];
+}
+
 void APIHandler::addAction(std::string api, APIAction *action) {
   std::set<APIAction*> set;
   if (apiModel.find(api) != apiModel.end())
@@ -2246,6 +2305,8 @@ void APIHandler::readProgModelSpec(const char *name) {
           std::istringstream iss2(data);
           read(iss2, par);
           APIAction *a = NULL;
+          if (desc[0] == '/' && desc[1] == '/') 
+             continue;
           if (desc == "terminate") {
              if (par.size() == 1)
                 par.insert(par.begin(), mainapi);
@@ -2450,11 +2511,11 @@ void APIAction::execute(PMFrame &pmf, ExecutionState &state, std::vector< ref<Ex
 }
 
 void APIAction::print() {
-   llvm::errs() << desc << ":" ;
+   llvm::outs() << desc << ":" ;
    for(auto p : param) {
-      llvm::errs() << p << ",";
+      llvm::outs() << p << ",";
    }
-   llvm::errs() << "\n";
+   llvm::outs() << "\n";
 }
 
 APIBlock::APIBlock() : APIAction() {
