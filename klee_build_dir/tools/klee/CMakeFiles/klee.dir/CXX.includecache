@@ -19,6 +19,8 @@ llvm/IR/Function.h
 /home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/IR/Function.h
 queue
 -
+../../lib/Core/SpecialFunctionHandler.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 klee/Constraints.h
 /home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Constraints.h
 klee/Expr.h

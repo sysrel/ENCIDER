@@ -207,6 +207,7 @@ lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tool
 lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Memory.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MemoryManager.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/StatsTracker.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/TimingSolver.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutionState.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Target.h
@@ -665,6 +666,7 @@ lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /home/tuba/Documents/tool
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ExecutorTimers.cpp
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/PTree.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/StatsTracker.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Types.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/ADT/APFloat.h
@@ -696,6 +698,7 @@ lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/BasicBlock.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/CallingConv.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Constant.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DataLayout.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DebugLoc.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DerivedTypes.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Function.h
@@ -714,9 +717,16 @@ lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/User.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.def
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/InitializePasses.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Pass.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassAnalysisSupport.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassInfo.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassRegistry.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassSupport.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AIXDataTypesFix.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AlignOf.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Allocator.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Atomic.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CBindingWrapping.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Casting.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CommandLine.h
@@ -728,7 +738,9 @@ lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Memory.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Options.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/PointerLikeTypeTraits.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/RWMutex.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/SwapByteOrder.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Threading.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/TimeValue.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/raw_ostream.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorTimers.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/type_traits.h
@@ -766,6 +778,7 @@ lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /home/tuba/Documents/tools/
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Executor.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ExecutorUtil.cpp
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
+lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Target.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/TargetMachine.h
 lib/Core/CMakeFiles/kleeCore.dir/ExecutorUtil.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Types.h
@@ -1179,6 +1192,7 @@ lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /home/tuba/Documents/tools
 lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MemoryManager.cpp
 lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MemoryManager.h
 lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
+lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/TimingSolver.h
 lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Target.h
 lib/Core/CMakeFiles/kleeCore.dir/MemoryManager.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/TargetMachine.h
@@ -1301,6 +1315,7 @@ lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /home/tuba/Documents/tools/
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Executor.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MergeHandler.cpp
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Types.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/ADT/APFloat.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/ADT/APInt.h
@@ -1331,6 +1346,7 @@ lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/BasicBlock.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/CallingConv.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Constant.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DataLayout.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DebugLoc.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DerivedTypes.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Function.h
@@ -1349,9 +1365,16 @@ lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/User.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.def
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/InitializePasses.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Pass.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassAnalysisSupport.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassInfo.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassRegistry.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassSupport.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AIXDataTypesFix.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AlignOf.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Allocator.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Atomic.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CBindingWrapping.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Casting.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CommandLine.h
@@ -1363,7 +1386,9 @@ lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Memory.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Options.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/PointerLikeTypeTraits.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/RWMutex.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/SwapByteOrder.h
+lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Threading.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/raw_ostream.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/type_traits.h
 lib/Core/CMakeFiles/kleeCore.dir/MergeHandler.cpp.o: include/klee/Config/config.h
@@ -1441,6 +1466,7 @@ lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /home/tuba/Documents/tools/klee
 lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/PTree.h
 lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Searcher.cpp
 lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Searcher.h
+lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/StatsTracker.h
 lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Target.h
 lib/Core/CMakeFiles/kleeCore.dir/Searcher.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/TargetMachine.h
@@ -1562,6 +1588,7 @@ lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /home/tuba/Documents/tools/klee
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SeedInfo.cpp
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SeedInfo.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/TimingSolver.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Types.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/ADT/APFloat.h
@@ -1594,6 +1621,7 @@ lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/BasicBlock.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/CallingConv.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Constant.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DataLayout.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DebugLoc.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DerivedTypes.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Function.h
@@ -1612,9 +1640,16 @@ lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/User.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.def
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/InitializePasses.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Pass.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassAnalysisSupport.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassInfo.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassRegistry.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassSupport.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AIXDataTypesFix.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AlignOf.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Allocator.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Atomic.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CBindingWrapping.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Casting.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CommandLine.h
@@ -1626,7 +1661,9 @@ lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Memory.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Options.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/PointerLikeTypeTraits.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/RWMutex.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/SwapByteOrder.h
+lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Threading.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/raw_ostream.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/type_traits.h
 lib/Core/CMakeFiles/kleeCore.dir/SeedInfo.cpp.o: include/klee/Config/config.h
@@ -1658,6 +1695,7 @@ lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Docume
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ArrayCache.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ArrayExprHash.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/Bits.h
+lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ExprPPrinter.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/Ref.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/AddressSpace.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/CallPathManager.h
@@ -1730,6 +1768,7 @@ lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/SymbolTableListTraits.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/TrackingMDRef.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Type.h
+lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/TypeFinder.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Use.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/User.h
 lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.def
@@ -1798,6 +1837,7 @@ lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/
 lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Executor.h
 lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/MemoryManager.h
 lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
+lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/StatsTracker.cpp
 lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/StatsTracker.h
 lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/UserSearcher.h
@@ -1926,6 +1966,7 @@ lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/AddressSpace.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/CoreStats.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/TimingSolver.cpp
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/TimingSolver.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Types.h
@@ -1958,6 +1999,7 @@ lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/BasicBlock.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/CallingConv.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Constant.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DataLayout.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DebugLoc.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DerivedTypes.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Function.h
@@ -1976,9 +2018,16 @@ lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/User.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.def
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/InitializePasses.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Pass.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassAnalysisSupport.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassInfo.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassRegistry.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassSupport.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AIXDataTypesFix.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AlignOf.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Allocator.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Atomic.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CBindingWrapping.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Casting.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CommandLine.h
@@ -1990,7 +2039,9 @@ lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Memory.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Options.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/PointerLikeTypeTraits.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/RWMutex.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/SwapByteOrder.h
+lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Threading.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/raw_ostream.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/type_traits.h
 lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o: include/klee/Config/config.h
@@ -2025,6 +2076,7 @@ lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Executor.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/ObjectHolder.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/Searcher.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/UserSearcher.cpp
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/UserSearcher.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm-c/Types.h
@@ -2057,6 +2109,7 @@ lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/BasicBlock.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/CallingConv.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Constant.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DataLayout.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DebugLoc.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/DerivedTypes.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Function.h
@@ -2075,9 +2128,16 @@ lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/User.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.def
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/IR/Value.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/InitializePasses.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Pass.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassAnalysisSupport.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassInfo.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassRegistry.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/PassSupport.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AIXDataTypesFix.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/AlignOf.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Allocator.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Atomic.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CBindingWrapping.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Casting.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/CommandLine.h
@@ -2089,7 +2149,9 @@ lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/l
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Memory.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Options.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/PointerLikeTypeTraits.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/RWMutex.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/SwapByteOrder.h
+lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/Threading.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/raw_ostream.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: /usr/lib/llvm-3.8/include/llvm/Support/type_traits.h
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o: include/klee/Config/config.h

@@ -162,7 +162,8 @@ namespace {
   LazySingle("lazy-single-ins",cl::desc("Lazily initialized types that should have a single instance"));
 
   cl::opt<std::string>
-  FrameworkDts("framework-dts", cl::desc("Framework data structure types file (turns off automatic inference of lazy types)"));     
+  FrameworkDts("framework-dts", cl::desc("Framework data structure types file \
+                                            (turns off automatic inference of lazy types)"));     
 
   cl::opt<std::string>
   ProgModelSpec("prog-model-spec", cl::desc("Programming Model Spec File, enables related checks and enforcements\n"));
@@ -1698,7 +1699,7 @@ int main(int argc, char **argv, char **envp) {
      }
   }
 
-  if (LifeCycleConf.c_str()) {
+  if (LifeCycleConf != "") {
      moduleHandle = finalModule; 
      Sequential *lcm = readLCMConfig(LifeCycleConf.c_str());
      if (lcm) {
@@ -1710,7 +1711,8 @@ int main(int argc, char **argv, char **envp) {
 
   lazyInit = LazyInit;
 
-  if (FrameworkDts.c_str()) {
+  if (FrameworkDts != "") {
+     llvm::errs() << "Framework dts=" << FrameworkDts.c_str() << "\n";
      assert(LazyInit);
      lazySpec = true;
      readFrameworkDts(FrameworkDts.c_str());
@@ -1724,14 +1726,14 @@ int main(int argc, char **argv, char **envp) {
      if (!lazySpec && !numLazyInst)
         assert(false && "For automatic lazy instantiation type inference mode, number of instances need to be specified!");
      llvm::outs() << "lazy single spec file? " << LazySingle.c_str() << "\n";
-     if (LazySingle.c_str())
+     if (LazySingle != "")
         readLazySingles(LazySingle.c_str()); 
 
-     if (InferenceClue.c_str())
+     if (InferenceClue != "")
         readInferenceClue(InferenceClue.c_str());
   }
 
-  if (ProgModelSpec.c_str()) {
+  if (ProgModelSpec != "") {
      moduleHandle = finalModule; 
      progModel = true;
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());

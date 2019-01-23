@@ -33,6 +33,8 @@ llvm/IR/Function.h
 /home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/IR/Function.h
 queue
 -
+../../lib/Core/SpecialFunctionHandler.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/SpecialFunctionHandler.h
 klee/Constraints.h
 /home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Constraints.h
 klee/Expr.h
@@ -615,6 +617,8 @@ llvm/Support/Process.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/Support/Process.h
 llvm/Support/raw_ostream.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/Support/raw_ostream.h
+llvm/IR/DerivedTypes.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/IR/DerivedTypes.h
 llvm/Support/CallSite.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/Support/CallSite.h
 llvm/IR/CallSite.h
@@ -1181,6 +1185,8 @@ klee/MergeHandler.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/MergeHandler.h
 klee/ExecutionState.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/ExecutionState.h
+klee/util/ExprPPrinter.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/util/ExprPPrinter.h
 klee/Internal/Module/KInstruction.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/klee/Internal/Module/KInstruction.h
 klee/Internal/Module/KModule.h
@@ -1207,6 +1213,8 @@ llvm/IR/Instructions.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/IR/Instructions.h
 llvm/IR/CallSite.h
 /home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/IR/CallSite.h
+llvm/IR/TypeFinder.h
+/home/tuba/Documents/tools/klee-3.8/klee/lib/Core/llvm/IR/TypeFinder.h
 errno.h
 -
 sstream
