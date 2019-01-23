@@ -1075,10 +1075,12 @@ llvm::Type *ExecutionState::getSymbolType(std::string sym) {
 }
 
 void ExecutionState::recordAlloc(ref<Expr> address) {
+  llvm::errs() << "Recording alloc " << address << "\n";
   alloced.insert(address);
 }
 
 void ExecutionState::recordFree(ref<Expr> address) {
+  llvm::errs() << "Recording free " << address << "\n";
   freed.insert(address);
 }
 
@@ -1173,6 +1175,9 @@ void ExecutionState::pushPMFrame(APIAction *a, std::vector< ref<Expr> > argument
           KInstruction *target, int tid) {
    PMFrame *pf = new PMFrame(a, arguments, target, tid);
    llvm::errs() << "pushing to PM stack of size=" << pmstack.size() << "\n";
+   a->print();
+   for(int i=0; i<arguments.size(); i++)
+      llvm::errs() << "arg " << i << "=" << arguments[i] << "\n";
    pmstack.push_back(pf);
 }
 

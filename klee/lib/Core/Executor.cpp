@@ -1917,7 +1917,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* SYSREL extension */
       if (branches.first && branches.second) {
          singleSuccessor = false;
+         llvm::errs() << "executingPM on successor first\n";
          branches.first->executePM();
+         llvm::errs() << "executingPM on successor second\n";
          branches.second->executePM();  
       } 
       /* SYSREL extension */
@@ -3690,7 +3692,9 @@ void Executor::callExternalFunction(ExecutionState &state,
     if (progModel) {
        // let the generic API handler handle the arg and return value symbolization
        std::vector<ExecutionState*> successors;
-       llvm::outs() << "are we handling external function " << function->getName() << "\n";
+       llvm::errs() << "state=" << &state << " are we handling external function " << function->getName() << "\n";
+       for(int a=0; a<arguments.size(); a++)
+          llvm::errs() << "arg" << a << "=" << arguments[a] << "\n";         
        bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target);
        if (!resHandled) {
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
@@ -4154,7 +4158,7 @@ void Executor::executeFree(ExecutionState &state,
                            KInstruction *target) {
   llvm::errs() << "Executing free " << address << " from function " << state.prevPC->inst->getParent()->getParent()->getName() << "\n"; 
 
-
+  state.recordFree(address); 
   StatePair zeroPointer = fork(state, Expr::createIsZero(address), true);
   if (zeroPointer.first) {
      llvm::outs() << "A zero pointer possibility in free " << address << "\n";
@@ -4231,7 +4235,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
   /* SYSREL EXTENSION */ 
 
 
-  llvm::outs() << "memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n"; 
+  llvm::outs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n"; 
   state.prevPC->inst->print(llvm::outs());  
   llvm::outs() << "\n address: " << address << "\n";
 

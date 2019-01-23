@@ -346,6 +346,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            std::string es2 = getTypeName(et);
            if (inferenceClue.find(es1) != inferenceClue.end() && !isAnInferenceClue(es1, es2))
               continue;
+           llvm::errs() << "Checking inference clue " << es1 << "," << es2 << "\n";
            /*if (hint != "" && es1.find("struct.device") != std::string::npos && es2.find(hintS) == std::string::npos)
               continue;
            else if (hint == "" && es1.find("struct.device") != std::string::npos && es2.find("struct.usb_device") == std::string::npos)

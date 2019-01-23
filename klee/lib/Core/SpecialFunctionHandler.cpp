@@ -157,7 +157,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
 
   /* SYSREL EXTENSION */
   //add("__kmalloc", handleMalloc, true),
-  add("kfree", handleFree, false),
+  //add("kfree", handleFree, false),
   /* SYSREL EXTENSION */
 
   // operator delete[](void*)
@@ -1235,6 +1235,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
           }
           llvm::errs() << "Allocated memory object of size " << allocationSize << " at " << mo->getBaseExpr() << " to handle anonymous alloc " << par[5] << "\n"; 
 
+          state.recordAlloc(mo->getBaseExpr());
           state.addSymbolDef(par[5], mo->getBaseExpr());
           state.addSymbolType(par[5], t);
           if (sym) {
@@ -1277,7 +1278,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
              return false;
           }
           llvm::errs() << "Allocated memory object of size " << allocationSize << " at " << mo->getBaseExpr() << " to handle anonymous alloc " << par[5] << "\n"; 
-
+          state.recordAlloc(mo->getBaseExpr());
           state.addSymbolDef(par[5], mo->getBaseExpr());
           state.addSymbolType(par[5], t);
 
@@ -1369,7 +1370,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
        return false;
     }
     llvm::outs() << "Allocated memory object at " << mo->getBaseExpr() << " to handle alloc API " << fname << "\n"; 
-
+    state.recordAlloc(mo->getBaseExpr());
     state.addSymbolDef(par[5], mo->getBaseExpr());
     state.addSymbolType(par[5], t);
 
@@ -1654,6 +1655,7 @@ bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSt
   llvm::errs() << "Handling terminate api\n " ; action->print();
   std::vector<std::string>  par = action->getParams();
   std::string texpr = par[1];
+  /*
   bool address = true;
   if (texpr[0] == '*') {
      address = false;
@@ -1663,7 +1665,8 @@ bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSt
   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
   ref<Expr> res = eval(state, dl, f, arguments, texpr, target, address);
   llvm::errs() << "Time to terminate? " << res << " vs " << Expr::createPointer(0) << " " << texpr << "address=? " << address <<  " \n";
-  term = (res == Expr::createPointer(0));
+  term = (res == Expr::createPointer(0));*/
+  term = checkCondition(action, state, arguments, texpr, target);
   return true;
 }       
 
@@ -2511,11 +2514,11 @@ void APIAction::execute(PMFrame &pmf, ExecutionState &state, std::vector< ref<Ex
 }
 
 void APIAction::print() {
-   llvm::outs() << desc << ":" ;
+   llvm::errs() << desc << ":" ;
    for(auto p : param) {
-      llvm::outs() << p << ",";
+      llvm::errs() << p << ",";
    }
-   llvm::outs() << "\n";
+   llvm::errs() << "\n";
 }
 
 APIBlock::APIBlock() : APIAction() {
