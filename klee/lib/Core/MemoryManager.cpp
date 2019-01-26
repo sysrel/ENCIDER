@@ -340,6 +340,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
         if (isSingle)
            llvm::errs() << "Warning: Single instance embedded type has multiple embedders!\n";
      }
+     const llvm::DataLayout &dl = moduleHandle->getDataLayout();
      std::string es1 = getTypeName(allocType);
      std::string hintS(hint);
      for(auto et : embset) {
@@ -353,6 +354,8 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
               continue;*/                   
            llvm::StructType *set = dyn_cast<llvm::StructType>(et);
            assert(set);
+           llvm::errs() << "moduleHandle " << moduleHandle << " set=" << set << " opaque? " << set->isOpaque() << "\n";
+           const llvm::StructLayout *sl =  dl.getStructLayout(set);
            ref<Expr> sub;
            int etcount = 1;
            bool etisSingle;
@@ -360,8 +363,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            llvm::outs() << "Chose embedded type " << es2 << " etcount= " << etcount << "\n";      
            const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, etisSingle, etcount, rallocType, sub, sym);
            if (mo) {
-              const llvm::DataLayout &dl = moduleHandle->getDataLayout();
-              const llvm::StructLayout *sl =  dl.getStructLayout(set);
+              //const llvm::DataLayout &dl = moduleHandle->getDataLayout();
               unsigned i = 0;
               for(; i< set->getNumElements(); i++) {                   
                  if (set->getElementType(i) == allocType) {

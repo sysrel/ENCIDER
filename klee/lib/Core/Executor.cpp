@@ -3698,8 +3698,10 @@ void Executor::callExternalFunction(ExecutionState &state,
        bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target);
        if (!resHandled) {
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
-          symbolizeArguments(state, target, function, arguments);
-          symbolizeReturnValue(state, target, function);
+          bool term = false;
+          symbolizeArguments(state, target, function, arguments, term);
+          if (!term)
+             symbolizeReturnValue(state, target, function);
        }
        return;
        /*
@@ -3857,7 +3859,7 @@ void Executor::callExternalFunction(ExecutionState &state,
 void Executor::symbolizeArguments(ExecutionState &state, 
                                   KInstruction *target,
                                   Function *function,
-                                  std::vector< ref<Expr> > &arguments) {
+                                  std::vector< ref<Expr> > &arguments, bool &term) {
 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) { 
@@ -3890,6 +3892,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal, 
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
                    llvm::outs() << "Symbolizing argument of function " << function->getName() << ", address=" << sm->getBaseExpr() << "\n"; 
+                   llvm::errs() << "base addres=" << base << "\n";
                    unsigned id = 0;
                    std::string name = "shadow";
                    std::string uniqueName = name;
@@ -3903,7 +3906,19 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr() 
                    ref<Expr> offsetexpr = SubExpr::create(base, op.first->getBaseExpr());
-                   llvm::errs() << "offsetexpr=" << offsetexpr << "result=" << result << " width=" << getWidthForLLVMType(bt) << " sm->size=" << sm->size << " targetsize=" << op.first->size << "\n";
+                   llvm::errs() << TD->getTypeAllocSize(bt) << " vs width=" << getWidthForLLVMType(bt) << "offsetexpr=" << offsetexpr << "result=" << result << " width=" << getWidthForLLVMType(bt) << " sm->size=" << sm->size << "targetbase=" << op.first->getBaseExpr() << " targetsize=" << op.first->size << "\n";
+                   // check sanity
+                   const ConstantExpr *co = dyn_cast<ConstantExpr>(offsetexpr);
+                   if (co) {
+                      if ((op.first->size - co->getZExtValue()) < sm->size) {
+                         llvm::errs() << "Lazy init of a void pointer mismatches real type, " 
+                                       << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
+                         terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
+                            NULL, getAddressInfo(state, op.first->getBaseExpr()));
+                         term = true;
+                         return;
+                      }
+                   }               
                    wos->write(offsetexpr, result);
                    llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n"; 
                }
@@ -3912,7 +3927,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
 
          }
        }
-      }
+      } 
 
 }
 

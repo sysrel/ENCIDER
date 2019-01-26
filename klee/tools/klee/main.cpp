@@ -1699,6 +1699,9 @@ int main(int argc, char **argv, char **envp) {
      }
   }
 
+  if (LazyInit)
+     moduleHandle = finalModule; 
+
   if (LifeCycleConf != "") {
      moduleHandle = finalModule; 
      Sequential *lcm = readLCMConfig(LifeCycleConf.c_str());
@@ -1730,6 +1733,7 @@ int main(int argc, char **argv, char **envp) {
         readLazySingles(LazySingle.c_str()); 
 
      if (InferenceClue != "")
+        llvm::outs() << "Reading inference clue from " << InferenceClue.c_str() << "\n";
         readInferenceClue(InferenceClue.c_str());
   }
 

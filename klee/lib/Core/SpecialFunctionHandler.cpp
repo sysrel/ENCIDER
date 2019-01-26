@@ -1361,7 +1361,13 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
        ConstantExpr *constexp = dyn_cast<ConstantExpr>(arguments[param]);
        if (constexp)
           allocationSize = constexp->getZExtValue();
-      else assert(false && "alloc size is symbolic!");
+      else {
+           llvm::errs() << "Terminating path due to a symbolic size for AllocAPIHandler!\n";	
+           ((Executor*)(theInterpreter))->terminateStateOnError(state, "concretized symbolic size",
+                                Executor::Model, NULL, "A symbolic size is passed to an AllocAPIHandler"); 
+           return false;
+           //assert(false && "alloc size is symbolic!");
+      }
     }
     MemoryObject *mo = ((Executor*)(theInterpreter))->memory->allocate(allocationSize, false, false,
                          ci, allocationAlignment);

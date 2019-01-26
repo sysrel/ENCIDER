@@ -156,7 +156,7 @@ public:
   void symbolizeArguments(ExecutionState &state, 
                                   KInstruction *target,
                                   llvm::Function *function,
-                                  std::vector< ref<Expr> > &arguments) ;
+                                  std::vector< ref<Expr> > &arguments, bool &term) ;
 
   void symbolizeArgumentsThread(ExecutionState &state, 
                                   KInstruction *target,
