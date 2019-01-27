@@ -182,7 +182,7 @@ class PMFrame {
     PMFrame(APIAction *a, std::vector< ref<Expr> > &arguments, 
              KInstruction *target, int tid=-1);
     PMFrame(const PMFrame&);
-    void execute(ExecutionState &state, bool &term, bool &comp);
+    void execute(ExecutionState &state, bool &term, bool &comp, bool &abort);
     void setCallback(std::string);
     void setPMAction(int);
 
@@ -216,7 +216,7 @@ public:
   bool isPMStackEmpty();
   int getPMAction();
   int getPMNumActions();
-  void executePM();
+  void executePM(bool &abort);
   void setPMCallback(std::string cbn);
   std::string getPMCallback();
   void checkAndSetPMCallbackCompleted(std::string cbn);

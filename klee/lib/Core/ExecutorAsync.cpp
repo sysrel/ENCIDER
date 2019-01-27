@@ -2091,7 +2091,9 @@ void Executor::callExternalFunctionThread(ExecutionState &state,
     if (progModel) {
        // let the generic API handler handle the arg and return value symbolization
        std::vector<ExecutionState*> successors;
-       bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target, tid);
+       bool abort = false;
+       bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target, abort, tid);
+       assert(!abort); 
        if (!resHandled) {
           symbolizeArgumentsThread(state, target, function, arguments, tid);
           symbolizeReturnValueThread(state, target, function, tid); 
@@ -2295,8 +2297,10 @@ const MemoryObject *Executor::symbolizeReturnValueThread(ExecutionState &state,
     ref<Expr> laddr;
     llvm::Type *rType;
     bool mksym; 
+    bool abort = false;
     mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, function->getReturnType(), function->getReturnType(),  
-          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
+          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym, abort);
+    assert(!false);
     //mo = memory->allocateForLazyInit(state, state.prevPC->inst, function->getReturnType(), isLazySingle(function->getReturnType(), "*"), 1, laddr);
     mo->name = "%sym" + std::to_string(target->dest) + "_" + function->getName().str();
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
@@ -2645,8 +2649,10 @@ void Executor::executeMemoryOperationThread(ExecutionState &state,
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
+                  bool abort = false;
                   const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.threads[tid].prevPC->inst, t, t,
-                             singleInstance, count, rType, laddr, mksym); 
+                             singleInstance, count, rType, laddr, mksym, abort); 
+                  assert(!false);
                   //MemoryObject *mo = memory->allocateForLazyInit(state, state.threads[tid].prevPC->inst, t, singleInstance, count, laddr); 
                   mo->name = rso.str();
                   if (mksym)

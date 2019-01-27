@@ -1884,9 +1884,13 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         // We check that the return value has no users instead of
         // checking the type, since C defaults to returning int for
         // undeclared functions.
-        if (!caller->use_empty()) {
-          terminateStateOnExecError(state, "return void when caller expected a result");
-        }
+        
+        /* SYSREL extension */
+        //if (!caller->use_empty()) {
+          //terminateStateOnExecError(state, "return void when caller expected a result");
+        //}
+        llvm::errs() << "Warning: return void when caller expected a result\n";
+        /* SYSREL extension */
       }
     }      
     break;
@@ -1918,9 +1922,16 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       if (branches.first && branches.second) {
          singleSuccessor = false;
          llvm::errs() << "executingPM on successor first\n";
-         branches.first->executePM();
+         bool abort = false;
+         branches.first->executePM(abort);
+         if (abort) {
+            terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+         }
          llvm::errs() << "executingPM on successor second\n";
-         branches.second->executePM();  
+         branches.second->executePM(abort);
+         if (abort) {
+            terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+         }  
       } 
       /* SYSREL extension */
 
@@ -3196,8 +3207,13 @@ void Executor::run(ExecutionState &initialState) {
       executeInstruction(state, ki);
       /* SYSREL extension */
       // First check if any programming model related action to be executed
-      if (singleSuccessor)
-         state.executePM();
+      if (singleSuccessor) {
+         bool abort = false;
+         state.executePM(abort);
+         if (abort) {
+            terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+         }
+      }
       /* SYSREL extension */  
       processTimers(&state, MaxInstructionTime * numSeeds);
       updateStates(&state);
@@ -3278,8 +3294,13 @@ void Executor::run(ExecutionState &initialState) {
        executeInstruction(state, ki);
        /* SYSREL extension */
        // First check if any programming model related action to be executed
-       if (singleSuccessor)
-           state.executePM();
+       if (singleSuccessor) {
+           bool abort = false;
+           state.executePM(abort);
+           if (abort) {
+              terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+          }     
+       }
        /* SYSREL extension */  
        llvm::outs() << "after execute instruction for the main thread\n";   
        processTimers(&state, MaxInstructionTime);
@@ -3302,8 +3323,13 @@ void Executor::run(ExecutionState &initialState) {
       executeInstruction(state, ki);
       /* SYSREL extension */
       // First check if any programming model related action to be executed
-      if (singleSuccessor)
-         state.executePM();
+      if (singleSuccessor) {
+         bool abort = false;
+         state.executePM(abort);
+         if (abort) {
+            terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+         }
+      }
       /* SYSREL extension */  
       processTimers(&state, MaxInstructionTime);
       checkMemoryUsage();
@@ -3695,13 +3721,23 @@ void Executor::callExternalFunction(ExecutionState &state,
        llvm::errs() << "state=" << &state << " are we handling external function " << function->getName() << "\n";
        for(int a=0; a<arguments.size(); a++)
           llvm::errs() << "arg" << a << "=" << arguments[a] << "\n";         
-       bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target);
+       bool abort = false; 
+       bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target, abort);
+       if (abort) {
+          terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+          return;
+       }
        if (!resHandled) {
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
           bool term = false;
           symbolizeArguments(state, target, function, arguments, term);
-          if (!term)
-             symbolizeReturnValue(state, target, function);
+          if (!term) {
+             symbolizeReturnValue(state, target, function, abort);
+             if (abort) {
+                terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+                return;
+             }
+          }
        }
        return;
        /*
@@ -3934,7 +3970,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
 
 const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state, 
                                   KInstruction *target,
-                                  Function *function) {
+                                  Function *function, bool &abort) {
 
     if (function->getReturnType()->isVoidTy())
        return NULL;  
@@ -3951,7 +3987,10 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
     if (retType->isPointerTy())
        allocType = retType->getPointerElementType();
     mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, allocType, allocType,  
-          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym);
+          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym, abort);
+    if (abort) { 
+       return NULL; 
+    }
     mo->name = "%sym" + std::to_string(target->dest) + "_" + state.getUnique(function->getName().str());
     llvm::outs() << "mo=" << mo << "\n";
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
@@ -4238,7 +4277,9 @@ void Executor::resolveExact(ExecutionState &state,
   }
 }
 
-void Executor::executeMemoryOperation(ExecutionState &state,
+/* SYSREL EXTENSION */ 
+// return true if abort
+bool Executor::executeMemoryOperation(ExecutionState &state,
                                       bool isWrite,
                                       ref<Expr> address,
                                       ref<Expr> value /* undef if read */,
@@ -4313,7 +4354,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
     if (!success) {
       state.pc = state.prevPC;
       terminateStateEarly(state, "Query timed out (bounds check).");
-      return;
+      return false;
     }
 
     llvm::outs() << "bounds check expression " << mo->getBoundsCheckOffset(offset, bytes) << "\n";
@@ -4379,9 +4420,12 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
+                  bool abort = false;
                   const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, 
-                              state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym); 
-                  //MemoryObject *mo = memory->allocateForLazyInit(state, state.prevPC->inst, t, singleInstance, count, laddr); 
+                              state.prevPC->inst, t, t, singleInstance, count, rType, laddr, mksym, abort); 
+                  if (abort) {
+                     return true;
+                  }  
                   llvm::errs() << "mem obj addr=" << laddr << "\n";
                   mo->name = state.getUnique(rso2str);
                   if (mksym)
@@ -4424,7 +4468,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
 
        }
 
-      return;
+      return false;
     }
   } 
 
@@ -4495,6 +4539,7 @@ void Executor::executeMemoryOperation(ExecutionState &state,
                             NULL, getAddressInfo(*unbound, address));
     }
   }
+  return false;
 }
 
 void Executor::executeMakeSymbolic(ExecutionState &state, 
@@ -4609,7 +4654,7 @@ void Executor::clearFunctionPointers(const MemoryObject *mo, ObjectState *os, Ty
     }
 }
 
-void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool nosym) {
+void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool &abort, bool nosym) {
    KFunction *kf = kmodule->functionMap[entryFunc];
    unsigned int ind = 0;
    for(llvm::Function::arg_iterator ai = entryFunc->arg_begin(); ai != entryFunc->arg_end(); ai++) {
@@ -4654,7 +4699,8 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::Type *rType;
               bool mksym;
               const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance, 
-                              count, rType, laddr, mksym);
+                              count, rType, laddr, mksym, abort);
+              if (abort) return;
               llvm::outs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
@@ -4866,7 +4912,9 @@ void Executor::runFunctionAsMain(Function *f,
      state->updateLCMState();
   if (lazyInit) {
    // Lazy init args of the entryFunc
-   initArgsAsSymbolic(*state, entryFunc);
+   bool abort = false;
+   initArgsAsSymbolic(*state, entryFunc, abort);
+   assert(!abort);
    /* To be replaced with initArgsAsSymbolic 
    unsigned int ind = 0;
    for(llvm::Function::arg_iterator ai = entryFunc->arg_begin(); ai != entryFunc->arg_end(); ai++) {

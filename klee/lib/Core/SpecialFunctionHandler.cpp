@@ -969,7 +969,7 @@ bool MutexAPIHandler::handle(std::map<ref<Expr>, int> &stateModel, std::string f
 ReturnAPIHandler::ReturnAPIHandler() : APIHandler() {}
 
 bool ReturnAPIHandler::interpret(PMFrame &pmf, APIAction *action,ExecutionState &state,  
-          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
+          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
 
   comp = true;
   std::vector<std::string> par = action->getParams();
@@ -979,7 +979,9 @@ bool ReturnAPIHandler::interpret(PMFrame &pmf, APIAction *action,ExecutionState 
      llvm::CallSite cs(target->inst);
      Value *fp = cs.getCalledValue();
      Function *caller = ((Executor*)theInterpreter)->getTargetFunction(fp, state);
-     ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, par[1], target, true);
+     ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, par[1], target, true, abort);
+     if (abort)
+        return false; 
      for(int i=0; i<arguments.size(); i++)
         llvm::outs() << "arg " << i << " " << arguments[i] << "\n";
      llvm::outs() << "returning value " << refobjaddr << "\n";
@@ -1005,7 +1007,7 @@ bool RefCountAPIHandler::assignsRetValue(APIAction *action) {
 }
 
 bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
-    std::vector< ref<Expr> > &arguments, KInstruction *target, bool &temp, bool &comp, int tid){   
+    std::vector< ref<Expr> > &arguments, KInstruction *target, bool &temp, bool &comp, bool &abort, int tid){   
 
   std::vector<std::string> par = action->getParams();
   std::string api = par[0];
@@ -1014,7 +1016,10 @@ bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSta
   llvm::CallSite cs(target->inst);
   Value *fp = cs.getCalledValue();
   Function *caller = ((Executor*)theInterpreter)->getTargetFunction(fp, state);
-  ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, par[2], target, false);
+  ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, par[2], target, false, abort);
+  if (abort) {
+     return false;
+  }
   llvm::errs() << "memory object at base addr " << refobjaddr  << "\n";
   int value = std::stoi(par[3]);
   std::string onzerocb = par[4]; 
@@ -1046,7 +1051,8 @@ bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSta
         if (onzerocb != "none") {
            if (onzerocb.find("arg") != std::string::npos) { 
               llvm::outs() << "executing callback " << onzerocb << " on zero refcount\n";
-              executeCallback(state, onzerocb, arguments, target, comp, tid); 
+              executeCallback(state, onzerocb, arguments, target, comp, abort, tid);
+              if (abort) return false; 
            }
            else {
              llvm::outs() << "executing subblock " << onzerocb << " on zero refcount\n";
@@ -1216,7 +1222,7 @@ bool AllocAPIHandler::assignsRetValue(APIAction *action) {
 }
 
 bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state,
-         std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
+         std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
     comp = true;
     std::vector<std::string> par = action->getParams();
     if (par[0] == "anonymous") {
@@ -1393,7 +1399,8 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
 
        if (tid == -1) {
           ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);
-          ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, arguments[param], mo->getBaseExpr(), 0);
+          abort = ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, arguments[param], mo->getBaseExpr(), 0);
+          if (abort) return false;
        } 
        else {
           ((Executor*)(theInterpreter))->executeMakeSymbolicThread(state, mo, mo->name, tid); 
@@ -1422,7 +1429,7 @@ bool FreeAPIHandler::assignsRetValue(APIAction *action) {
 
        
 bool FreeAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
-          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
+          std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
      comp = true;
      std::vector<std::string> pars = action->getParams();
      llvm::outs() << "Handling free api " << pars[0] << "\n";
@@ -1430,7 +1437,8 @@ bool FreeAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &
      if (pars[0] == "anonymous") {
         Function *f = kmoduleExt->module->getFunction(action->getFunctionName());
         const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
-        ref<Expr> addr = eval(state, dl, f, arguments, pars[1], target, true); 
+        ref<Expr> addr = eval(state, dl, f, arguments, pars[1], target, true, abort);
+        if (abort) return false; 
         llvm::errs() << "Freeing address " << addr << " as anonymous free of function";         
         if (tid == -1)  
            ((Executor*)(theInterpreter))->executeFree(state, addr, NULL);
@@ -1539,7 +1547,7 @@ IgnoreAPIHandler::IgnoreAPIHandler() : APIHandler() {
 
 
 bool IgnoreAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
-           std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
+           std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
     comp = true;
     std::vector<std::string> pars = action->getParams();
     llvm::outs() << "Handling ignore api " << pars[0] << "\n";
@@ -1551,7 +1559,7 @@ bool IgnoreAPIHandler::assignsRetValue(APIAction *action) {
 }
 
 void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std::vector< ref<Expr> > &arguments, 
-         KInstruction *target, bool &comp, int tid) {
+         KInstruction *target, bool &comp, bool &abort, int tid) {
    llvm::outs() << "cbexpr= " << cbexpr << "\n";
    APIAction *sub = APIHandler::getSubblock(cbexpr);
    if (sub) {
@@ -1575,7 +1583,8 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
       Value *fp = cs.getCalledValue();
       Function *caller = ((Executor*)theInterpreter)->getTargetFunction(fp, state);
       const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();
-      ref<Expr> cbaddr = eval(state,  dl, caller, arguments, cbexpr, target, false) ;
+      ref<Expr> cbaddr = eval(state,  dl, caller, arguments, cbexpr, target, false, abort) ;
+      if (abort) return;
       llvm::errs() << "cbaddr=" << cbaddr << "\n";
       f = ((Executor*)theInterpreter)->getFunctionFromAddress(cbaddr);
    }
@@ -1589,12 +1598,13 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
       return;
    }
    llvm::errs() << "calling callback " << f->getName() << "\n";
-   state.setPMCallback(f->getName());
-   comp = false; 
    Function *ncf = target->inst->getParent()->getParent()->getParent()->getFunction(f->getName());
    KFunction *kf = kmoduleExt->functionMap[ncf];      
-   state.pushFrame(state.prevPC, kf);
-   state.pc = kf->instructions;
+   if (kf) {
+      state.setPMCallback(f->getName());
+      comp = false; 
+     state.pushFrame(state.prevPC, kf);
+    state.pc = kf->instructions;
 
    StatsTracker * statsTracker = ((Executor*)theInterpreter)->getStatsTracker();
    if (statsTracker) {
@@ -1604,8 +1614,14 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
          statsTracker->framePushedThread(state, &state.stack[state.stack.size()-2], tid);
    }
    // allocate symbolic arguments
-   ((Executor*)theInterpreter)->initArgsAsSymbolic(state, kf->function, true);
-          
+   ((Executor*)theInterpreter)->initArgsAsSymbolic(state, kf->function, abort, true);
+   if (abort) return;       
+  }
+  else {
+     llvm::errs() << "WARNING: Callback function is an external function, expr=" << cbexpr << "!\n";
+     comp = true;
+     return ;
+  }
 }  
 
 CallbackAPIHandler::CallbackAPIHandler() : APIHandler() {}
@@ -1615,7 +1631,7 @@ bool CallbackAPIHandler::assignsRetValue(APIAction *action) {
 }
 
 bool APIHandler::checkCondition(APIAction *action, ExecutionState &state, 
-      std::vector< ref<Expr> > &arguments, std::string cexpr, KInstruction *target) {
+      std::vector< ref<Expr> > &arguments, std::string cexpr, KInstruction *target, bool &abort) {
   std::vector<std::string> par = action->getParams();
   bool negate = false;
   bool address = true;
@@ -1629,24 +1645,29 @@ bool APIHandler::checkCondition(APIAction *action, ExecutionState &state,
   }
   Function *f = kmoduleExt->module->getFunction(par[0]);
   const DataLayout &dl = target->inst->getParent()->getParent()->getParent()->getDataLayout();  
-  ref<Expr> result = eval(state, dl, f, arguments, cexpr, target, address);
+  ref<Expr> result = eval(state, dl, f, arguments, cexpr, target, address, abort);
+  if (abort) return false;
   llvm::errs() << "condition eval " << cexpr << "=" << result << "\n"; 
+  ConstantExpr *CE;
   if (!negate)
-     return (result == Expr::createPointer(0));
-  else return (result != Expr::createPointer(0));
+     return (result == Expr::createPointer(0) || !((CE = dyn_cast<ConstantExpr>(result))));
+  else return (result != Expr::createPointer(0) && (CE = dyn_cast<ConstantExpr>(result)));
 }
 
 bool CallbackAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
-      std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, int tid) {
+      std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
    std::vector<std::string> par = action->getParams();
    bool cond = true;
    if (par.size() == 3) {
       // check the condition
-      cond = checkCondition(action, state, arguments, par[2], target);
+      cond = checkCondition(action, state, arguments, par[2], target, abort);
+      if (abort) return false; 
       llvm::errs() << "Callback condition " << par[2] << "? " << cond << "\n";
    }
-   if (cond)
-      executeCallback(state, par[1], arguments, target, comp, tid); 
+   if (cond) {
+      executeCallback(state, par[1], arguments, target, comp, abort, tid);
+      if (abort) return false; 
+   }
    else comp = true;
    return true; 
 }
@@ -1656,7 +1677,7 @@ TerminateAPIHandler::TerminateAPIHandler() : APIHandler() {}
 
 bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, 
                                 std::vector< ref<Expr> > &arguments, 
-                                KInstruction *target, bool &term, bool &comp, int tid) {
+                                KInstruction *target, bool &term, bool &comp,bool &abort,  int tid) {
   comp = true;
   llvm::errs() << "Handling terminate api\n " ; action->print();
   std::vector<std::string>  par = action->getParams();
@@ -1672,7 +1693,8 @@ bool TerminateAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSt
   ref<Expr> res = eval(state, dl, f, arguments, texpr, target, address);
   llvm::errs() << "Time to terminate? " << res << " vs " << Expr::createPointer(0) << " " << texpr << "address=? " << address <<  " \n";
   term = (res == Expr::createPointer(0));*/
-  term = checkCondition(action, state, arguments, texpr, target);
+  term = checkCondition(action, state, arguments, texpr, target, abort);
+  if (abort) return false; 
   return true;
 }       
 
@@ -1687,7 +1709,7 @@ SideEffectAPIHandler::SideEffectAPIHandler() : APIHandler() {}
 // we assume that argi holds base address of the memory object pointed by that pointer type argument
 // to do: handle the * operator
 ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Function *f, 
-     std::vector< ref<Expr> > &arguments, std::string oexpr, KInstruction *target, bool address) {
+     std::vector< ref<Expr> > &arguments, std::string oexpr, KInstruction *target, bool address, bool &abort) {
 
    if (oexpr == "NULL")
       return Expr::createPointer(0);
@@ -1852,12 +1874,14 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
                    if (!lazyInitTemp)
                       count = 1;
                    const MemoryObject *mo = ((Executor*)(theInterpreter))->memory->allocateLazyForTypeOrEmbedding(state, target->inst, 
-                              t, t, singleInstance, count, rallocType, resaddr, sym, hint.c_str());
+                              t, t, singleInstance, count, rallocType, resaddr, sym, abort, hint.c_str());
+                   if (abort) return Expr::createPointer(0);
                    mo->name = "sym_" + state.getUnique(getTypeName(t)); 
                    if (sym) {
                       llvm::errs() << "lazy initializing, new object at " << resaddr << " while evaluating expression\n";
                       ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);  
-                      ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, cur, resaddr, 0);
+                      abort = ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, cur, resaddr, 0);
+                      if (abort) return Expr::createPointer(0);
                       addressRes = cur;
                       cur = resaddr;
                    }
@@ -1940,7 +1964,7 @@ bool SideEffectAPIHandler::assignsRetValue(APIAction *action) {
 }
 
 bool SideEffectAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-      KInstruction *target, bool &term, bool &comp, int tid) {
+      KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
    comp = true;
    std::vector<std::string> pars = action->getParams();
    std::string fname = pars[0];
@@ -1956,8 +1980,10 @@ bool SideEffectAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionS
       rhs = ltrim(rtrim(rhs));
       llvm::errs() << "lhs=" << lhs << "\n";
       llvm::errs() << "rhs=" << rhs << "\n";
-      ref<Expr> addr = eval(state, dl, f, arguments, lhs, target, true);
-      ref<Expr> value = eval(state, dl, f, arguments, rhs, target, false);
+      ref<Expr> addr = eval(state, dl, f, arguments, lhs, target, true, abort);
+      if (abort) return false;
+      ref<Expr> value = eval(state, dl, f, arguments, rhs, target, false, abort);
+      if (abort) return false;
       llvm::errs() << "addr=" << addr << "\n";
       llvm::errs() << "value=" << value << "\n";
       // write value to addr
@@ -2001,7 +2027,7 @@ bool APIHandler::handle(ExecutionState &state,
                                std::vector<ExecutionState*> &branches,
                                std::string fname, 
                                std::vector< ref<Expr> > &arguments, 
-                               KInstruction *target, 
+                               KInstruction *target, bool &abort,
                                int tid) {
   if (apiModel.find(fname) == apiModel.end()) {
      llvm::outs() << "external function " << fname << " not handled\n"; 
@@ -2032,7 +2058,8 @@ bool APIHandler::handle(ExecutionState &state,
 
      if (symbolizeRetValueOK) {
         llvm::outs() << "symbolizing ret value in handler for function " << function->getName() << "\n";
-        ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function);
+        ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function, abort);
+        if (abort) return false;
      }
      
      if (apiModel[fname].size() > 1)
@@ -2063,7 +2090,8 @@ bool APIHandler::handle(ExecutionState &state,
    //ExprPPrinter::printConstraints(llvm::outs(), state.constraints);
    Function *f = kmoduleExt->module->getFunction(fname);
    assert(f);
-   const MemoryObject *srt = ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function);
+   const MemoryObject *srt = ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function, abort);
+   if (abort) return false;
    bool asuccess;
    ObjectPair op;
    if (srt) { 
@@ -2284,6 +2312,7 @@ void APIHandler::readProgModelSpec(const char *name) {
        }
        else if (desc == "endapiblock") {
           addAction(mainapi, apiblock);  
+          addSubblock(mainapi, apiblock);
           mainapi = "";        
           apiblock = NULL;
           rcond = TRUE;
@@ -2433,7 +2462,7 @@ void APIHandler::readProgModelSpec(const char *name) {
 
 
 bool APIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-            KInstruction *target, bool &term, bool &comp, int tid) {
+            KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
      llvm::outs() << "Superclass interpret should not be executing!\n";
      return true;
 }
@@ -2515,8 +2544,8 @@ bool APIAction::setsArgs() {
 
 
 void APIAction::execute(PMFrame &pmf, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-          KInstruction *target, bool &term, bool &comp, int tid) {
-  handler->interpret(pmf, this, state, arguments, target, term, comp, tid);
+          KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
+  handler->interpret(pmf, this, state, arguments, target, term, comp, abort, tid);
 }
 
 void APIAction::print() {
@@ -2566,7 +2595,7 @@ int APIBlock::getNumActions() {
 }
 
 void APIBlock::execute(PMFrame &pmf, ExecutionState &state, std::vector< ref<Expr> > &arguments, 
-         KInstruction *target, bool &term, bool &comp, int tid) {
+         KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
      term = false;
      comp = true;
      int i = state.getPMAction();
@@ -2574,7 +2603,8 @@ void APIBlock::execute(PMFrame &pmf, ExecutionState &state, std::vector< ref<Exp
         if (!term)  {
            bool term2 = false;
            bool comp2 = false;
-           body[i]->execute(pmf, state, arguments, target, term2, comp2, tid);
+           body[i]->execute(pmf, state, arguments, target, term2, comp2, abort, tid);
+           if (abort) return;
            if (term2) {
               term = term2;
               break;

@@ -139,7 +139,9 @@ void ExecutionState::extendExecutionWith(KFunction *kf) {
   pushFrame(0, kf);
   stack.back().callPathNode = prev; 
   // allocate symbolic arguments
-  ((Executor*)theInterpreter)->initArgsAsSymbolic(*this, kf->function);
+  bool abort = false;
+  ((Executor*)theInterpreter)->initArgsAsSymbolic(*this, kf->function, abort);
+  assert(!abort);
   llvm::outs() << "extending execution with the first instruction \n";
   pc->inst->print(llvm::outs());
 }
@@ -929,7 +931,9 @@ Async::Async(ExecutionState *state, Function *f, int tid,  MemoryManager *memory
            ref<Expr> laddr;
            llvm::Type *rType;
            bool mksym;
-           const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(*state, prevPC->inst, at, at, singleInstance, count, rType, laddr, mksym);
+           bool abort = false;
+           const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(*state, prevPC->inst, at, at, singleInstance, count, rType, laddr, mksym, abort);
+           assert(!abort);
            //MemoryObject *mo = memory->allocateForLazyInit(*state, prevPC->inst, at, singleInstance, count, laddr);
            mo->name = state->getUnique(f->getName()) + std::string("arg_") + std::to_string(ind);
            Executor *exe = (Executor*)theInterpreter;
@@ -1156,11 +1160,11 @@ PMFrame::PMFrame(const PMFrame &pf) {
   callback = pf.callback;
 }
 
-void PMFrame::execute(ExecutionState &state, bool &term, bool &comp) {
+void PMFrame::execute(ExecutionState &state, bool &term, bool &comp, bool &abort) {
 
   llvm::errs() << "PMFrame's action:\n "; action->print();
-  action->execute(*this, state, args, target, term, comp, tid);
-
+  action->execute(*this, state, args, target, term, comp, abort, tid);
+  
 }
 
 void PMFrame::setCallback(std::string cb) {
@@ -1193,7 +1197,7 @@ bool ExecutionState::isPMStackEmpty() {
    return (pmstack.size() == 0);
 }
 
-void ExecutionState::executePM() {
+void ExecutionState::executePM(bool &abort) {
   if (isPMStackEmpty())
      return;
   int top = pmstack.size() - 1;
@@ -1204,13 +1208,14 @@ void ExecutionState::executePM() {
   llvm::errs() << "Executing PMFrame, callback=" << pmstack[top]->callback << "\n";
   bool term;
   bool comp;
-  pmstack[top]->execute(*this, term, comp);
+  pmstack[top]->execute(*this, term, comp, abort);
+  if (abort) return;
   if (term || comp) {
      llvm::errs() << "APIAction completed\n"; pmstack[top]->action->print();
      popPMFrame(); 
   }   
   // in case an apisubblock frame is on the stack
-  executePM();
+  executePM(abort);
 }
 
 void ExecutionState::setPMCallback(std::string cbn) {

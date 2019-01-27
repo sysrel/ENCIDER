@@ -189,7 +189,7 @@ MemoryObject *MemoryManager::simulateMalloc(ExecutionState &state, ref<Expr> siz
 
 /* Meant to be used internally */
 const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(ExecutionState &state, llvm::Instruction *inst, 
-         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym) {
+         llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, ref<Expr> &resaddr, bool &sym, bool &abort) {
      std::string type_str;
      llvm::raw_string_ostream rso(type_str);
      allocType->print(rso); 
@@ -247,7 +247,9 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
               sym = false;
               return op.first;
            }
-           assert(0 && "could not resolve embedded type address\n");
+           abort = true;
+           return NULL;
+           //assert(0 && "could not resolve embedded type address\n");
         }
      }
      llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
@@ -286,7 +288,7 @@ bool isAnInferenceClue(std::string embeddedType, std::string embeddingType) {
 // recursive calls with the embedding type as the allocType is made 
 const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState &state, llvm::Instruction *inst, 
          llvm::Type *origType, llvm::Type *allocType, bool isSingle, int count, llvm::Type *&rallocType, 
-         ref<Expr> &resaddr, bool &sym, const char * hint) {
+         ref<Expr> &resaddr, bool &sym, bool &abort, const char * hint) {
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   allocType->print(rso); 
@@ -361,7 +363,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            bool etisSingle;
            bool ilz = isAllocTypeLazyInit(et, etisSingle, etcount);
            llvm::outs() << "Chose embedded type " << es2 << " etcount= " << etcount << "\n";      
-           const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, etisSingle, etcount, rallocType, sub, sym);
+           const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, etisSingle, etcount, rallocType, sub, sym, abort);
            if (mo) {
               //const llvm::DataLayout &dl = moduleHandle->getDataLayout();
               unsigned i = 0;
@@ -380,10 +382,10 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
                      
      }
      // even though the type is embedded, obviously there are cases where it is used independently. So create an independent memory object
-     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym);
+     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym, abort);
   }
   else { // base case: not an embedded type
-     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym);
+     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym, abort);
 /*
      size_t allocationAlignment = 8;
      const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();

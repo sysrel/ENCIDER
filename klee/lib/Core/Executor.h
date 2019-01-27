@@ -166,7 +166,7 @@ public:
 
   const MemoryObject *symbolizeReturnValue(ExecutionState &state, 
                                   KInstruction *target,
-                                  llvm::Function *function);
+                                  llvm::Function *function, bool &abort);
 
 
   const MemoryObject *symbolizeReturnValueThread(ExecutionState &state, 
@@ -304,7 +304,7 @@ private:
 
   public:
   /* SYSREL extension */
-  void initArgsAsSymbolic(ExecutionState &state, llvm::Function *f, bool nosym=false); 
+  void initArgsAsSymbolic(ExecutionState &state, llvm::Function *f, bool &abort, bool nosym=false); 
   /* SYSREL extension */
 
   private:
@@ -442,7 +442,8 @@ private:
   public: 
   // do address resolution / object binding / out of bounds checking
   // and perform the operation
-  void executeMemoryOperation(ExecutionState &state,
+  /* SYSREL extension */ // return value is used for abort signaling
+  bool executeMemoryOperation(ExecutionState &state,
                               bool isWrite,
                               ref<Expr> address,
                               ref<Expr> value /* undef if read */,
