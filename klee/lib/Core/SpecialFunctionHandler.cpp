@@ -1016,7 +1016,17 @@ bool RefCountAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionSta
   llvm::CallSite cs(target->inst);
   Value *fp = cs.getCalledValue();
   Function *caller = ((Executor*)theInterpreter)->getTargetFunction(fp, state);
-  ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, par[2], target, false, abort);
+  bool address = false;
+  std::string expr = par[2]; 
+  if (expr[0] == '&') {
+     address = true;
+     expr = expr.substr(1);
+  }
+  if (expr[0] == '*') {
+     address = false;
+     expr = expr.substr(1);
+  }
+  ref<Expr> refobjaddr = eval(state,  dl, caller, arguments, expr, target, address, abort);
   if (abort) {
      return false;
   }
