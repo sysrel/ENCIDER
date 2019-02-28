@@ -98,6 +98,15 @@ using namespace llvm;
 using namespace klee;
 
 /* SYSREL extension */
+
+/* Side channel begin */
+#include "AnalyzeConstraint.h"
+#include "ResourceUsage.h"
+klee::ref<Expr> branchCondition;
+std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
+/* Side channel end */
+
+
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
 
@@ -133,6 +142,9 @@ bool isAssemblyFunc(std::string name) {
         return true;
   return false;
 }
+
+extern int minInstCount;
+extern int maxInstCount;
 
 extern bool lazyInit;
 extern bool lazySpec;
@@ -1465,6 +1477,7 @@ void Executor::printDebugInstructions(ExecutionState &state) {
 }
 
 void Executor::stepInstruction(ExecutionState &state) {
+  state.instCount++;
   printDebugInstructions(state);
   if (statsTracker)
     statsTracker->stepInstruction(state);
@@ -1789,6 +1802,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     if (!isVoidReturn) {
       result = eval(ki, 0, state).value;
       /* SYSREL EXTENSION */
+      /* Side channel begin */
+      RD* rdd = getrdmap(&state);
+      rdd->isvoid = false;
+      rdd->retval = ref<Expr>(result);      
+      /* Side channel end */
       if (state.hasLCM()) {
          llvm::outs() << "function " << ri->getParent()->getParent()->getName() << " return expression " << result << "\n"; 
          ConstantExpr *re = dyn_cast<ConstantExpr>(result);
@@ -1904,6 +1922,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       assert(bi->getCondition() == bi->getOperand(0) &&
              "Wrong operand index!");
       ref<Expr> cond = eval(ki, 0, state).value;
+      /* SYSREL side channel begin */
+      branchCondition = cond;
+      /* SYSREL side channel end */
       Executor::StatePair branches = fork(state, cond, false);
 
       // NOTE: There is a hidden dependency here, markBranchVisited
@@ -1913,10 +1934,18 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       if (statsTracker && state.stack.back().kf->trackCoverage)
         statsTracker->markBranchVisited(branches.first, branches.second);
 
-      if (branches.first)
+      if (branches.first) {
         transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
-      if (branches.second)
+        /* SYSREL side channel begin */
+        successorsPaths->insert(branches.first); // Keeping track of the new paths 
+        /* SYSREL side channel end */
+      }
+      if (branches.second) {
         transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
+        /* SYSREL side channel begin */
+        successorsPaths->insert(branches.second); // Keeping track of the new paths 
+        /* SYSREL side channel end */
+      }
 
       /* SYSREL extension */
       if (branches.first && branches.second) {
@@ -2014,6 +2043,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   case Instruction::Switch: {
     SwitchInst *si = cast<SwitchInst>(i);
     ref<Expr> cond = eval(ki, 0, state).value;
+    /* SYSREL side channel begin */
+    branchCondition = cond;
+    /* SYSREL side channel  end */
     BasicBlock *bb = si->getParent();
 
     cond = toUnique(state, cond);
@@ -2120,8 +2152,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                                                ie = bbOrder.end();
            it != ie; ++it) {
         ExecutionState *es = *bit;
-        if (es)
+        if (es) {
           transferToBasicBlock(*it, bb, *es);
+          /* SYSREL side channel begin */
+          successorsPaths->insert(es);
+          /* SYSREL side channel end */
+        }
         ++bit;
       }
     }
@@ -3175,6 +3211,16 @@ void Executor::run(ExecutionState &initialState) {
   initTimers();
 
   states.insert(&initialState);
+        /* SYSREL side channel begin */
+                root = newNode(&initialState);
+                initialState.rdid = root->stateid;
+                rdmapinsert(initialState.rdid, root);
+                printResourceUsage(root);
+                currentRD = root;
+                //exit(0);
+        /* SYSREL side channel end */
+
+
 
   if (usingSeeds) {
     std::vector<SeedInfo> &v = seedMap[&initialState];
@@ -3261,7 +3307,10 @@ void Executor::run(ExecutionState &initialState) {
 
   std::vector<ExecutionState *> newStates(states.begin(), states.end());
   searcher->update(0, newStates, std::vector<ExecutionState *>());
-
+  /* SYSREL side channel begin */
+  bool isbranch = false;
+  readMemLoc();
+  /* SYSREL side channel end */
   while (!states.empty() && !haltExecution) {
     ExecutionState &state = searcher->selectState();
     /* SYSREL */
@@ -3282,8 +3331,29 @@ void Executor::run(ExecutionState &initialState) {
        updateStates(&state);       
     }
     else {
+
+      /* Side channel begin */
+      std::cerr << "Number of states=" << states.size() << "\n";
+      Instruction* ii = state.pc->inst;
+      ii->dump();
+      const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
+                printInfo(ii_info);
+      std::cerr << "\nGetting currentRD.\n";
+                RD* rdd = getrdmap(&state);
+                currentRD = rdd;
+                currentRD->ru += ICost;
+      /* SYSREL - branch tracking */    
+      if ((ii->getOpcode()==Instruction::Br) | (ii->getOpcode()==Instruction::Switch)) {
+         isbranch = true;
+         successorsPaths->erase(successorsPaths->begin(), successorsPaths->end());
+         std::cerr << "\nIs a branch instruction\n";
+      }/* SYSREL - branch tracking */
+      /* Side channel end */ 
+
+
       if (!state.getWaitingForThreadsToTerminate()) {
-       llvm::outs() << "scheduling main thread\n"; 
+       llvm::outs() << "scheduling main thread\n";
+
        KInstruction *ki = state.pc;
        stepInstruction(state);
        llvm::outs() << "after step instruction for the main thread\n"; 
@@ -3339,8 +3409,16 @@ void Executor::run(ExecutionState &initialState) {
 
   delete searcher;
   searcher = 0;
-
+  // SYSREL side channel 
+  std::cerr << "Size of rdmap : " << rdmap->size() << "\n";
   doDumpStates();
+  /* SYSREL side channel begin */
+  propagate(root, "", this);
+  checkLeakage(root, this);
+  std::cerr << "\n\n\n\n>>>> Listing violations :  \n";
+  printviolations(this);
+  /* SYSREL side channel end */
+
 }
 
 std::string Executor::getAddressInfo(ExecutionState &state, 
@@ -3419,6 +3497,10 @@ void Executor::continueState(ExecutionState &state){
 
 void Executor::terminateState(ExecutionState &state) {
   /* SYSREL extension */
+  if (state.instCount < minInstCount)
+     minInstCount = state.instCount;
+  if (state.instCount > maxInstCount)
+     maxInstCount = state.instCount;
   llvm::errs() << "Checking the state at the end of path\n"; 
   state.check();
   /* SYSREL extension */
@@ -4668,7 +4750,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         bool singleInstance = false;
         int count = 0;
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
-        if (lazyInitT) {
+        //if (lazyInitT) {
           /*
            // if single instance and already init use that one 
            MemoryObject *mo = memory->getInstanceForType(state, at);      
@@ -4715,8 +4797,8 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << laddr << 
                                                                 " (in " << mo->getBaseExpr() << ")\n";
            //}
-        }
-        else llvm::outs() << "skipping lazy init for " << rso.str() << "\n";
+        //}
+       // else llvm::outs() << "skipping lazy init for " << rso.str() << "\n";
      } 
      else {
         size_t allocationAlignment = 8;
@@ -4753,6 +4835,8 @@ void Executor::runFunctionAsMain(Function *f,
 
   /* SYSREL EXTENSION */
   entryFunc = f;
+  // side channel - Reading unstrusted function list 
+  readConfig(); 
   /* SYSREL EXTENSION */
 
   std::vector<ref<Expr> > arguments;
@@ -4775,8 +4859,16 @@ void Executor::runFunctionAsMain(Function *f,
 
   unsigned NumPtrBytes = Context::get().getPointerWidth() / 8;
   KFunction *kf = kmodule->functionMap[f];
+  /* SYSREL side channel begin */
+  if (!fset){
+        ff=f;
+        fset = true;
+  }
+  /* SYSREL side channel end */
   assert(kf);
   Function::arg_iterator ai = f->arg_begin(), ae = f->arg_end();
+
+  if (!lazyInit) {
   if (ai!=ae) {
     arguments.push_back(ConstantExpr::alloc(argc, Expr::Int32));
     if (++ai!=ae) {
@@ -4800,6 +4892,7 @@ void Executor::runFunctionAsMain(Function *f,
       }
     }
   }
+ }
 
   ExecutionState *state = new ExecutionState(kmodule->functionMap[f]);
   
@@ -4811,8 +4904,9 @@ void Executor::runFunctionAsMain(Function *f,
 
   if (statsTracker)
     statsTracker->framePushed(*state, 0);
-
-  assert(arguments.size() == f->arg_size() && "wrong number of arguments");
+  
+  if (!lazyInit)
+     assert(arguments.size() == f->arg_size() && "wrong number of arguments");
 
   /* SYSREL EXTENSION */
   if (lazyInit) {
@@ -4870,9 +4964,11 @@ void Executor::runFunctionAsMain(Function *f,
   /* SYSREL EXTENSION */
 
 
+  if (!lazyInit) {
   for (unsigned i = 0, e = f->arg_size(); i != e; ++i) {
     bindArgument(kf, i, *state, arguments[i]);
   }
+}
 
   if (argvMO) {
     ObjectState *argvOS = bindObjectInState(*state, argvMO, false);

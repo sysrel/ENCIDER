@@ -199,6 +199,12 @@ class ExecutionState {
 public:
   typedef std::vector<StackFrame> stack_ty;
   /* SYSREL extension begin */
+  /* Side channel begin */
+  /* Rsource Usage Related Fields */
+  unsigned ru = 0;
+  int rdid = -1;
+  /* Side channel end */
+  int instCount;
   std::map<ref<Expr>,int> lockModel;
   std::map<ref<Expr>,int> stateModel;
   std::map<ref<Expr>, ref<Expr> > assocModel; 

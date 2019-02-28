@@ -59,7 +59,7 @@
 #include <iomanip>
 #include <iterator>
 #include <sstream>
-
+#include <climits>
 
 using namespace llvm;
 using namespace klee;
@@ -74,6 +74,8 @@ parallel := identifier '|' parallel
 parallel := identifier
 sequential := identifier
 */
+int minInstCount = INT_MAX;
+int maxInstCount = 0;
 const Module * moduleHandle = NULL;
 bool asyncMode = false;
 std::vector<std::string> asyncFunc;
@@ -1901,6 +1903,8 @@ int main(int argc, char **argv, char **envp) {
 
   std::stringstream stats;
   stats << "\n";
+  stats << "KLEE: done: minInst = " << minInstCount << "\n";
+  stats << "KLEE: done: maxInst = " << maxInstCount << "\n";
   stats << "KLEE: done: total instructions = "
         << instructions << "\n";
   stats << "KLEE: done: completed paths = "

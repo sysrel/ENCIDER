@@ -90,6 +90,7 @@ StackFrame::~StackFrame() {
 /***/
 
 ExecutionState::ExecutionState(KFunction *kf) :
+    instCount(0),
     pc(kf->instructions),
     prevPC(pc),
 
@@ -117,7 +118,7 @@ ExecutionState::ExecutionState(KFunction *kf) :
 }
 
 ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
-    : constraints(assumptions), queryCost(0.), ptreeNode(0) {
+    : instCount(0), constraints(assumptions), queryCost(0.), ptreeNode(0) {
    /* SYSREL */
   threadsQueue.push(-1);
   rtid = -1;
@@ -166,6 +167,7 @@ ExecutionState::~ExecutionState() {
 }
 
 ExecutionState::ExecutionState(const ExecutionState& state):
+    instCount(state.instCount),
     fnAliases(state.fnAliases),
     pc(state.pc),
     prevPC(state.prevPC),
