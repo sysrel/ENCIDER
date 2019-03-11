@@ -4,6 +4,7 @@
 #define ICost 1
 #define epsilon 0
 
+bool onlycompletedpaths = true;
 typedef std::pair<ref<Expr>, ref<Expr> > HCLC;
 typedef std::pair<int, int> range;
 typedef std::pair<unsigned, unsigned> exhash;
@@ -86,7 +87,7 @@ class RD {
 	public:
 		bool isHBr;// = false;
 		RD* HA;
-		bool HAset;// = false; 
+		bool HAset;// = false;
 		// Always set HAset to true when a state's HA is found
 		ref<Expr> HC;// = klee::ConstantExpr::create(true, 1);
 		ref<Expr> LC;// = klee::ConstantExpr::create(true, 1);
@@ -106,6 +107,7 @@ class RD {
 		bool isvoid = true; // For leaf nodes
 		// For H-ancestors
 		HashRet* lrets = new HashRet();  // Map of hash of expression to expression. Stores the return values of each path. Since returns are public.
+		bool pathterminated = false; // For leaf nodes keeps track of path termination info.
 };
 //
 void printResourceUsage(RD* s);
@@ -122,7 +124,7 @@ int updatesource(exhash exhash1, exhash exhash2, RD* rd) {
 	std::pair<exhash, exhash> exh2 = std::pair<exhash, exhash>(exhash2, exhash1);
 	if((sourcev->find(exh1) != sourcev->end()) | (sourcev->find(exh2) != sourcev->end())) {
 		std::cerr << "\nShould not happen. Source already exists. Double reporting.\n";
-		exit(0); // This can be commented out. Does not impact the source locations.		
+		exit(0); // This can be commented out. Does not impact the source locations.
 		return -1;
 	}
 	sourcev->insert(std::pair<std::pair<exhash, exhash>, RD* >(exh1, rd));
@@ -227,11 +229,15 @@ void printLeakage(RD* rd, Executor* ex) {
 		ref<Expr> h1 = hclc.first;
 		ref<Expr> l1 = hclc.second;
 		range R1 = rit->second;
+
+		/* Return value check */
 		bool checkret = (rd->lrets->find(rit->first) != rd->lrets->end());
 		ref<Expr> rv1 = klee::ConstantExpr::create(true, 1);
 		if(checkret) {
 			rv1 = rd->lrets->find(rit->first)->second;
 		}
+		/* Return value check end */
+
 		//std::cerr << "\n[ "; h1->dump(); l1->dump(); std::cerr << " ] ";
 		//std::cerr << "  ---->  [ " << R1.first << " , " << R1.second << " ]\n";
 		//std::set<exhash> * done = new std::set<exhash>();
@@ -262,12 +268,12 @@ void printLeakage(RD* rd, Executor* ex) {
 			}
 
 			if(h1->compare(*(h2))) {
-				//Return value check//
+				/* Return value check */
 				bool checkret2 = (rd->lrets->find(rit2->first) != rd->lrets->end());
 				//std::cerr << "\ncheckret2 : " << checkret2 << "\n";
 				//std::cerr << "lrets size = " << std::dec << rd->lrets->size() << "\n";
 				ref<Expr> rv2 = klee::ConstantExpr::create(true, 1);
-				/**/
+
 				if(checkret & checkret2) {
 					rv2 = rd->lrets->find(rit2->first)->second;
 					//std::cerr << "\nrv1 : "; rv1->dump();
@@ -280,8 +286,8 @@ void printLeakage(RD* rd, Executor* ex) {
 						continue;
 					}
 				}/**/
-				//Return value check end//
-				
+				/* Return value check */
+
 				ref<Expr> l2 = hclc2.second;
 				ref<Expr> eval = AndExpr::create(l1, l2);
 				//std::cerr << "\neval : "; eval->dump();
@@ -294,9 +300,9 @@ void printLeakage(RD* rd, Executor* ex) {
 						std::cerr << "\n===============\nFound Violation at : ";
 						std::cerr << "\ndiff : " << diff << "\n";
 						/*
-						std::cerr << "\nh1: \n"; h1->dump(); 
-						std::cerr << "\nval1: \n"; rv1->dump(); 
-						std::cerr << "\nh2: \n"; h2->dump(); 
+						std::cerr << "\nh1: \n"; h1->dump();
+						std::cerr << "\nval1: \n"; rv1->dump();
+						std::cerr << "\nh2: \n"; h2->dump();
 						std::cerr << "\nval2: \n"; rv2->dump();
 						*/
 
@@ -315,7 +321,7 @@ void printLeakage(RD* rd, Executor* ex) {
 						std::cerr << "  ---->  [ " << R1.first << " , " << R1.second << " ]\n";
 						std::cerr << "\n[ "; h2->dump(); l2->dump(); std::cerr << " ] ";
 						std::cerr << "  ---->  [ " << R2.first << " , " << R2.second << " ]\n";
-						
+
 						std::set<RD*>::iterator ssit = rd->succ->begin();
 						std::cerr << "\nSuccessors : \n";
 						for(; ssit!=rd->succ->end(); ++ssit) {
@@ -368,6 +374,11 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 		return 0; //Only let leaf nodes perform the following operations
 	}
 
+	if(onlycompletedpaths){
+		if(!rd->pathterminated){
+			return 0;
+		}
+	}
 	//std::cerr << indent << rd->stateid;// << "\n";
 	//if(rd->HAset) {
 	while(rd->HAset) {
@@ -390,7 +401,7 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 				a->lrets->insert(std::pair<exhash, ref<Expr> >(hit->first, hit->second));
 			}
 		}
-		else { 
+		else {
 			RU::iterator rit = rd->Ru->begin();
 			range Rs;
 			for(; rit != rd->Ru->end(); ++rit) {
@@ -420,7 +431,7 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 			}
 		}
 		rd = a;
-		
+
 	}
 	//}
 	//std::cerr << indent << rd->stateid << " : ru : " << rd->ru << "\n";
@@ -442,7 +453,7 @@ RD* getrdmap(ExecutionState * s) {
     	klee::ConstraintManager::constraint_iterator sit = s->constraints.begin();
 		if(s->constraints.size() > 0) {
 			sit = s->constraints.end();
-			--sit;   
+			--sit;
 			ref<Expr> r1 = *sit;
 			r1->dump();
 		}
@@ -464,7 +475,7 @@ RD* getrdmap(ExecutionState * s) {
     klee::ConstraintManager::constraint_iterator sit = s->constraints.begin();
 		if(s->constraints.size() > 0) {
 			sit = s->constraints.end();
-			--sit;   
+			--sit;
 			ref<Expr> r1 = *sit;
 			r1->dump();
 		}
@@ -508,4 +519,3 @@ void initStateRes(RD * s) {
 	s->LC = klee::ConstantExpr::create(true, 1);
 	s->ru = 0;
 }
-

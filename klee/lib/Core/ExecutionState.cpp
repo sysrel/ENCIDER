@@ -167,6 +167,7 @@ ExecutionState::~ExecutionState() {
 }
 
 ExecutionState::ExecutionState(const ExecutionState& state):
+		rdid(state.rdid),
     instCount(state.instCount),
     fnAliases(state.fnAliases),
     pc(state.pc),

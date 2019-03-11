@@ -1,12 +1,3 @@
-/*
-#include "klee/Expr.h"
-#include "klee/util/ExprPPrinter.h"
-#include "klee/util/ExprSMTLIBPrinter.h"
-#include "klee/util/ExprUtil.h"
-#include "klee/ExecutionState.h"
-using namespace llvm;
-using namespace klee;
-*/
 #include <iostream>
 
 #define dbp 0
@@ -40,7 +31,7 @@ void readMemLoc() {
 		}
 	}
 	infile.close();
-	
+
 	std::ifstream infile2("configSYSRel/lowloc.txt");
 	std::string line2;
 	std::string umarker2 = "low";
@@ -152,14 +143,14 @@ void dumpKidsRec(klee::ref<Expr>& cexpr) {
 	}
 }
 
-/* 
+/*
  * Assumption for getProjection and buildProjection is that
- * cexpr has atleast 1 highloc 
+ * cexpr has atleast 1 highloc
  */
 ref<Expr> getProjection(ref<Expr>& cexpr, std::set<std::string> * varset) {
 	//std::set<std::string>* names = getNameofAddressConstraintSet(cexpr);
 	ref<Expr> e = buildProjection(cexpr);
-	return e;	
+	return e;
 }
 
 ref<Expr> buildProjection(ref<Expr>& cexpr) {
@@ -194,11 +185,10 @@ ref<Expr> buildProjection(ref<Expr>& cexpr) {
     }
     case Expr::Concat: return ConcatExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     case Expr::Extract: {
-        klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(kid[1]);
-        //klee::ConstantExpr *DE = dyn_cast<klee::ConstantExpr>(kid[2]);
-        return ExtractExpr::create(kid[0], CE->getZExtValue(), cexpr->getWidth());
+				ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
+        return ExtractExpr::create(buildProjection(kid[0]), EE->offset, EE->width);
     }
-    case Expr::Select: return SelectExpr::create(buildProjection(kid[0]), buildProjection(kid[1]), 
+    case Expr::Select: return SelectExpr::create(buildProjection(kid[0]), buildProjection(kid[1]),
                                                  buildProjection(kid[2]));
     case Expr::Add: return AddExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     case Expr::Sub: return SubExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
@@ -210,8 +200,8 @@ ref<Expr> buildProjection(ref<Expr>& cexpr) {
     case Expr::AShr: return AShrExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     case Expr::LShr: return LShrExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     case Expr::Shl: return ShlExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    
-    case Expr::And:  
+
+    case Expr::And:
     case Expr::Or:
     case Expr::Xor:
     {
@@ -245,12 +235,12 @@ ref<Expr> buildProjection(ref<Expr>& cexpr) {
     case Expr::Sle: return SleExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     case Expr::Sgt: return SgtExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     case Expr::Sge: return SgeExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    
+
     default:
     std::cerr << ">>>> SYSREL ERROR : Unhandled type of expression in buildProjection: " << cexpr->getKind() << "\n";
     exit(0);
     ref<Expr> res = klee::ConstantExpr::create(0, Expr::Bool);
-    return res;    
+    return res;
   }
 }
 
