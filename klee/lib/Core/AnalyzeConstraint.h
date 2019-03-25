@@ -52,21 +52,21 @@ void readMemLoc() {
 bool exprHasVar(klee::ref<Expr> expr, std::set<std::string> * varset) {
   std::set<std::string>* names = getNameofAddressConstraintSet(expr);
   std::set<std::string>::iterator it;
-  #if dbp
+  //#if dbp
     std::cerr << "\n Variables in expression : \n";
   	for(it = names->begin(); it!=names->end(); it++) {
   		std::cerr << *it << " ";
   	}
   	std::cerr << "\n";
-  #endif
+  //#endif
 	for(std::set<std::string>::iterator sit = varset->begin();
 			sit != varset->end(); ++sit) {
 		std::string var = *sit;
 		it = names->find(var);
 	  if(it != names->end()) {
-	  	#if dbp
+	  	//#if dbp
 	  		std::cerr << "Found " << var << "\n";
-	  	#endif
+	  	//#endif
 	  	return true;
 	  }
 	  #if dbp

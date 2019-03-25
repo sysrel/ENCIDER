@@ -4821,6 +4821,7 @@ void Executor::clearFunctionPointers(const MemoryObject *mo, ObjectState *os, Ty
 }
 
 void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool &abort, bool nosym) {
+   std::string uniquefname = state.getUnique(entryFunc->getName().str());
    KFunction *kf = kmodule->functionMap[entryFunc];
    unsigned int ind = 0;
    for(llvm::Function::arg_iterator ai = entryFunc->arg_begin(); ai != entryFunc->arg_end(); ai++) {
@@ -4871,7 +4872,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
-              mo->name = state.getUnique(entryFunc->getName().str()) + std::string("_arg_") + std::to_string(ind);
+              mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
               if (!nosym && mksym) {
                  executeMakeSymbolic(state, mo,
                                      entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind),
@@ -4889,9 +4890,10 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         Instruction *inst = &*(entryFunc->begin()->begin());
         const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
         MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
-        mo->name = state.getUnique(entryFunc->getName().str()) + std::string("_arg_") + std::to_string(ind);
+        mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
         unsigned id = 0;
-        std::string name = "shadow";
+        //std::string name = "shadow";
+        std::string name = uniquefname  + std::string("_arg_") + std::to_string(ind);
         std::string uniqueName = name;
         while (!state.arrayNames.insert(uniqueName).second) {
               uniqueName = name + "_" + llvm::utostr(++id);
