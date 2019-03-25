@@ -14,7 +14,7 @@ std::vector<std::string> * processline(std::string s, std::string delimiter);
 void dumpKids(klee::ref<Expr>& cexpr);
 bool replace(std::string& str, const std::string& from, const std::string& to);
 void removeBrackets(std::string& str);
-ref<Expr> buildProjection(ref<Expr>& cexpr);
+ref<Expr> buildProjection(ref<Expr>& cexpr, bool high);
 
 void readMemLoc() {
 	std::ifstream infile("configSYSRel/highloc.txt");
@@ -63,6 +63,7 @@ bool exprHasVar(klee::ref<Expr> expr, std::set<std::string> * varset) {
 			sit != varset->end(); ++sit) {
 		std::string var = *sit;
 		it = names->find(var);
+          std::cerr << " checking " << var << "\n";
 	  if(it != names->end()) {
 	  	//#if dbp
 	  		std::cerr << "Found " << var << "\n";
@@ -149,11 +150,12 @@ void dumpKidsRec(klee::ref<Expr>& cexpr) {
  */
 ref<Expr> getProjection(ref<Expr>& cexpr, std::set<std::string> * varset) {
 	//std::set<std::string>* names = getNameofAddressConstraintSet(cexpr);
-	ref<Expr> e = buildProjection(cexpr);
+
+	ref<Expr> e = buildProjection(cexpr, (varset == highLoc));
 	return e;
 }
 
-ref<Expr> buildProjection(ref<Expr>& cexpr) {
+ref<Expr> buildProjection(ref<Expr>& cexpr, bool high) {
 	//std::cerr << ">>>> buildProjection Gets called\n";
   int size = cexpr->getNumKids();
   ref<Expr> kid[size];
@@ -165,11 +167,11 @@ ref<Expr> buildProjection(ref<Expr>& cexpr) {
   switch (cexpr->getKind()) {
     case Expr::Not: return NotExpr::create(cexpr);
     case Expr::ZExt: {
-        return ZExtExpr::create(buildProjection(kid[0]), cexpr->getWidth());
+        return ZExtExpr::create(buildProjection(kid[0],high), cexpr->getWidth());
     }
-    case Expr::SExt: return SExtExpr::create(buildProjection(kid[0]), cexpr->getWidth());
+    case Expr::SExt: return SExtExpr::create(buildProjection(kid[0],high), cexpr->getWidth());
     case Expr::NotOptimized: {
-            if(size > 0) { return NotOptimizedExpr::create(buildProjection(kid[0])); }
+            if(size > 0) { return NotOptimizedExpr::create(buildProjection(kid[0],high)); }
             else return NotOptimizedExpr::create(cexpr);
         }
     case Expr::Constant: {
@@ -183,58 +185,61 @@ ref<Expr> buildProjection(ref<Expr>& cexpr) {
         //exit(0);
         break;
     }
-    case Expr::Concat: return ConcatExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
+    case Expr::Concat: return ConcatExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
     case Expr::Extract: {
 				ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
-        return ExtractExpr::create(buildProjection(kid[0]), EE->offset, EE->width);
+        return ExtractExpr::create(buildProjection(kid[0],high), EE->offset, EE->width);
     }
-    case Expr::Select: return SelectExpr::create(buildProjection(kid[0]), buildProjection(kid[1]),
-                                                 buildProjection(kid[2]));
-    case Expr::Add: return AddExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Sub: return SubExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Mul: return MulExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::UDiv: return UDivExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::SDiv: return SDivExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::URem: return URemExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::SRem: return SRemExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::AShr: return AShrExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::LShr: return LShrExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Shl: return ShlExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
+    case Expr::Select: return SelectExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high),
+                                                 buildProjection(kid[2],high));
+    case Expr::Add: return AddExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Sub: return SubExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Mul: return MulExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::UDiv: return UDivExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::SDiv: return SDivExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::URem: return URemExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::SRem: return SRemExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::AShr: return AShrExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::LShr: return LShrExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Shl: return ShlExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
 
     case Expr::And:
     case Expr::Or:
     case Expr::Xor:
     {
-    	bool k0 = exprHasVar(kid[0], highLoc);
-    	bool k1 = exprHasVar(kid[1], highLoc);
-    	if(k0 & k1) {
-    		return AndExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
+    	bool k0 = high ? exprHasVar(kid[0], highLoc) : exprHasVar(kid[0], lowLoc);
+    	bool k1 = high ? exprHasVar(kid[1], highLoc) : exprHasVar(kid[1], lowLoc);
+    	if (k0 && k1) {
+    		return AndExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
     	}
-    	else if(k0) {
-    		return buildProjection(kid[0]);
+    	else if (k0) {
+    		return buildProjection(kid[0],high);
     	}
-    	else if(k1){
-    		return buildProjection(kid[1]);
+    	else if (k1){
+    		return buildProjection(kid[1],high);
     	}
-    	else { // Should not happen since there is a varcheck done before calling getProjection
-    		std::cerr << "Error : Request to duplicate expression with no H value";
-    		cexpr->dump();
+    	else 
+        { // Should not happen since there is a varcheck done before calling getProjection
+    		std::cerr << "high=" << high << " k0=" << k0 << " k1=" << k1 << " Error : Request to duplicate expression with no H value";
+                llvm::errs() << "\nsubexpr 1:\n"; kid[0]->dump();
+    		llvm::errs() << "\nsubexpr 2:\n"; kid[1]->dump();
     		exit(0);
     	}
+
     }
     //case Expr::Or:  return OrExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
     //case Expr::Xor: return XorExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
 
-    case Expr::Eq:  return EqExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Ne:  return NeExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Ult: return UltExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Ule: return UleExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Ugt: return UgtExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Uge: return UgeExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Slt: return SltExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Sle: return SleExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Sgt: return SgtExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
-    case Expr::Sge: return SgeExpr::create(buildProjection(kid[0]), buildProjection(kid[1]));
+    case Expr::Eq:  return EqExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Ne:  return NeExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Ult: return UltExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Ule: return UleExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Ugt: return UgtExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Uge: return UgeExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Slt: return SltExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Sle: return SleExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Sgt: return SgtExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
+    case Expr::Sge: return SgeExpr::create(buildProjection(kid[0],high), buildProjection(kid[1],high));
 
     default:
     std::cerr << ">>>> SYSREL ERROR : Unhandled type of expression in buildProjection: " << cexpr->getKind() << "\n";
