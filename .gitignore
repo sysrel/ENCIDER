@@ -1,3 +1,5 @@
 klee_build_dir
 temp
 build
+klee-out-*
+klee-last
