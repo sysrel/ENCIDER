@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuba/Documents/tools/klee-3.8/klee
+# Install script for directory: /home/tuba/Documents/tools/pmguidedsymex/klee
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -32,7 +32,7 @@ if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
   set(CMAKE_INSTALL_SO_NO_EXE "1")
 endif()
 
-if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
    "/usr/local/lib/klee/runtime/klee-uclibc.bca")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
@@ -41,20 +41,19 @@ if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMP
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/usr/local/lib/klee/runtime" TYPE FILE RENAME "klee-uclibc.bca" FILES "/home/tuba/Documents/tools/klee-3.8/klee-uclibc/lib/libc.a")
+file(INSTALL DESTINATION "/usr/local/lib/klee/runtime" TYPE FILE RENAME "klee-uclibc.bca" FILES "/home/tuba/Documents/tools/pmguidedsymex/klee-uclibc/lib/libc.a")
 endif()
 
-if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/klee" TYPE FILE FILES "/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee.h")
+if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/klee" TYPE FILE FILES "/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee.h")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/lib/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/runtime/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/test/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/docs/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/runtime/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/docs/cmake_install.cmake")
 
 endif()
 
@@ -66,5 +65,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/tuba/Documents/tools/klee-3.8/klee_build_dir/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

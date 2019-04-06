@@ -1,0 +1,2 @@
+KLEE: WARNING: undefined reference to function: printf
+KLEE: WARNING ONCE: calling external: printf(56185840, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:23

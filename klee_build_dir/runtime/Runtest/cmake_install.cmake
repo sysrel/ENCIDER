@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuba/Documents/tools/klee-3.8/klee/runtime/Runtest
+# Install script for directory: /home/tuba/Documents/tools/pmguidedsymex/klee/runtime/Runtest
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -32,7 +32,7 @@ if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
   set(CMAKE_INSTALL_SO_NO_EXE "1")
 endif()
 
-if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
   foreach(file
       "$ENV{DESTDIR}/usr/local/lib/libkleeRuntest.so.1.0"
       "$ENV{DESTDIR}/usr/local/lib/libkleeRuntest.so"
@@ -53,8 +53,8 @@ if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMP
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
 file(INSTALL DESTINATION "/usr/local/lib" TYPE SHARED_LIBRARY FILES
-    "/home/tuba/Documents/tools/klee-3.8/klee_build_dir/lib/libkleeRuntest.so.1.0"
-    "/home/tuba/Documents/tools/klee-3.8/klee_build_dir/lib/libkleeRuntest.so"
+    "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/libkleeRuntest.so.1.0"
+    "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/libkleeRuntest.so"
     )
   foreach(file
       "$ENV{DESTDIR}/usr/local/lib/libkleeRuntest.so.1.0"

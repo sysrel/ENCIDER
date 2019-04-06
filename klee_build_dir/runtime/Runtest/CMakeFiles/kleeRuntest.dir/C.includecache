@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -6,15 +6,15 @@
 
 #IncludeRegexTransform: 
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/ADT/KTest.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/ADT/KTest.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee.h
 stdint.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/stdint.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/stdint.h
 stddef.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/stddef.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/stddef.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/runtime/Runtest/intrinsics.c
+/home/tuba/Documents/tools/pmguidedsymex/klee/runtime/Runtest/intrinsics.c
 assert.h
 -
 stdarg.h
@@ -32,7 +32,7 @@ sys/time.h
 time.h
 -
 klee/klee.h
-/home/tuba/Documents/tools/klee-3.8/klee/runtime/Runtest/klee/klee.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/runtime/Runtest/klee/klee.h
 klee/Internal/ADT/KTest.h
-/home/tuba/Documents/tools/klee-3.8/klee/runtime/Runtest/klee/Internal/ADT/KTest.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/runtime/Runtest/klee/Internal/ADT/KTest.h
 

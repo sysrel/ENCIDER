@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuba/Documents/tools/klee-3.8/klee/lib/Basic
+# Install script for directory: /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Basic
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

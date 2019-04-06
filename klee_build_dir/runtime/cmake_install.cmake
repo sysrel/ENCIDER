@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuba/Documents/tools/klee-3.8/klee/runtime
+# Install script for directory: /home/tuba/Documents/tools/pmguidedsymex/klee/runtime
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -32,7 +32,7 @@ if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
   set(CMAKE_INSTALL_SO_NO_EXE "1")
 endif()
 
-if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
    "/usr/local/lib/klee/runtime/kleeRuntimeIntrinsic.bc;/usr/local/lib/klee/runtime/klee-libc.bc;/usr/local/lib/klee/runtime/libkleeRuntimePOSIX.bca")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
@@ -42,15 +42,15 @@ if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMP
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
 file(INSTALL DESTINATION "/usr/local/lib/klee/runtime" TYPE FILE FILES
-    "/home/tuba/Documents/tools/klee-3.8/klee_build_dir/Release+Debug+Asserts/lib/kleeRuntimeIntrinsic.bc"
-    "/home/tuba/Documents/tools/klee-3.8/klee_build_dir/Release+Debug+Asserts/lib/klee-libc.bc"
-    "/home/tuba/Documents/tools/klee-3.8/klee_build_dir/Release+Debug+Asserts/lib/libkleeRuntimePOSIX.bca"
+    "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/Release+Debug+Asserts/lib/kleeRuntimeIntrinsic.bc"
+    "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/Release+Debug+Asserts/lib/klee-libc.bc"
+    "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/Release+Debug+Asserts/lib/libkleeRuntimePOSIX.bca"
     )
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/runtime/Runtest/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/runtime/Runtest/cmake_install.cmake")
 
 endif()
 

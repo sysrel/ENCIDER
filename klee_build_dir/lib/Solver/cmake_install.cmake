@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuba/Documents/tools/klee-3.8/klee/lib/Solver
+# Install script for directory: /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Solver
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

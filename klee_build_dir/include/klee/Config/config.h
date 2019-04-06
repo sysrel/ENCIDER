@@ -84,7 +84,7 @@
 the runtime directory is in the build tree. Instead we should just define a
 macro for that. That would simplify the C++ code.  */
 /* Root of the KLEE binary build directory */
-#define KLEE_DIR "/home/tuba/Documents/tools/klee-3.8/klee_build_dir"
+#define KLEE_DIR "/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir"
 
 /* Install directory for KLEE binaries */
 #define KLEE_INSTALL_BIN_DIR "/usr/local/bin"

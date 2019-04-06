@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -6,55 +6,55 @@
 
 #IncludeRegexTransform: 
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/expr/Lexer.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/expr/Lexer.h
 string
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/expr/Parser.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/expr/Parser.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/expr/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/expr/klee/Expr.h
 vector
 -
 string
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/CommandLine.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Config/config.h
 llvm/ADT/ArrayRef.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/ADT/ArrayRef.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/ADT/ArrayRef.h
 llvm/Support/CommandLine.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/Support/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/Support/CommandLine.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Common.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Common.h
 klee/Solver.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Solver.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Solver.h
 string
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Config/Version.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Config/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Config/klee/Config/config.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Constraints.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Constraints.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Expr.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Expr.h
 klee/util/Bits.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/util/Bits.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/util/Bits.h
 klee/util/Ref.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/util/Ref.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/util/Ref.h
 llvm/ADT/APInt.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/ADT/APInt.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/ADT/APInt.h
 llvm/ADT/APFloat.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/ADT/APFloat.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/ADT/APFloat.h
 llvm/ADT/DenseSet.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/ADT/DenseSet.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/ADT/DenseSet.h
 llvm/ADT/SmallVector.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/ADT/SmallVector.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/ADT/SmallVector.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/Support/raw_ostream.h
 sstream
 -
 set
@@ -64,35 +64,35 @@ vector
 map
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/ExprBuilder.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/ExprBuilder.h
 Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Expr.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/PrintVersion.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/PrintVersion.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Solver.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Solver.h
 klee/CommandLine.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/CommandLine.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Expr.h
 vector
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/SolverImpl.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/SolverImpl.h
 vector
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Statistic.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Statistic.h
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Config/Version.h
 llvm/Support/DataTypes.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/llvm/Support/DataTypes.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/Support/DataTypes.h
 string
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Statistics.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Statistics.h
 Statistic.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Statistic.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Statistic.h
 vector
 -
 string
@@ -100,17 +100,17 @@ string
 string.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/Bits.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/Bits.h
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/klee/Config/Version.h
 llvm/Support/DataTypes.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/llvm/Support/DataTypes.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/llvm/Support/DataTypes.h
 assert.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ExprHashMap.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/ExprHashMap.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/klee/Expr.h
 ciso646
 -
 unordered_map
@@ -122,11 +122,11 @@ tr1/unordered_map
 tr1/unordered_set
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ExprPPrinter.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/ExprPPrinter.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/klee/Expr.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ExprSMTLIBPrinter.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/ExprSMTLIBPrinter.h
 string
 -
 set
@@ -142,15 +142,15 @@ klee/util/PrintContext.h
 klee/Solver.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ExprVisitor.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/ExprVisitor.h
 ExprHashMap.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/ExprHashMap.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/ExprHashMap.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/PrintContext.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/PrintContext.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/klee/Expr.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/llvm/Support/raw_ostream.h
 sstream
 -
 string
@@ -158,65 +158,65 @@ string
 stack
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/Ref.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/Ref.h
 llvm/Support/Casting.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/util/llvm/Support/Casting.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/util/llvm/Support/Casting.h
 assert.h
 -
 iosfwd
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/main.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/main.cpp
 expr/Lexer.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/expr/Lexer.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/expr/Lexer.h
 expr/Parser.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/expr/Parser.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/expr/Parser.h
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Config/Version.h
 klee/Constraints.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Constraints.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Constraints.h
 klee/Expr.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Expr.h
 klee/ExprBuilder.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/ExprBuilder.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/ExprBuilder.h
 klee/Solver.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Solver.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Solver.h
 klee/SolverImpl.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/SolverImpl.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/SolverImpl.h
 klee/Statistics.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Statistics.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Statistics.h
 klee/CommandLine.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/CommandLine.h
 klee/Common.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Common.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Common.h
 klee/util/ExprPPrinter.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/util/ExprPPrinter.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/util/ExprPPrinter.h
 klee/util/ExprVisitor.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/util/ExprVisitor.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/util/ExprVisitor.h
 klee/util/ExprSMTLIBPrinter.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/util/ExprSMTLIBPrinter.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/util/ExprSMTLIBPrinter.h
 klee/Internal/Support/PrintVersion.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/klee/Internal/Support/PrintVersion.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/klee/Internal/Support/PrintVersion.h
 llvm/ADT/StringExtras.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/ADT/StringExtras.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/ADT/StringExtras.h
 llvm/Support/CommandLine.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/Support/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/Support/CommandLine.h
 llvm/Support/ManagedStatic.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/Support/ManagedStatic.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/Support/ManagedStatic.h
 llvm/Support/MemoryBuffer.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/Support/MemoryBuffer.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/Support/MemoryBuffer.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/Support/raw_ostream.h
 sys/stat.h
 -
 unistd.h
 -
 llvm/Support/Signals.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/Support/Signals.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/Support/Signals.h
 llvm/ADT/OwningPtr.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/ADT/OwningPtr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/ADT/OwningPtr.h
 llvm/Support/system_error.h
-/home/tuba/Documents/tools/klee-3.8/klee/tools/kleaver/llvm/Support/system_error.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/tools/kleaver/llvm/Support/system_error.h
 
 /usr/lib/llvm-3.8/include/llvm-c/Types.h
 llvm/Support/DataTypes.h

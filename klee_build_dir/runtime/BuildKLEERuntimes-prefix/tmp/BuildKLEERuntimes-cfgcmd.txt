@@ -1,1 +1,1 @@
-cmd='/usr/local/bin/cmake;-E;echo;'
+cmd='/usr/bin/cmake;-E;echo;'

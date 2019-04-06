@@ -1,4 +1,4 @@
-# Install script for directory: /home/tuba/Documents/tools/klee-3.8/klee/tools
+# Install script for directory: /home/tuba/Documents/tools/pmguidedsymex/klee/tools
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,12 +34,12 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/gen-random-bout/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/kleaver/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/klee/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/klee-replay/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/klee-stats/cmake_install.cmake")
-  include("/home/tuba/Documents/tools/klee-3.8/klee_build_dir/tools/ktest-tool/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/gen-random-bout/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/kleaver/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/klee/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/klee-replay/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/klee-stats/cmake_install.cmake")
+  include("/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/tools/ktest-tool/cmake_install.cmake")
 
 endif()
 

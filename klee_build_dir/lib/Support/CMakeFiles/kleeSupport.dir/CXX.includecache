@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -6,65 +6,65 @@
 
 #IncludeRegexTransform: 
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Config/Version.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Config/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Config/klee/Config/config.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/ADT/RNG.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/ADT/RNG.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/ADT/TreeStream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/ADT/TreeStream.h
 string
 -
 vector
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/CompressionStream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/CompressionStream.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/llvm/Support/raw_ostream.h
 zlib.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/zlib.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/zlib.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/Debug.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/Debug.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/klee/Config/config.h
 llvm/Support/Debug.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/llvm/Support/Debug.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/llvm/Support/Debug.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/ErrorHandling.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/ErrorHandling.h
 stdio.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/FileHandling.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/FileHandling.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/llvm/Support/raw_ostream.h
 string
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/PrintVersion.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/PrintVersion.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/Support/Timer.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/Support/Timer.h
 stdint.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/System/MemoryUsage.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/System/MemoryUsage.h
 cstddef
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/System/Time.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/System/Time.h
 llvm/Support/TimeValue.h
-/home/tuba/Documents/tools/klee-3.8/klee/include/klee/Internal/System/llvm/Support/TimeValue.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Internal/System/llvm/Support/TimeValue.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/CompressionStream.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/CompressionStream.cpp
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/config.h
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/Version.h
 klee/Internal/Support/CompressionStream.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/CompressionStream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/CompressionStream.h
 llvm/Support/system_error.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/system_error.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/system_error.h
 llvm/Support/FileSystem.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/FileSystem.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/FileSystem.h
 fcntl.h
 -
 errno.h
@@ -76,15 +76,15 @@ sys/stat.h
 unistd.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/ErrorHandling.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/ErrorHandling.cpp
 klee/Internal/Support/ErrorHandling.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/ErrorHandling.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/ErrorHandling.h
 llvm/ADT/StringRef.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/ADT/StringRef.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/ADT/StringRef.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/raw_ostream.h
 llvm/Support/CommandLine.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/CommandLine.h
 stdlib.h
 -
 stdio.h
@@ -98,25 +98,25 @@ string.h
 set
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/FileHandling.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/FileHandling.cpp
 klee/Internal/Support/FileHandling.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/FileHandling.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/FileHandling.h
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/Version.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/config.h
 klee/Internal/Support/ErrorHandling.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/ErrorHandling.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/ErrorHandling.h
 llvm/Support/FileSystem.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/FileSystem.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/FileSystem.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/MemoryUsage.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/MemoryUsage.cpp
 klee/Internal/System/MemoryUsage.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/System/MemoryUsage.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/System/MemoryUsage.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/config.h
 gperftools/malloc_extension.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/gperftools/malloc_extension.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/gperftools/malloc_extension.h
 malloc.h
 -
 malloc/malloc.h
@@ -126,45 +126,45 @@ sanitizer/allocator_interface.h
 sanitizer/asan_interface.h
 -
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/PrintVersion.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/PrintVersion.cpp
 klee/Internal/Support/PrintVersion.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/PrintVersion.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/PrintVersion.h
 klee/Config/config.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/config.h
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/raw_ostream.h
 llvm/Support/CommandLine.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/CommandLine.h
 klee/Config/CompileTimeInfo.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/CompileTimeInfo.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/CompileTimeInfo.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/RNG.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/RNG.cpp
 klee/Internal/ADT/RNG.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/ADT/RNG.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/ADT/RNG.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/Time.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/Time.cpp
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/Version.h
 klee/Internal/System/Time.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/System/Time.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/System/Time.h
 llvm/Support/TimeValue.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/TimeValue.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/TimeValue.h
 llvm/Support/Process.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/Process.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/Process.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/Timer.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/Timer.cpp
 klee/Config/Version.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Config/Version.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Config/Version.h
 klee/Internal/Support/Timer.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/Timer.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/Timer.h
 klee/Internal/System/Time.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/System/Time.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/System/Time.h
 
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/TreeStream.cpp
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/TreeStream.cpp
 klee/Internal/ADT/TreeStream.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/ADT/TreeStream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/ADT/TreeStream.h
 klee/Internal/Support/Debug.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/klee/Internal/Support/Debug.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/klee/Internal/Support/Debug.h
 cassert
 -
 iomanip
@@ -176,7 +176,7 @@ iterator
 map
 -
 llvm/Support/raw_ostream.h
-/home/tuba/Documents/tools/klee-3.8/klee/lib/Support/llvm/Support/raw_ostream.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Support/llvm/Support/raw_ostream.h
 string.h
 -
 
