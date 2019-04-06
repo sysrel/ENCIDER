@@ -262,12 +262,20 @@ void printLeakage(RD* rd, Executor* ex) {
 			bool sourcecheck = true;
 			if(sourcecheck) {
 				std::pair<exhash, exhash> exh1 = std::pair<exhash, exhash>(exhash1, exhash2);
-				if((sourcev->find(exh1) != sourcev->end())) {
+				std::pair<exhash, exhash> exh2 = std::pair<exhash, exhash>(exhash2, exhash1);
+				if (sourcev->find(exh1) != sourcev->end() || sourcev->find(exh2) != sourcev->end()) {
 					continue;
 				}
 			}
 
-			if(h1->compare(*(h2))) {
+                        // check resource usage diff
+			range R2 = rit2->second;
+			range r = combineRange(R1, R2);
+			int diff = r.second - r.first;
+			if(diff > epsilon) {
+
+
+			   if(h1->compare(*(h2))) {
 				/* Return value check */
 				bool checkret2 = (rd->lrets->find(rit2->first) != rd->lrets->end());
 				//std::cerr << "\ncheckret2 : " << checkret2 << "\n";
@@ -292,10 +300,6 @@ void printLeakage(RD* rd, Executor* ex) {
 				ref<Expr> eval = AndExpr::create(l1, l2);
 				//std::cerr << "\neval : "; eval->dump();
 				if(isTrue(eval, ex)) {
-					range R2 = rit2->second;
-					range r = combineRange(R1, R2);
-					int diff = r.second - r.first;
-					if(diff > epsilon) {
 						vc++;
 						std::cerr << "\n===============\nFound Violation at : ";
 						std::cerr << "\ndiff : " << diff << "\n";

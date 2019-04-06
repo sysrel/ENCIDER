@@ -109,6 +109,7 @@ std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::Execution
 
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
+#define PRIM_LAZY_INIT_SIZE  1000
 
 cl::opt<bool>
 InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"),
@@ -248,9 +249,17 @@ bool isLazyInit(Type *t, bool &single, int &count) {
         single = isLazySingle(typestr);
         return true;
      }
-  count = origvalue;
-  single = false;
-  return false;
+
+  if (t->getPrimitiveSizeInBits()) {
+      count = PRIM_LAZY_INIT_SIZE; 
+      single = false;
+      return true;
+  }
+  else {
+    count = origvalue;
+    single = false;
+    return false;
+  }
 }
 
 bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
@@ -278,8 +287,15 @@ bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
         return true;
      }
   }
-  count = origvalue;
-  single = false;
+  if (t->getPrimitiveSizeInBits()) {
+      count = PRIM_LAZY_INIT_SIZE; 
+      single = false;
+      return true;
+  }
+  else {
+     count = origvalue;
+     single = false;
+  }
   return false;
 }
 
@@ -3430,11 +3446,12 @@ void Executor::run(ExecutionState &initialState) {
 			    	std::cerr << "\n>>>> Branch Condition : \n";
 						r1->dump();
 						bool hasHloc = exprHasVar(r1, highLoc);
+                                                bool hasLloc = exprHasVar(r1, lowLoc);
 						RD* srd = newNode(s);
 						s->rdid = srd->stateid;
 						rdmapinsert(s->rdid, srd);
 
-						if(hasHloc) {
+						if(hasHloc && !hasLloc) {
 							//Update currentstate
 							if(!done) {
 
@@ -3445,6 +3462,7 @@ void Executor::run(ExecutionState &initialState) {
 								printsucc = true;
 							}
 
+                                                        std::cerr << "Projection on high\n";
 							ref<Expr> proj = getProjection(r1, highLoc);
 							std::cerr << "\n>>>> Projection : ";
 							proj->dump();
@@ -3453,7 +3471,8 @@ void Executor::run(ExecutionState &initialState) {
 							srd->HAset = true;
 							srd->HC = proj;
 							srd->LC = klee::ConstantExpr::create(true, 1);
-							srd->ru = state.ru + ICost;
+							srd->ru = currentRD->ru;
+							//srd->ru = state.ru + ICost;
 						}
 						else {
 							if(currentRD->HAset) {
@@ -3462,11 +3481,16 @@ void Executor::run(ExecutionState &initialState) {
 								srd->HC = currentRD->HA->HC;
 							}
 							srd->HC = currentRD->HC;
-							ref<Expr> proj = getProjection(r1, lowLoc);
-							std::cerr << "\n>>>> Projection : ";
-							proj->dump();
-							srd->LC = AndExpr::create(currentRD->LC, proj);
-							srd->ru = state.ru;
+                                                        if (hasLloc) {
+                                                           std::cerr << "Projection on low\n";
+   							   ref<Expr> proj = getProjection(r1, lowLoc);
+							   std::cerr << "\n>>>> Projection : ";
+							   proj->dump();
+							   srd->LC = AndExpr::create(currentRD->LC, proj);
+                                                        }
+                                                        else srd->LC = currentRD->LC;
+							srd->ru = currentRD->ru;
+							//srd->ru = state.ru;
 						}
 						currentRD->succ->insert(srd);
 						printResourceUsage(srd);
