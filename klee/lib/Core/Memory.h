@@ -215,6 +215,13 @@ public:
   void flushToConcreteStore(TimingSolver *solver,
                             const ExecutionState &state) const;
 
+  /* SYSREl extension */
+  /* side channel */
+  bool isHigh() const;
+  bool isLow() const;
+  /* SYSREl extension */
+ 
+
 private:
   const UpdateList &getUpdates() const;
 

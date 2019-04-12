@@ -15,6 +15,7 @@
 #include "klee/Internal/Module/KModule.h"
 
 #include "klee/Expr.h"
+#include "klee/sysrel.h"
 
 #include "Memory.h"
 #include "llvm/IR/Function.h"
@@ -143,8 +144,10 @@ void ExecutionState::extendExecutionWith(KFunction *kf) {
   bool abort = false;
   ((Executor*)theInterpreter)->initArgsAsSymbolic(*this, kf->function, abort);
   assert(!abort);
+  #ifdef VB
   llvm::outs() << "extending execution with the first instruction \n";
   pc->inst->print(llvm::outs());
+  #endif
 }
 /* SYSREL */
 
@@ -202,6 +205,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     cur_mergehandler->addOpenState(this);
 
   /* SYSREL */
+  lastCondition = state.lastCondition;
   threadsQueue = state.threadsQueue; 
   rtid = state.rtid;
   waitingForThreadsToTerminate = state.waitingForThreadsToTerminate;
@@ -722,7 +726,9 @@ void ExecutionState::updateLCMState() {
      else assert(0); 
      lcmState->setInitialized();
   }
+  #ifdef VB
   llvm::outs() << "LCM state after update: " << lcmState->getCurrentStep() << "\n";
+  #endif
 }
 
 bool ExecutionState::lcmStepMovesWhenReturns(std::string fname) {
@@ -860,11 +866,15 @@ bool LifeCycleModelState::hasCompleted() {
 }
 
 bool LifeCycleModelState::stepMovesWhenReturns(std::string fname) {
+ #ifdef VB
   llvm::outs() << "step moves when " << fname << " returns?\n";
+ #endif
   Sequential *seq = lcm->getStep(state);
   if (seq->getType() == identifier) {
+    #ifdef VB
     llvm::outs() << "current state: " << state << "\n";
     llvm::outs() << "current step: " << ((Identifier*)seq)->getValue() << "\n"; 
+    #endif
     return ((Identifier*)seq)->getValue() == fname;
   }
   assert(seq->getType() == parallel);
@@ -891,10 +901,21 @@ void LifeCycleModelState::setInitialized() {
 }
 
 bool LifeCycleModelState::completesWith(std::string fn) {
+  #ifdef VB
    llvm::outs() << "checking completes with for " << fn << " state " << state  << "numsteps " << lcm->getNumSteps() << "\n";
+  #endif
    return (state == lcm->getNumSteps() - 1 && stepMovesWhenReturns(fn));
 }
 
+bool LifeCycleModelState::isLastStep(std::string fn) {
+  Sequential *seq = lcm->getStep(lcm->getNumSteps() - 1);
+  assert(seq->getType() == identifier);
+  #ifdef VB
+    llvm::outs() << "current state: " << state << "\n";
+    llvm::outs() << "current step: " << ((Identifier*)seq)->getValue() << "\n"; 
+  #endif
+  return ((Identifier*)seq)->getValue() == fn;
+}
 
 AsyncInfo::AsyncInfo(Function *f) {
     function = f;
@@ -1082,12 +1103,16 @@ llvm::Type *ExecutionState::getSymbolType(std::string sym) {
 }
 
 void ExecutionState::recordAlloc(ref<Expr> address) {
+  #ifdef VB
   llvm::errs() << "Recording alloc " << address << "\n";
+  #endif
   alloced.insert(address);
 }
 
 void ExecutionState::recordFree(ref<Expr> address) {
+  #ifdef VB
   llvm::errs() << "Recording free " << address << "\n";
+  #endif
   freed.insert(address);
 }
 
@@ -1164,8 +1189,9 @@ PMFrame::PMFrame(const PMFrame &pf) {
 }
 
 void PMFrame::execute(ExecutionState &state, bool &term, bool &comp, bool &abort) {
-
+  #ifdef VB
   llvm::errs() << "PMFrame's action:\n "; action->print();
+  #endif
   action->execute(*this, state, args, target, term, comp, abort, tid);
   
 }
@@ -1181,10 +1207,12 @@ void PMFrame::setPMAction(int cn) {
 void ExecutionState::pushPMFrame(APIAction *a, std::vector< ref<Expr> > arguments, 
           KInstruction *target, int tid) {
    PMFrame *pf = new PMFrame(a, arguments, target, tid);
+   #ifdef VB
    llvm::errs() << "pushing to PM stack of size=" << pmstack.size() << "\n";
    a->print();
    for(int i=0; i<arguments.size(); i++)
       llvm::errs() << "arg " << i << "=" << arguments[i] << "\n";
+  #endif
    pmstack.push_back(pf);
 }
 
@@ -1205,16 +1233,22 @@ void ExecutionState::executePM(bool &abort) {
      return;
   int top = pmstack.size() - 1;
   if (pmstack[top]->callback != "") {
+     #ifdef VB
      llvm::errs() << "skipping rest of the APIAction to wait for the callback to finish!\n";
+    #endif
      return;
   } 
+  #ifdef VB
   llvm::errs() << "Executing PMFrame, callback=" << pmstack[top]->callback << "\n";
+  #endif
   bool term;
   bool comp;
   pmstack[top]->execute(*this, term, comp, abort);
   if (abort) return;
   if (term || comp) {
+     #ifdef VB
      llvm::errs() << "APIAction completed\n"; pmstack[top]->action->print();
+     #endif
      popPMFrame(); 
   }   
   // in case an apisubblock frame is on the stack
@@ -1241,7 +1275,9 @@ std::string ExecutionState::getPMCallback() {
 
 void ExecutionState::checkAndSetPMCallbackCompleted(std::string cbn) {
    if (getPMCallback() == cbn) {
+      #ifdef VB
       llvm::errs() << "API callback " << cbn << " completed!\n";
+     #endif
       setPMCallback("");
       // Has the APIAction completed?
       if (getPMAction() >= getPMNumActions())
@@ -1263,6 +1299,19 @@ int ExecutionState::getPMNumActions() {
     return pmstack[top]->action->getNumActions();
 }
 
+
+ref<Expr> ExecutionState::addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &arrayCache) {
+   Function *f = moduleHandle->getFunction(entry);
+   Type *t = f->getReturnType();
+   const llvm::DataLayout & dl = f->getParent()->getDataLayout();
+   size_t allocationAlignment = 8;
+   MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(t), false, /*true*/false, NULL, allocationAlignment);
+   mo->name = name;
+   const Array *array = arrayCache.CreateArray(mo->name, mo->size);
+   ObjectState *sos = ((Executor*)theInterpreter)->bindObjectInState(*this, mo, true, array);
+   ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), ((Executor*)theInterpreter)->getWidthForLLVMType(t));
+   return result; 
+}
 
 /* SYSREL */
 

@@ -1560,7 +1560,9 @@ bool IgnoreAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState
            std::vector< ref<Expr> > &arguments, KInstruction *target, bool &term, bool &comp, bool &abort, int tid) {
     comp = true;
     std::vector<std::string> pars = action->getParams();
+    #ifdef VB
     llvm::outs() << "Handling ignore api " << pars[0] << "\n";
+    #endif
     return true;
 }
 
@@ -1627,7 +1629,7 @@ void APIHandler::executeCallback(ExecutionState &state, std::string cbexpr, std:
    ((Executor*)theInterpreter)->initArgsAsSymbolic(state, kf->function, abort, true);
    if (abort) return;       
   }
-  else {
+  else {   
      llvm::errs() << "WARNING: Callback function is an external function, expr=" << cbexpr << "!\n";
      comp = true;
      return ;
@@ -2040,7 +2042,9 @@ bool APIHandler::handle(ExecutionState &state,
                                KInstruction *target, bool &abort,
                                int tid) {
   if (apiModel.find(fname) == apiModel.end()) {
+     #ifdef VB
      llvm::outs() << "external function " << fname << " not handled\n"; 
+     #endif
      return false;
   }
   Function *function = kmoduleExt->module->getFunction(fname);
@@ -2067,7 +2071,9 @@ bool APIHandler::handle(ExecutionState &state,
         llvm::outs() << "WARNING: api both branching and requesting not to symbolize the return value!\n";
 
      if (symbolizeRetValueOK) {
+        #ifdef VB
         llvm::outs() << "symbolizing ret value in handler for function " << function->getName() << "\n";
+        #endif
         ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function, abort);
         if (abort) return false;
      }
@@ -2544,7 +2550,9 @@ std::string APIAction::getFunctionName() {
 
        
 bool APIAction::assignsRetValue() {
+  #ifdef VB
    llvm::errs() << "Checking return value with the handler..\n";
+   #endif
    return handler->assignsRetValue(this);
 }
 

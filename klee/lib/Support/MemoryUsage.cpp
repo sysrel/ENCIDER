@@ -90,12 +90,12 @@ size_t util::GetTotalMallocUsage() {
   return ASAN_GET_ALLOCATED_MEM_FUNCTION();
 #endif
 
-#ifdef HAVE_GPERFTOOLS_MALLOC_EXTENSION_H
+//#ifdef HAVE_GPERFTOOLS_MALLOC_EXTENSION_H
   size_t value = 0;
   MallocExtension::instance()->GetNumericProperty(
       "generic.current_allocated_bytes", &value);
   return value;
-#elif HAVE_MALLINFO
+/*#elif HAVE_MALLINFO
   struct mallinfo mi = ::mallinfo();
   // The malloc implementation in glibc (pmalloc2)
   // does not include mmap()'ed memory in mi.uordblks
@@ -114,9 +114,9 @@ size_t util::GetTotalMallocUsage() {
   return Stats.size_in_use;
 
 #else // HAVE_MALLINFO
-
+*/
 #warning Cannot get malloc info on this platform
   return 0;
 
-#endif
+//#endif
 }

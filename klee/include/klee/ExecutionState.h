@@ -120,6 +120,7 @@ public:
   unsigned int getNumSteps();
   Sequential *getStep(unsigned int);
   lcmType getType() ;
+  virtual std::string getValue() { return ""; }
 };
 
 
@@ -130,7 +131,7 @@ private:
 public:
   Identifier(std::string s);
   virtual void print();
-  std::string getValue();
+  virtual std::string getValue();
 };
 
 class Parallel : public Sequential {
@@ -166,6 +167,7 @@ public:
   bool stepMovesWhenReturns(std::string);
   bool isCompleted();
   bool completesWith(std::string);
+  bool isLastStep(std::string fname);
 };
 
 class PMFrame {
@@ -203,6 +205,7 @@ public:
   /* Rsource Usage Related Fields */
   unsigned ru = 0;
   int rdid = -1;
+  ref<Expr> addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &array);
   /* Side channel end */
   int instCount;
   std::map<ref<Expr>,int> lockModel;
@@ -388,11 +391,12 @@ public:
   /* SYSREL extension */
 
   void addSymbolic(const MemoryObject *mo, const Array *array);
-  void addConstraint(ref<Expr> e) { constraints.addConstraint(e); }
+  void addConstraint(ref<Expr> e) { lastCondition = e; constraints.addConstraint(e); }
 
   bool merge(const ExecutionState &b);
   void dumpStack(llvm::raw_ostream &out) const;
   /* SYSREL extension */
+  ref<Expr> lastCondition;
   void dumpStackThread(llvm::raw_ostream &out) const;
   void recordAlloc(ref<Expr>);
   void recordFree(ref<Expr>);

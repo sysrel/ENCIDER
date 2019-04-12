@@ -366,7 +366,9 @@ endif()
 ################################################################################
 # TCMalloc support
 ################################################################################
-OPTION(ENABLE_TCMALLOC "Enable TCMalloc support" OFF)
+#OPTION(ENABLE_TCMALLOC "Enable TCMalloc support" OFF)
+OPTION(ENABLE_TCMALLOC "Enable TCMalloc support" ON)
+set(ENABLE_TCMALLOC ON)
 if (ENABLE_TCMALLOC)
   message(STATUS "TCMalloc support enabled")
   set(TCMALLOC_HEADER "gperftools/malloc_extension.h")

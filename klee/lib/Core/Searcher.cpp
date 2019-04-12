@@ -239,7 +239,9 @@ double WeightedRandomSearcher::getWeight(ExecutionState *es) {
     /* SYSTEL extension */
     uint64_t md2u;
     if (!asyncMode || es->rtid < 0) {
+       #ifdef VB
        llvm::outs() << "main thread es->rtid=" << es->rtid << "\n";
+       #endif
        if (!es->getWaitingForThreadsToTerminate()) { // otherwise pc is not valid
           md2u = computeMinDistToUncovered(es->pc,
                                               es->stack.back().minDistToUncoveredOnReturn);

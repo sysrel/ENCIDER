@@ -38,6 +38,12 @@ namespace {
                     cl::init(true));
 }
 
+/* SYSREL extension */
+extern std::set<std::string> * highLoc;
+extern std::set<std::string> * lowLoc;
+extern bool exprHasVar(klee::ref<Expr> expr, std::set<std::string> * varset);
+/* SYSREL extension */
+
 /***/
 
 ObjectHolder::ObjectHolder(const ObjectHolder &b) : os(b.os) { 
@@ -243,6 +249,36 @@ void ObjectState::flushToConcreteStore(TimingSolver *solver,
         ce->toMemory(concreteStore + i);
     }
   }
+}
+
+
+bool ObjectState::isHigh() const {
+ ref<Expr> value = read(ConstantExpr::alloc(0, Expr::Int64), size * 8);
+ return exprHasVar(value, highLoc);
+ /* 
+ for (unsigned i = 0; i < size; i++) {
+    if (isByteKnownSymbolic(i)) {
+    llvm::errs() << "checking ishigh " << knownSymbolics[i] << "\n";
+       if (exprHasVar(knownSymbolics[i], highLoc))
+          return true;
+    }
+ }
+ return false;
+ */
+}
+
+bool ObjectState::isLow() const {
+ ref<Expr> value = read(ConstantExpr::alloc(0, Expr::Int64), size * 8);
+ return exprHasVar(value, lowLoc);
+ /*
+ for (unsigned i = 0; i < size; i++) {
+    if (isByteKnownSymbolic(i)) {
+       if (exprHasVar(knownSymbolics[i], lowLoc))
+          return true;
+    }
+ }
+ return false;
+ */
 }
 
 void ObjectState::makeConcrete() {

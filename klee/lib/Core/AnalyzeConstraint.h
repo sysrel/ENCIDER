@@ -52,27 +52,29 @@ void readMemLoc() {
 bool exprHasVar(klee::ref<Expr> expr, std::set<std::string> * varset) {
   std::set<std::string>* names = getNameofAddressConstraintSet(expr);
   std::set<std::string>::iterator it;
-  //#if dbp
+  #if VBSC
     std::cerr << "\n Variables in expression : \n";
   	for(it = names->begin(); it!=names->end(); it++) {
   		std::cerr << *it << " ";
   	}
   	std::cerr << "\n";
-  //#endif
+  #endif
 	for(std::set<std::string>::iterator sit = varset->begin();
 			sit != varset->end(); ++sit) {
 		std::string var = *sit;
 		it = names->find(var);
+         #ifdef VBSC
           std::cerr << " checking " << var << "\n";
+         #endif
 	  if(it != names->end()) {
-	  	//#if dbp
+	  	#if VBSC
 	  		std::cerr << "Found " << var << "\n";
-	  	//#endif
+	  	#endif
 	  	return true;
 	  }
-	  #if dbp
+	  #if VBSC
 			std::cerr << "NotFound " << var << "\n";
-		#endif
+          #endif
   }
   return false;
 }
@@ -88,9 +90,9 @@ std::string getString(ref<Expr> e){
 std::set<std::string>* getNameofAddressConstraintSet(klee::ref<Expr> cexpr) {
   std::set<std::string>* names = new std::set<std::string>();
   std::vector< ref<ReadExpr> > results;
-  #if dbp
+  #if VBSC
 		std::cerr << "\n : findReads : \n";
-	#endif
+  #endif
   findReads(cexpr, false, results);
 	std::string s;
   for(std::vector<ref<ReadExpr> >::iterator rit = results.begin();
@@ -109,7 +111,7 @@ std::set<std::string>* getNameofAddressConstraintSet(klee::ref<Expr> cexpr) {
 			names->insert(n);
 		}
   }
-  #if dbp
+  #if VBSC
 		std::cerr << " : findReads : end\n";
   #endif
   return names;

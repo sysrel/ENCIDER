@@ -15,6 +15,7 @@
 #include "klee/Expr.h"
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "klee/Interpreter.h"
+#include "klee/sysrel.h"
 
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/MathExtras.h"
@@ -120,7 +121,9 @@ MemoryManager::~MemoryManager() {
 
 
 ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::Type *t, bool &result) {
+  #ifdef VB
    llvm::errs() << "in getInstanceAddressForType " << getTypeName(t) << " type pointer=" << t << "\n";
+  #endif
   if (state.lazyInitSingleInstances.find(t) != state.lazyInitSingleInstances.end()) {
       result = true;
      return state.lazyInitSingleInstances[t]->getBaseExpr();
@@ -128,7 +131,9 @@ ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::
   else  {
         // Grab the address mapped to this type
         if (state.typeToAddr.find(t) != state.typeToAddr.end()) {
+            #ifdef VB
             llvm::outs() << "found the instance for type " << getTypeName(t) << "\n";
+            #endif
             result = true;
             return state.typeToAddr[t];
         }
@@ -138,7 +143,9 @@ ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::
         if (embeddedTypes.find(t) != embeddedTypes.end()) {
            std::set<llvm::Type*> embset = embeddingTypes[t];
            if (embset.size() > 1) {
+               #ifdef VB
                llvm::errs() << "Warning: Single instance embedded type has multiple embedders!\n";
+               #endif
            }
            else { // must be one
                for(auto et : embset) {
@@ -153,13 +160,17 @@ ref<Expr> MemoryManager::getInstanceAddressForType(ExecutionState &state, llvm::
                      unsigned i = 0;
                      for(; i< set->getNumElements(); i++) {                   
                         if (set->getElementType(i) == t) {
+                           #ifdef VB
                            llvm::outs() << "matched element " << i << " to type " << getTypeName(t) << "\n";
+                           #endif
                             break;
                         }
                      }
                      assert(i >=0  && i < set->getNumElements());
                      ref<Expr> re = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), eaddr);
+                     #ifdef VB
                      llvm::outs() << "instance for embedded type found at " << re << " after adding offset " << sl->getElementOffset(i) << " for element " << i << " to addr " << eaddr << "\n";
+                     #endif
                      result = true;
                      return re;
                    }
@@ -179,7 +190,9 @@ MemoryObject *MemoryManager::simulateMalloc(ExecutionState &state, ref<Expr> siz
     MemoryObject *mo = allocate(CE->getZExtValue(), false, /*isGlobal=*/false,
                           state.prevPC->inst, allocationAlignment);
     mo->name = "smalloc" + CE->getZExtValue();
+    #ifdef VB
     llvm::outs() << "simulating allocation of size : " << CE->getZExtValue() << " at address " << mo->getBaseExpr() << "\n";
+    #endif
     return mo;  
  } 
  assert(false && "Not simulating symbolic size memory allocations!"); 
@@ -208,10 +221,14 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
            rallocType = allocType;
            resaddr = state.lazyInitSingleInstances[allocType]->getBaseExpr();
            if (state.isFreed(resaddr)) {
+              #ifdef VB
               llvm::errs() << "Single instance use after free!\n";
+              #endif
               ((Executor*)theInterpreter)->terminateStateOnError(state, "Single instance use after free!", Executor::Ptr);
            }
+           #ifdef VB
            llvm::outs() << "returning address " << state.lazyInitSingleInstances[allocType]->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+           #endif
            sym = false;
            return state.lazyInitSingleInstances[allocType];
         }
@@ -236,14 +253,18 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
                 unsigned i = 0;
                 for(; i< set->getNumElements(); i++) {                   
                     if (set->getElementType(i) == origType) {
+                       #ifdef VB
                        llvm::outs() << "matched element " << i << " to type " << getTypeName(origType) << "\n";
+                       #endif
                         break;
                     }
                 }
                 assert(i >=0  && i < set->getNumElements());
                 resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), op.first->getBaseExpr());
               }
+              #ifdef VB
               llvm::outs() << "returning address " << op.first->getBaseExpr() << " as embedded type ancestor instance " << rso.str() << "\n"; 
+              #endif
               sym = false;
               return op.first;
            }
@@ -252,7 +273,9 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
            //assert(0 && "could not resolve embedded type address\n");
         }
      }
+     #ifdef VB
      llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
+     #endif
      mo = allocate(dl.getTypeAllocSize(allocType)*count, false, /*true*/false, inst, allocationAlignment);
      resaddr = mo->getBaseExpr();
      rallocType = allocType;
@@ -260,12 +283,16 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
      if (st) {
         std::string tname = getTypeName(allocType); 
         state.typeToAddr[allocType] = mo->getBaseExpr();
+        #ifdef VB
         llvm::outs() << "mapping lazy instance of " << tname << " to " << mo->getBaseExpr() << "\n";
+        #endif
      }   
 
      if (isSingle) {
         state.lazyInitSingleInstances[allocType] = mo;
+        #ifdef VB
         llvm::errs() << "storing address " << mo->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+        #endif
      }
      sym = true;
      return mo;
@@ -297,7 +324,9 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
         if (state.lazyInitSingleInstances.find(allocType) != state.lazyInitSingleInstances.end()) {
            rallocType = allocType;
            resaddr = state.lazyInitSingleInstances[allocType]->getBaseExpr();
+           #ifdef VB
            llvm::errs() << "returning address " << state.lazyInitSingleInstances[allocType]->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+           #endif	
            sym = false;
            return state.lazyInitSingleInstances[allocType];
         }
@@ -322,14 +351,18 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
                 unsigned i = 0;
                 for(; i< set->getNumElements(); i++) {                   
                     if (set->getElementType(i) == origType) {
+                       #ifdef VB
                        llvm::outs() << "matched element " << i << " to type " << getTypeName(origType) << "\n";
+                       #endif
                         break;
                     }
                 }
                 assert(i >=0  && i < set->getNumElements());
                 resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), op.first->getBaseExpr());
               }
+              #ifdef VB
               llvm::outs() << "returning address " << op.first->getBaseExpr() << " as embedded type ancestor instance " << rso.str() << "\n"; 
+              #endif
               sym = false;
               return op.first;
            }
@@ -349,34 +382,44 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
            std::string es2 = getTypeName(et);
            if (inferenceClue.find(es1) != inferenceClue.end() && !isAnInferenceClue(es1, es2))
               continue;
+           #ifdef VB
            llvm::errs() << "Checking inference clue " << es1 << "," << es2 << "\n";
+           #endif
            /*if (hint != "" && es1.find("struct.device") != std::string::npos && es2.find(hintS) == std::string::npos)
               continue;
            else if (hint == "" && es1.find("struct.device") != std::string::npos && es2.find("struct.usb_device") == std::string::npos)
               continue;*/                   
            llvm::StructType *set = dyn_cast<llvm::StructType>(et);
            assert(set);
+           #ifdef VB
            llvm::errs() << "moduleHandle " << moduleHandle << " set=" << set << " opaque? " << set->isOpaque() << "\n";
+           #endif
            const llvm::StructLayout *sl =  dl.getStructLayout(set);
            ref<Expr> sub;
            int etcount = 1;
            bool etisSingle;
            bool ilz = isAllocTypeLazyInit(et, etisSingle, etcount);
+           #ifdef VB
            llvm::outs() << "Chose embedded type " << es2 << " etcount= " << etcount << "\n";      
+           #endif
            const MemoryObject *mo = allocateLazyForTypeOrEmbedding(state, inst, origType, et, etisSingle, etcount, rallocType, sub, sym, abort);
            if (mo) {
               //const llvm::DataLayout &dl = moduleHandle->getDataLayout();
               unsigned i = 0;
               for(; i< set->getNumElements(); i++) {                   
                  if (set->getElementType(i) == allocType) {
+                   #ifdef VB
                     llvm::outs() << "matched element " << i << " to type " << getTypeName(allocType) << "\n";
+                   #endif
                     break;
                  }
               }
               assert(i >=0  && i < set->getNumElements());
               resaddr = AddExpr::create(ConstantExpr::create(sl->getElementOffset(i), Expr::Int64), mo->getBaseExpr());
+              #ifdef VB
               llvm::outs() << "instance for embedded type found at " << resaddr << " after adding offset " 
                            << sl->getElementOffset(i) << " for element " << i << " to addr " << mo->getBaseExpr() << "\n";
+              #endif
               return mo;
            }
                      
@@ -462,23 +505,31 @@ MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::In
  if (isSingle) {
     mo = getInstanceForType(state, allocType);
    if (mo) {
+      #ifdef VB
       llvm::outs() << "returning address " << mo->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+      #endif
       return mo;
    }
  }
+ #ifdef VB 
  llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
+ #endif 
  mo = allocate(dl.getTypeAllocSize(allocType)*count, false, /*true*/false, inst, allocationAlignment);
  llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
  if (st) {
     std::string tname = getTypeName(allocType); 
     state.typeToAddr[allocType] = mo->getBaseExpr();
+    #ifdef VB
     llvm::outs() << "mapping lazy instance of " << tname << " to " << mo->getBaseExpr() << "\n";
+    #endif
  }   
 
 
  if (isSingle) {
     state.lazyInitSingleInstances[allocType] = mo;
+    #ifdef VB
     llvm::outs() << "storing address " << mo->getBaseExpr() << " as single instance of type " << rso.str() << "\n"; 
+    #endif
  }
  return mo;
 }
@@ -542,8 +593,10 @@ MemoryObject *MemoryManager::allocate(uint64_t size, bool isLocal,
   MemoryObject *res = new MemoryObject(address, size, isLocal, isGlobal, false,
                                        allocSite, this);
 
+  #ifdef VB
   llvm::outs() << "Allocated object of size " << size << " at address " << address << "\n";
   llvm::outs() << "Basexpr=" << res->getBaseExpr() << "\n";
+  #endif
 
   objects.insert(res);
   return res;

@@ -81,6 +81,7 @@ bool asyncMode = false;
 std::vector<std::string> asyncFunc;
 std::vector<std::string> enabledFunc;
 std::string entryFunctionName;
+std::string sidechannelentry;
 bool lazyInit = false;
 bool lazySpec = false;
 int numLazyInst = 20;
@@ -173,8 +174,17 @@ namespace {
   cl::opt<std::string>
   InferenceClue("infer-clue-spec", cl::desc("Inference Clue Spec File, embedded type and embedding type pairs\n"));
 
+  cl::opt<std::string>
+  SideChannelEntryPoint("side-channel-entry", cl::desc("function name from which time side channel analysis will be initiated \ 
+                                            \n \t (default is the symbolic execution entry point) \n"));
 
+   cl::opt<std::string>
+   SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
+                                             \n \t (use naive for using all leaf nodes (may not terminate)\n \
+                                             \n \t (use decompose for focusing on relevant candidates only\n"));
+                                             
   /* SYSREL extension */
+
 
   cl::opt<std::string>
   RunInDir("run-in", cl::desc("Change to the given directory prior to executing"));
@@ -523,17 +533,21 @@ void KleeHandler::processTestCase(const ExecutionState &state,
     unsigned id = ++m_numTotalTests;
 
     /* SYSREL extxension */
+    #ifdef VB
     if (!success) {
        llvm::errs() << "unable to get symbolic solution, losing test case\n";
        ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
     }
+    #endif
     /* SYSREL extxension */
 
 
     if (success) {
       /* SYSREL extxension */
+      #ifdef VB
       llvm::errs() << "\nPath constraint:\n";
       ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
+      #endif
       /* SYSREL extxension */
 
       KTest b;
@@ -770,6 +784,8 @@ static int initEnv(Module *mainModule) {
   */
 
   Function *mainFn = mainModule->getFunction(EntryPoint);
+  entryFunctionName = mainFn->getName();
+  sidechannelentry = (SideChannelEntryPoint.c_str()) ? SideChannelEntryPoint : entryFunctionName ;
   if (!mainFn) {
     klee_error("'%s' function not found in module.", EntryPoint.c_str());
   }
@@ -1455,6 +1471,8 @@ static llvm::Module *linkWithUclibc(llvm::Module *mainModule, StringRef libDir) 
   // the environment arguments to what uclibc expects (following
   // argv), since it does not explicitly take an envp argument.
   Function *userMainFn = mainModule->getFunction(EntryPoint);
+  entryFunctionName = userMainFn->getName();
+  sidechannelentry = (SideChannelEntryPoint.c_str()) ? SideChannelEntryPoint : entryFunctionName ;
   assert(userMainFn && "unable to get user main");
   Function *uclibcMainFn = mainModule->getFunction("__uClibc_main");
   assert(uclibcMainFn && "unable to get uclibc main");
@@ -1628,6 +1646,8 @@ int main(int argc, char **argv, char **envp) {
   // Get the desired main function.  klee_main initializes uClibc
   // locale and other data and then calls main.
   Function *mainFn = mainModule->getFunction(EntryPoint);
+  entryFunctionName = mainFn->getName();
+  sidechannelentry = (SideChannelEntryPoint.c_str()) ? SideChannelEntryPoint : entryFunctionName ;
   if (!mainFn) {
     klee_error("'%s' function not found in module.", EntryPoint.c_str());
   }

@@ -10,6 +10,7 @@
 #ifndef KLEE_SPECIALFUNCTIONHANDLER_H
 #define KLEE_SPECIALFUNCTIONHANDLER_H
 
+#include "klee/sysrel.h"
 #include <iterator>
 #include <map>
 #include <vector>

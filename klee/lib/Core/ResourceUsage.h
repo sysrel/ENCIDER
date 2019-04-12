@@ -161,7 +161,7 @@ RD* newNode(RD* rd) {
 	nrd->succ = new std::set<RD*>();
 	nrd->i = rd->i;
 	nrd->stateid = rd->stateid;
-	rdid++;
+	//rdid++;
 	nrd->copyRd = true;
 	return nrd;
 }
@@ -231,11 +231,12 @@ void printLeakage(RD* rd, Executor* ex) {
 		range R1 = rit->second;
 
 		/* Return value check */
+                /*
 		bool checkret = (rd->lrets->find(rit->first) != rd->lrets->end());
 		ref<Expr> rv1 = klee::ConstantExpr::create(true, 1);
 		if(checkret) {
 			rv1 = rd->lrets->find(rit->first)->second;
-		}
+		}*/
 		/* Return value check end */
 
 		//std::cerr << "\n[ "; h1->dump(); l1->dump(); std::cerr << " ] ";
@@ -274,9 +275,12 @@ void printLeakage(RD* rd, Executor* ex) {
 			int diff = r.second - r.first;
 			if(diff > epsilon) {
 
-
-			   if(h1->compare(*(h2))) {
+                           ref<Expr> h1diffh2 = AndExpr::create(h1, Expr::createIsZero(h2));
+                           ref<Expr> h2diffh1 = AndExpr::create(h2, Expr::createIsZero(h1));
+                           // check if HC's differ on some assignment
+			   if(isTrue(h1diffh2,ex) || isTrue(h2diffh1,ex)) {
 				/* Return value check */
+                                /*
 				bool checkret2 = (rd->lrets->find(rit2->first) != rd->lrets->end());
 				//std::cerr << "\ncheckret2 : " << checkret2 << "\n";
 				//std::cerr << "lrets size = " << std::dec << rd->lrets->size() << "\n";
@@ -293,12 +297,13 @@ void printLeakage(RD* rd, Executor* ex) {
 					if(!commonsolutionavailable) {
 						continue;
 					}
-				}/**/
+				}*/
 				/* Return value check */
 
 				ref<Expr> l2 = hclc2.second;
 				ref<Expr> eval = AndExpr::create(l1, l2);
 				//std::cerr << "\neval : "; eval->dump();
+                                // check is LC's agree on some assignment
 				if(isTrue(eval, ex)) {
 						vc++;
 						std::cerr << "\n===============\nFound Violation at : ";
@@ -465,7 +470,9 @@ RD* getrdmap(ExecutionState * s) {
 	}
 	RD* rd;
 	std::map<int, RD*>::iterator it = rdmap->find(s->rdid);
+        #ifdef VBSC
 	std::cerr << "\nrdid : " << s->rdid;
+       #endif
 	//std::cerr << "\nstate id : " << s->getID();
 	if(it != rdmap->end()) {
 		rd = it->second;

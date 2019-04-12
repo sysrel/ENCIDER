@@ -48,6 +48,7 @@
 #include "klee/Internal/System/Time.h"
 #include "klee/Internal/System/MemoryUsage.h"
 #include "klee/SolverStats.h"
+#include "klee/sysrel.h"
 
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Attributes.h"
@@ -104,8 +105,15 @@ using namespace klee;
 #include "ResourceUsage.h"
 klee::ref<Expr> branchCondition;
 std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
+extern std::string entryFunctionName;
+std::string publicOutputVarName = "return_value";
+std::string publicOutputReturningFName;
+ref<Expr> publicOutputVar;
+extern std::string sidechannelentry;
+bool sidechannelstarted = false;
 /* Side channel end */
 
+//#define VBSC
 
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
@@ -1578,6 +1586,8 @@ void Executor::executeCall(ExecutionState &state,
   } else {
 
        /* SYSREL extension */
+       //llvm::errs() << "checking regular function call for high/low flows\n";
+       //checkHighArgumentFlow(state, ki, f, arguments);
        // Handle certain functions in a special way, e.g., those that have inline assembly
        if (lazyInit && APIHandler::handles(f->getName())) {
           callExternalFunction(state, ki, f, arguments);
@@ -1813,21 +1823,35 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     /* SYSREL EXTENSION */
     state.checkAndSetPMCallbackCompleted(ri->getParent()->getParent()->getName());
     /* SYSREL EXTENSION */
-
+    #ifdef VB 
     llvm::outs() << "handling return for function " << ri->getParent()->getParent()->getName()  << "\n";
+    #endif
     if (!isVoidReturn) {
       result = eval(ki, 0, state).value;
       /* SYSREL EXTENSION */
+      /* side channel */
+      if (ri->getParent()->getParent()->getName() == publicOutputReturningFName) {    
+         RD *rd =  getrdmap(&state);  
+         ref<Expr> eq = EqExpr::create(publicOutputVar,result); 
+         rd->LC =  AndExpr::create(rd->LC, eq);
+      }
+      /* side channel */   
       if (state.hasLCM()) {
+         #ifdef VB
          llvm::outs() << "function " << ri->getParent()->getParent()->getName() << " return expression " << result << "\n";
+         #endif
          ConstantExpr *re = dyn_cast<ConstantExpr>(result);
          if (re) {
-            llvm::outs() << "Recording return value " << re->getZExtValue() << " for " << ri->getParent()->getParent()->getName() << "\n";
-            state.returnValueModel[ri->getParent()->getParent()->getName()] = re->getZExtValue();
+            #ifdef VB
+            llvm::errs() << "Recording return value for an expression of width " << re->getWidth() << ":\n";
+            llvm::errs() << re->getZExtValue(re->getWidth()) << " for " << ri->getParent()->getParent()->getName() << "\n";
+            #endif
+            state.returnValueModel[ri->getParent()->getParent()->getName()] = re->getZExtValue(re->getWidth());
          }
       }
+      #ifdef VB
       llvm::outs() << "return value " << result << " for " << ri->getParent()->getParent()->getName() << "\n";
-
+      #endif
       /* SYSREL EXTENSION */
     }
 
@@ -1837,6 +1861,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
       Function *rf = ri->getParent()->getParent();
 
+      #ifdef VB     
+
       if (state.hasLCM()) {
          llvm::outs() << "returning from function " << rf->getName() << "\n";
          llvm::outs() << "lcm completed? " <<  state.lcmCompleted() << "\n";
@@ -1845,9 +1871,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          llvm::outs() << "state id: " << state.getID() << "\n";
          ExprPPrinter::printConstraints(llvm::outs(), state.constraints);
       }
+      #endif
 
       if (!state.activeThreads() && (!state.hasLCM() || state.lcmCompletesWith(rf->getName().str()))) {
+         #ifdef VB
          llvm::outs() << "terminating state with " << rf->getName() << "\n";
+         #endif
 
          /* Side channel begin */
          RD* rdd = getrdmap(&state);
@@ -1867,18 +1896,26 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
            if (state.lcmStepMovesWhenReturns(rf->getName())) {
               if (state.returnValueModel.find(rf->getName()) != state.returnValueModel.end() &&
                             state.returnValueModel[rf->getName()] == 0) {
+                 #ifdef VB
                  llvm::outs() << "lcm continues with the next sequential step\n";
+                 #endif
                  state.updateLCMState();
+                 if (LifeCycleModelState::lcm->getStep(state.getLCMState())->getValue() == sidechannelentry)
+                    sidechannelstarted = true; 
               }
               else {
+                 #ifdef VB
                  llvm::outs() << "terminating state and life cycle early due to error return value!\n";
+                 #endif
                  terminateStateOnExit(state);
               }
            }
+           #ifdef VB
            else {
                llvm::outs() << "no, step not moving at..\n";
                llvm::outs() << state.prevPC->inst << "\n";
            }
+           #endif
         }
       }
       /* SYSREL extension */
@@ -1889,12 +1926,16 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         statsTracker->framePopped(state);
 
       if (InvokeInst *ii = dyn_cast<InvokeInst>(caller)) {
+        #ifdef VB
         llvm::outs() << "returning to basic block of " << (*caller) << "\n";
+        #endif
         transferToBasicBlock(ii->getNormalDest(), caller->getParent(), state);
       } else {
         state.pc = kcaller;
         ++state.pc;
+        #ifdef VB
         llvm::outs() << "returning to " <<  (*state.pc->inst) << "\n";
+        #endif
       }
 
       if (!isVoidReturn) {
@@ -1928,7 +1969,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         //if (!caller->use_empty()) {
           //terminateStateOnExecError(state, "return void when caller expected a result");
         //}
+        #ifdef VB
         llvm::errs() << "Warning: return void when caller expected a result\n";
+        #endif
         /* SYSREL extension */
       }
     }
@@ -1971,13 +2014,17 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* SYSREL extension */
       if (branches.first && branches.second) {
          singleSuccessor = false;
+         #ifdef VB
          llvm::errs() << "executingPM on successor first\n";
+         #endif
          bool abort = false;
          branches.first->executePM(abort);
          if (abort) {
             terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
          }
+         #ifdef VB
          llvm::errs() << "executingPM on successor second\n";
+         #endif
          branches.second->executePM(abort);
          if (abort) {
             terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
@@ -2204,27 +2251,37 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     if (asyncMode) {
       if (isAsyncInitiate(f->getName())) {
          std::string asyncName = getAsyncFunction(f->getName());
+         #ifdef VB
          llvm::outs() << "checking for async function name " << asyncName << "\n";
+         #endif
          if (isAsync(asyncName)) {
             Function *asyncF =  moduleHandle->getFunction(asyncName);
             int c = state.initiateAsync(asyncF);
+            #ifdef VB
             llvm::outs() << "async function " << asyncName << " initiated, count=" << c << "\n";
+            #endif
             break;
          }
       }
       else if (isEnableEntry(f->getName())) {
          std::string asyncName = getEnableFunction(f->getName());
+         #ifdef VB
          llvm::outs() << "checking for enabled function name " << asyncName << "\n";
+         #endif
          if (isEnabled(asyncName)) {
             Function *asyncF =  moduleHandle->getFunction(asyncName);
             int c = state.initiateAsync(asyncF);
+            #ifdef VB
             llvm::outs() << "enabled function " << asyncName << " initiated, count=" << c << "\n";
+            #endif
             break;
          }
       }
     }
     else if (!asyncMode && f && isAsyncInitiate(f->getName())) {
+     #ifdef VB
       llvm::outs() << "Ignoring async_initiate in single threaded mode\n";
+     #endif
       break;
     }
     /* end SYSREL extension */
@@ -2247,9 +2304,13 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     if (f) {
 
        /* SYSREL extension */
+       #ifdef VB
        llvm::outs() << "calling function " << f->getName() << "\n";
+       #endif
        if (isAssemblyFunc(f->getName())) {
+          #ifdef VB 
           llvm::outs() << "handling assembly function " << f->getName() << "\n";
+          #endif
           callExternalFunction(state, ki, f, arguments);
           return;
        }
@@ -2611,29 +2672,39 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     KGEPInstruction *kgepi = static_cast<KGEPInstruction*>(ki);
     ref<Expr> base = eval(ki, 0, state).value;
 
+    #ifdef VB 
     llvm::outs() << "GetElementPtr info:\n";
     ki->inst->print(llvm::outs());
     llvm::outs() << "\n initial base: " << base << "\n";
+    #endif
     for (std::vector< std::pair<unsigned, uint64_t> >::iterator
            it = kgepi->indices.begin(), ie = kgepi->indices.end();
          it != ie; ++it) {
       uint64_t elementSize = it->second;
       ref<Expr> index = eval(ki, it->first, state).value;
 
+      #ifdef VB
       llvm::outs() << "index: " << index << "\n";
       llvm::outs() << "pointer: " << Expr::createPointer(elementSize) << "\n";
+      #endif
       base = AddExpr::create(base,
                              MulExpr::create(Expr::createSExtToPointerWidth(index),
                                              Expr::createPointer(elementSize)));
+      #ifdef VB
       llvm::outs() << "base: " << base << "\n";
+      #endif
     }
     if (kgepi->offset) {
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
+      #ifdef VB
       llvm::outs() << "geptr offset: " << Expr::createPointer(kgepi->offset) << "\n";
       llvm::outs() << "geptr base: " << base << "\n";
+      #endif
     }
+    #ifdef VB
     llvm::outs() << "geptr final base: " << base << "\n";
+    #endif
     bindLocal(ki, state, base);
     break;
   }
@@ -2683,8 +2754,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
     /* SYSREL EXTENSION */
    if (lazyInit) {
+    #ifdef VB
     llvm::outs() <<  (*(ki->inst)) << "\n";
     llvm::outs() << "num ops " << getTypeName(ki->inst->getType()) << "\n";
+    #endif
     Type *t = ki->inst->getType();
     if (t->isPointerTy()) {
        t = t->getPointerElementType();
@@ -2694,8 +2767,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
              std::string tname = getTypeName(t);
              state.typeToAddr[t] = result;
 
-
+             #ifdef VB
              llvm::outs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
+             #endif
           }
        }
     }
@@ -3232,17 +3306,27 @@ void Executor::run(ExecutionState &initialState) {
   initTimers();
 
   states.insert(&initialState);
-        /* SYSREL side channel begin */
-                root = newNode(&initialState);
-                initialState.rdid = root->stateid;
-                rdmapinsert(initialState.rdid, root);
-                printResourceUsage(root);
-                currentRD = root;
-                //exit(0);
-        /* SYSREL side channel end */
-
-
-
+  /* SYSREL side channel begin */
+  if (initialState.hasLCM()) {
+     Sequential *lcmModel = LifeCycleModelState::lcm;
+     publicOutputReturningFName = lcmModel->getStep(lcmModel->getNumSteps()-1)->getValue();
+     sidechannelstarted = true;
+  }
+  else {
+     publicOutputReturningFName = entryFunctionName;
+     sidechannelstarted = true;
+  }
+  llvm::errs() << "Registering publicOutputReturningFName as " << publicOutputReturningFName << "\n";
+  publicOutputVar = initialState.addSymbolicReturnAsPublicOutput(publicOutputReturningFName, publicOutputVarName, memory, arrayCache);
+  lowLoc->insert(publicOutputVarName);
+  root = newNode(&initialState);
+  initialState.rdid = root->stateid;
+  rdmapinsert(initialState.rdid, root);
+  #ifdef VBSC
+    printResourceUsage(root);
+  #endif
+  currentRD = root;
+  /* SYSREL side channel end */
   if (usingSeeds) {
     std::vector<SeedInfo> &v = seedMap[&initialState];
 
@@ -3256,6 +3340,7 @@ void Executor::run(ExecutionState &initialState) {
     while (!seedMap.empty()) {
       if (haltExecution) {
         doDumpStates();
+        llvm::errs() << "Halting execution!!!\n";
         return;
       }
 
@@ -3336,48 +3421,64 @@ void Executor::run(ExecutionState &initialState) {
     ExecutionState &state = searcher->selectState();
 
      /* Side channel begin */
+     #ifdef VBSC
       std::cerr << "Number of states=" << states.size() << "\n";
+     #endif
       Instruction* ii = state.pc->inst;
+      #ifdef VBSC
       ii->dump();
+      #endif
       const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
+      #ifdef VBSC
       printInfo(ii_info);
       std::cerr << "\nGetting currentRD.\n";
-		    RD* rdd = getrdmap(&state);
-		    currentRD = rdd;
-		    currentRD->ru += ICost;
+      #endif
       /* SYSREL - branch tracking */
       if ((ii->getOpcode()==Instruction::Br) | (ii->getOpcode()==Instruction::Switch)) {
          isbranch = true;
          successorsPaths->erase(successorsPaths->begin(), successorsPaths->end());
+         #ifdef VBSC
          std::cerr << "\nIs a branch instruction\n";
+         #endif
       }/* SYSREL - branch tracking */
       /* Side channel end */
 
     /* SYSREL */
     // Schedule async function if applicable
+    #ifdef VB
     llvm::outs() << "Number of states=" << states.size() << "\n";
+    #endif
     if (asyncMode) {
     int tid = -1;
     if ((tid = state.scheduleAsync(memory)) >= 0) {
+       #ifdef VB
        llvm::outs() << "scheduling thread " << tid << "\n";
+       #endif
        KInstruction *kia = state.threads[tid].pc;
        stepInstructionThread(state, tid);
+       #ifdef VB
        llvm::outs() << "after step instruction for thread " << tid << "..\n";
        kia->inst->dump();
+       #endif 
        executeInstructionThread(state, kia, tid);
+       #ifdef VB
        llvm::outs() << "after execute instruction for thread " << tid << "..\n";
+       #endif
        processTimers(&state, MaxInstructionTime);
        checkMemoryUsage();
        updateStates(&state);
     }
     else {
       if (!state.getWaitingForThreadsToTerminate()) {
+       #ifdef VB
        llvm::outs() << "scheduling main thread\n";
-
+       #endif
        KInstruction *ki = state.pc;
        stepInstruction(state);
+       #ifdef VB
        llvm::outs() << "after step instruction for the main thread\n";
        ki->inst->dump();
+       #endif
        /* SYSREL extension */
        singleSuccessor = true;
        /* SYSREL extension */
@@ -3392,14 +3493,18 @@ void Executor::run(ExecutionState &initialState) {
           }
        }
        /* SYSREL extension */
+       #ifdef VB
        llvm::outs() << "after execute instruction for the main thread\n";
+       #endif
        processTimers(&state, MaxInstructionTime);
 
        checkMemoryUsage();
        updateStates(&state);
      }
      else {
+        #ifdef VB
         llvm::outs() << "terminating main thread\n";
+        #endif
         terminateStateOnExit(state);
         updateStates(&state);
      }
@@ -3427,90 +3532,116 @@ void Executor::run(ExecutionState &initialState) {
    }
 
    /* SYSREL Side Channel */
+  if (sidechannelstarted) {
+   RD* rdd = getrdmap(&state);
+   currentRD = rdd;
+   currentRD->ru += ICost;
 
-       if(isbranch) {
+   if (isbranch) {
       isbranch = false;
-    	if (successorsPaths->size() > 1) {
+      if (successorsPaths->size() > 1) {
+      	 bool printsucc = false;
+    	 std::set<klee::ExecutionState*>::iterator it = successorsPaths->begin();
+    	 bool done = false;
+	 for(; it!=successorsPaths->end(); ++it) {
+            ExecutionState *s = *it;
+ 	    ref<Expr> r1 = s->lastCondition;
+             #ifdef VBSC
+	            std::cerr << "\n>>>> Branch Condition : \n";
+		    r1->dump();
+             #endif
+             bool hasHloc = exprHasVar(r1, highLoc);
+             bool hasLloc = exprHasVar(r1, lowLoc);
+             RD* srd = newNode(s);
+	     s->rdid = srd->stateid;
+	     rdmapinsert(s->rdid, srd);
+             // initialize srd in case it does not satisfy any special case
+             srd->HA = currentRD->HA;
+             srd->HAset = currentRD->HAset;
+             srd->HC = currentRD->HC;
+             srd->LC = currentRD->LC;
+             srd->ru = currentRD->ru; 
+	     if (hasHloc && !hasLloc) {
+	     	ref<Expr> proj = getProjection(r1, highLoc);
+                // check if the projection is consistent with the path condition
+                bool result;
+                bool success = solver->mayBeTrue(*s, proj, result);
+                assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
+                if (result) {
+                   #ifdef VBSC
+                          std::cerr << "Projection on high\n";
+    	                  std::cerr << "\n>>>> Projection : ";
+	                  proj->dump();
+                   #endif
+                   //Update currentstate
+		   if (!done) {
+		      rdd->isHBr = true;
+		      rdd->finalized = 0;
+		      rdd->numSucc = successorsPaths->size();
+		      done = true;
+	              printsucc = true;
+	           }
+	   	   srd->HA = currentRD;
+		   srd->HAset = true;
+		   srd->HC = proj;
+		   srd->LC = klee::ConstantExpr::create(true, 1);
+	        }                
+                else {
+                   #ifdef VBSC
+                          std::cerr << "Infeasible Projection on high\n";
+                          std::cerr << "\n>>>> Projection : ";
+                          proj->dump();
+                          std::cerr << "PC:\n";
+                          ExprPPrinter::printConstraints(llvm::errs(), s->constraints);
+                   #endif
 
-    	  bool printsucc = false;
-    		std::set<klee::ExecutionState*>::iterator it = successorsPaths->begin();
-    		bool done = false;
-	      for(; it!=successorsPaths->end(); ++it) {
-	      	//ExecutionState* s = new ExecutionState(*(*it));
-					ExecutionState* s = *it;
-					klee::ConstraintManager::constraint_iterator sit = s->constraints.begin();
-					if(s->constraints.size() > 0) {
-						sit = s->constraints.end();
-						--sit;
-						ref<Expr> r1 = *sit;
-			    	std::cerr << "\n>>>> Branch Condition : \n";
-						r1->dump();
-						bool hasHloc = exprHasVar(r1, highLoc);
-                                                bool hasLloc = exprHasVar(r1, lowLoc);
-						RD* srd = newNode(s);
-						s->rdid = srd->stateid;
-						rdmapinsert(s->rdid, srd);
+                }                                                 
+             }   
+	     else {
+                if (hasLloc) {
+   	           ref<Expr> proj = getProjection(r1, lowLoc);
+                   // check if the projection is consistent with the path condition
+                   bool result;
+                   bool success = solver->mayBeTrue(*s, proj, result);
+                   assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection!");
+                   if (result) {
+                      #ifdef VBSC 
+                             std::cerr << "Projection on low\n";
+                             std::cerr << "\n>>>> Projection : ";
+	                     proj->dump();
+                      #endif
+	              srd->LC = AndExpr::create(currentRD->LC, proj);
+                   }
+                   else {
+                      #ifdef VBSC
+                          std::cerr << "Infeasible Projection on low\n";
+                          std::cerr << "\n>>>> Projection : ";
+                          proj->dump();
+                          std::cerr << "PC:\n";
+                          ExprPPrinter::printConstraints(llvm::errs(), s->constraints);
+                      #endif
 
-						if(hasHloc && !hasLloc) {
-							//Update currentstate
-							if(!done) {
-
-								rdd->isHBr = true;
-								rdd->finalized = 0;
-								rdd->numSucc = successorsPaths->size();
-								done = true;
-								printsucc = true;
-							}
-
-                                                        std::cerr << "Projection on high\n";
-							ref<Expr> proj = getProjection(r1, highLoc);
-							std::cerr << "\n>>>> Projection : ";
-							proj->dump();
-
-							srd->HA = currentRD;
-							srd->HAset = true;
-							srd->HC = proj;
-							srd->LC = klee::ConstantExpr::create(true, 1);
-							srd->ru = currentRD->ru;
-							//srd->ru = state.ru + ICost;
-						}
-						else {
-							if(currentRD->HAset) {
-								srd->HA = currentRD->HA;
-								srd->HAset = true;
-								srd->HC = currentRD->HA->HC;
-							}
-							srd->HC = currentRD->HC;
-                                                        if (hasLloc) {
-                                                           std::cerr << "Projection on low\n";
-   							   ref<Expr> proj = getProjection(r1, lowLoc);
-							   std::cerr << "\n>>>> Projection : ";
-							   proj->dump();
-							   srd->LC = AndExpr::create(currentRD->LC, proj);
-                                                        }
-                                                        else srd->LC = currentRD->LC;
-							srd->ru = currentRD->ru;
-							//srd->ru = state.ru;
-						}
-						currentRD->succ->insert(srd);
-						printResourceUsage(srd);
-					}
-					else{
-						std::cerr << "\nConstraints size = 0\n";
-						exit(0);
-					}
-	      }
-		  	if(printsucc) {
-					std::cerr << "\n>>>> HA : ";
-					for(std::set<RD*>::iterator srit = currentRD->succ->begin();
-							srit != currentRD->succ->end(); ++srit){
-						printResourceUsage(*srit);
-					}
-					printResourceUsage(currentRD);
-				}
-    	}
+                   }                     
+               }
+	     }
+	     currentRD->succ->insert(srd);
+             #ifdef VBSC
+		    printResourceUsage(srd);
+             #endif
+          }
+          #ifdef VBSC
+		 if (printsucc) {
+		    std::cerr << "\n>>>> HA : ";
+		    for(std::set<RD*>::iterator srit = currentRD->succ->begin();
+			srit != currentRD->succ->end(); ++srit){
+			printResourceUsage(*srit);
+		    }
+		    printResourceUsage(currentRD);
+		 }
+          #endif
+      }
     }
-
+   }
    /* SYSREL Side Channel End */
 
   }
@@ -3609,8 +3740,10 @@ void Executor::terminateState(ExecutionState &state) {
      minInstCount = state.instCount;
   if (state.instCount > maxInstCount)
      maxInstCount = state.instCount;
+  #ifdef VB
   llvm::errs() << "Checking the state at the end of path\n";
   state.check();
+  #endif
   /* SYSREL extension */
 
 
@@ -3721,14 +3854,18 @@ void Executor::terminateStateOnError(ExecutionState &state,
   const InstructionInfo &ii = getLastNonKleeInternalInstruction(state, &lastInst);
 
   /* SYSREL extension */
+  #ifdef VB
   llvm::errs() << "Error instruction " << lastInst << " content " << (*lastInst) << "\n";
+  #endif
   /* SYSREL extension */
 
 
   // DEBUG
+  #ifdef VB
   if (info.str() != "")
      llvm::outs() << "Info: \n" << info.str() << "\n";
   else llvm::outs() << "No info\n";
+  #endif
   // END DEBUG
 
 
@@ -3765,14 +3902,18 @@ void Executor::terminateStateOnError(ExecutionState &state,
     }
 
     /* SYSREL extension */
+    #ifdef VB
     llvm::errs() << "processing test case in error state termination\n";
+    #endif
     /* SYSREL extension */
 
     interpreterHandler->processTestCase(state, msg.str().c_str(), suffix);
   }
   else {
         /* SYSREL extension */
+    #ifdef VB
     llvm::errs() << "error seen before\n";
+    #endif
     /* SYSREL extension */
   }
 
@@ -3781,7 +3922,9 @@ void Executor::terminateStateOnError(ExecutionState &state,
   if (shouldExitOn(termReason))
     haltExecution = true;
 
+   #ifdef VB
   llvm::outs() << "Execution halting? " << haltExecution << "\n";
+   #endif
 }
 
 // XXX shoot me
@@ -3812,9 +3955,12 @@ void Executor::callExternalFunction(ExecutionState &state,
   // allocate 128 bits for each argument (+return value) to support fp80's;
   // we could iterate through all the arguments first and determine the exact
   // size we need, but this is faster, and the memory usage isn't significant.
+
   uint64_t *args = (uint64_t*) alloca(2*sizeof(*args) * (arguments.size() + 1));
   memset(args, 0, 2 * sizeof(*args) * (arguments.size() + 1));
   unsigned wordIndex = 2;
+  ObjectPair result;
+ if (!APIHandler::handles(function->getName())) { // this check is a SYSREL extension to avoid issues with pointers to 128 bit 
   for (std::vector<ref<Expr> >::iterator ai = arguments.begin(),
        ae = arguments.end(); ai!=ae; ++ai) {
     if (AllowExternalSymCalls) { // don't bother checking uniqueness
@@ -3855,7 +4001,6 @@ void Executor::callExternalFunction(ExecutionState &state,
 #ifndef WINDOWS
   // Update external errno state with local state value
   int *errno_addr = getErrnoLocation(state);
-  ObjectPair result;
   bool resolved = state.addressSpace.resolveOne(
       ConstantExpr::create((uint64_t)errno_addr, Expr::Int64), result);
   if (!resolved)
@@ -3891,12 +4036,16 @@ void Executor::callExternalFunction(ExecutionState &state,
       klee_warning_once(function, "%s", os.str().c_str());
   }
 
+  }// end if APIHandler::handles
+
    /* SYSREL EXTENSION */
   bool success = false;
   if (!APIHandler::handles(function->getName())) {
      success = externalDispatcher->executeCall(function, target->inst, args);
 
+  #ifdef VB
   llvm::outs() << "external dispatcher result for " << function->getName() << " " << success << "\n";
+   #endif
  }
  /* SYSREL EXTENSION */
 
@@ -3908,9 +4057,11 @@ void Executor::callExternalFunction(ExecutionState &state,
     if (progModel) {
        // let the generic API handler handle the arg and return value symbolization
        std::vector<ExecutionState*> successors;
+       #ifdef VB 
        llvm::errs() << "state=" << &state << " are we handling external function " << function->getName() << "\n";
        for(int a=0; a<arguments.size(); a++)
           llvm::errs() << "arg" << a << "=" << arguments[a] << "\n";
+       #endif
        bool abort = false;
        bool resHandled =  APIHandler::handle(state, successors, function->getName(), arguments, target, abort);
        if (abort) {
@@ -3918,7 +4069,12 @@ void Executor::callExternalFunction(ExecutionState &state,
           return;
        }
        if (!resHandled) {
+          /* side channel */
+          checkHighArgumentFlow(state, target, function, arguments);
+          /* side channel */
+          #ifdef VB
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
+          #endif
           bool term = false;
           symbolizeArguments(state, target, function, arguments, term);
           if (!term) {
@@ -4082,14 +4238,18 @@ void Executor::callExternalFunction(ExecutionState &state,
 
 /* SYSREL extension */
 
-void Executor::symbolizeArguments(ExecutionState &state,
+
+bool Executor::checkHighArgumentFlow(ExecutionState &state,
                                   KInstruction *target,
                                   Function *function,
-                                  std::vector< ref<Expr> > &arguments, bool &term) {
-
+                                  std::vector< ref<Expr> > &arguments) {
+ 
+    bool flows = false;
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
+       #ifdef VB
        llvm::outs() << "ext function operand " << ai+1 << " " << target->operands[ai+1] << "\n";
+       #endif
        if (target->operands[ai+1] >= 0) { // a local var
           Type *at = agi->getType();
           if (at->isPointerTy()) {
@@ -4098,7 +4258,66 @@ void Executor::symbolizeArguments(ExecutionState &state,
                  llvm::raw_string_ostream rso(type_str);
                  at->print(rso);
              //if (bt->getPrimitiveSizeInBits()) {
+                #ifdef VB
                 llvm::outs() << "Type of parameter " << ai << " is " << rso.str() << "\n";
+                #endif
+                DataLayout *TD = kmodule->targetData;
+                // find the MemoryObject for this value
+                ObjectPair op;
+                bool asuccess;
+                ref<Expr> base = eval(target, ai+1, state).value;
+                if (SimplifySymIndices) {
+                   if (!isa<ConstantExpr>(base))
+                      base = state.constraints.simplifyExpr(base);
+                }
+                solver->setTimeout(coreSolverTimeout);
+                if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+                   base = toConstant(state, base, "resolveOne failure");
+                   asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+                }
+                solver->setTimeout(0);
+                if (asuccess) {
+                   if (op.second->isHigh()) {
+                      #ifdef VBSC
+                      llvm::errs() << "High security argument " << ai << " flows into function " << function->getName() << "\n";
+                      #endif
+                      flows = true;
+                   }
+                   if (op.second->isLow()) {
+                      #ifdef VBSC
+                      llvm::errs() << "Low security argument " << ai << " flows into function " << function->getName() << "\n";
+                      #endif
+                      flows = true;
+                   }
+                }
+          }
+       }
+     }
+     return flows;
+}
+
+
+void Executor::symbolizeArguments(ExecutionState &state,
+                                  KInstruction *target,
+                                  Function *function,
+                                  std::vector< ref<Expr> > &arguments, bool &term) {
+
+    unsigned int ai = 0;
+    for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
+       #ifdef VB
+       llvm::outs() << "ext function operand " << ai+1 << " " << target->operands[ai+1] << "\n";
+       #endif
+       if (target->operands[ai+1] >= 0) { // a local var
+          Type *at = agi->getType();
+          if (at->isPointerTy()) {
+             Type *bt = at->getPointerElementType();
+                 std::string type_str;
+                 llvm::raw_string_ostream rso(type_str);
+                 at->print(rso);
+             //if (bt->getPrimitiveSizeInBits()) {
+                #ifdef VB
+                llvm::outs() << "Type of parameter " << ai << " is " << rso.str() << "\n";
+                #endif
                 DataLayout *TD = kmodule->targetData;
                 // find the MemoryObject for this value
                 ObjectPair op;
@@ -4117,8 +4336,10 @@ void Executor::symbolizeArguments(ExecutionState &state,
                 if (asuccess) {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
-                   llvm::outs() << "Symbolizing argument of function " << function->getName() << ", address=" << sm->getBaseExpr() << "\n";
+                   #ifdef VB
+                   llvm::errs() << "Symbolizing argument of function " << function->getName() << ", address=" << sm->getBaseExpr() << "\n";
                    llvm::errs() << "base addres=" << base << "\n";
+                   #endif
                    unsigned id = 0;
                    std::string name = "shadow";
                    std::string uniqueName = name;
@@ -4132,13 +4353,17 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr()
                    ref<Expr> offsetexpr = SubExpr::create(base, op.first->getBaseExpr());
+                   #ifdef VB
                    llvm::errs() << TD->getTypeAllocSize(bt) << " vs width=" << getWidthForLLVMType(bt) << "offsetexpr=" << offsetexpr << "result=" << result << " width=" << getWidthForLLVMType(bt) << " sm->size=" << sm->size << "targetbase=" << op.first->getBaseExpr() << " targetsize=" << op.first->size << "\n";
+                   #endif
                    // check sanity
                    const ConstantExpr *co = dyn_cast<ConstantExpr>(offsetexpr);
                    if (co) {
                       if ((op.first->size - co->getZExtValue()) < sm->size) {
+                         #ifdef VB
                          llvm::errs() << "Lazy init of a void pointer mismatches real type, "
                                        << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
+                         #endif
                          terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
                             NULL, getAddressInfo(state, op.first->getBaseExpr()));
                          term = true;
@@ -4146,9 +4371,13 @@ void Executor::symbolizeArguments(ExecutionState &state,
                       }
                    }
                    wos->write(offsetexpr, result);
+                   #ifdef VB
                    llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n";
+                   #endif
                }
+               #ifdef VB
                else llvm::outs() << "Couldn't resolve address during lazy init arg: " << base << " for function " << function->getName() << "\n";
+               #endif
              //}
 
          }
@@ -4167,7 +4396,9 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
     std::string type_str;
     llvm::raw_string_ostream rso(type_str);
     function->getReturnType()->print(rso);
+    #ifdef VB
     llvm::outs() << "return type of external function " << function->getName() << ": " << rso.str() << "\n";
+    #endif
     const MemoryObject *mo;
     ref<Expr> laddr;
     llvm::Type *rType;
@@ -4182,10 +4413,14 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
        return NULL;
     }
     mo->name = "%sym" + std::to_string(target->dest) + "_" + state.getUnique(function->getName().str());
+    #ifdef VB
     llvm::outs() << "mo=" << mo << "\n";
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
+    #endif
     if (mksym) {
+       #ifdef VB
        llvm::outs() << "symbolizing return value \n";
+       #endif
        executeMakeSymbolic(state, mo, mo->name, allocType, true);
     }
     if (allocType == retType)
@@ -4222,7 +4457,9 @@ ref<Expr> Executor::replaceReadWithSymbolic(ExecutionState &state,
                              Expr::getMinBytesForWidth(e->getWidth()));
   ref<Expr> res = Expr::createTempRead(array, e->getWidth());
   ref<Expr> eq = NotOptimizedExpr::create(EqExpr::create(e, res));
+  #ifdef VB
   llvm::errs() << "Making symbolic: " << eq << "\n";
+  #endif
   state.addConstraint(eq);
   return res;
 }
@@ -4251,12 +4488,16 @@ void Executor::executeAlloc(ExecutionState &state,
                             bool zeroMemory,
                             bool record,
                             const ObjectState *reallocFrom) {
+  #ifdef VB 
   llvm::outs() << "Alloc'ing...\n";
+  #endif
   size = toUnique(state, size);
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(size)) {
     const llvm::Value *allocSite = state.prevPC->inst;
     size_t allocationAlignment = getAllocationAlignment(allocSite);
+    #ifdef VB
     llvm::errs() << "Alloc size: " << CE->getZExtValue() << "\n";
+    #endif
     MemoryObject *mo =
         memory->allocate(CE->getZExtValue(), isLocal, /*isGlobal=*/false,
                          allocSite, allocationAlignment);
@@ -4275,7 +4516,9 @@ void Executor::executeAlloc(ExecutionState &state,
             if (st) {
                std::string tname = getTypeName(t);
                state.typeToAddr[t] = mo->getBaseExpr();
+               #ifdef VB
                llvm::outs() << "mapping alloced " << tname << " to " << mo->getBaseExpr() << "\n";
+              #endif
             }
         }
     }
@@ -4292,11 +4535,12 @@ void Executor::executeAlloc(ExecutionState &state,
       } else {
         os->initializeToRandom();
       }
-
+      #ifdef VB
       llvm::errs() << "mo=" << mo << "\n";
       llvm::errs() << "binding " << mo->getBaseExpr() << " to " << (*target->inst) << "\n";
       if (getDestCell(state, target).value.get())
          llvm::errs() << "address to be dest: " << getDestCell(state, target).value << "\n";
+      #endif
 
 
       bindLocal(target, state, mo->getBaseExpr());
@@ -4400,20 +4644,27 @@ void Executor::executeAlloc(ExecutionState &state,
 void Executor::executeFree(ExecutionState &state,
                            ref<Expr> address,
                            KInstruction *target) {
+  #ifdef VB
   llvm::errs() << "Executing free " << address << " from function " << state.prevPC->inst->getParent()->getParent()->getName() << "\n";
-
+  #endif
   state.recordFree(address);
   StatePair zeroPointer = fork(state, Expr::createIsZero(address), true);
   if (zeroPointer.first) {
+     #ifdef VB
      llvm::outs() << "A zero pointer possibility in free " << address << "\n";
+    #endif
     if (target)
       bindLocal(target, *zeroPointer.first, Expr::createPointer(0));
   }
   if (zeroPointer.second) { // address != 0
     ExactResolutionList rl;
+    #ifdef VB 
     llvm::outs() << "Resolving exact for free!";
+    #endif
     resolveExact(*zeroPointer.second, address, rl, "free");
+    #ifdef VB
     llvm::outs() << "Resolved exact for free!";
+    #endif
     for (Executor::ExactResolutionList::iterator it = rl.begin(),
            ie = rl.end(); it != ie; ++it) {
       const MemoryObject *mo = it->first.first;
@@ -4424,7 +4675,9 @@ void Executor::executeFree(ExecutionState &state,
         terminateStateOnError(*it->second, "free of global", Free, NULL,
                               getAddressInfo(*it->second, address));
       } else {
+         #ifdef VB
          llvm::outs() << "In free, unbinding obj at address "  << mo->getBaseExpr() << "\n";
+         #endif
 
          /* SYSREL extension */
          state.recordFree(mo->getBaseExpr());
@@ -4480,22 +4733,21 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   static bool forcedOffset = false;
   /* SYSREL EXTENSION */
 
-
+  #ifdef VB
   llvm::outs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::outs());
   llvm::outs() << "\n address: " << address << "\n";
-
   llvm::outs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::outs() << "storing value " << value << "\n";
+  #endif
+
 
   Expr::Width type = (isWrite ? value->getWidth() :
                      getWidthForLLVMType(target->inst->getType()));
 
   unsigned bytes = Expr::getMinBytesForWidth(type);
 
-  llvm::outs() << "width for the memop: " << type << "\n";
-  llvm::outs() << "bytes for the memop: " << bytes << "\n";
 
 
   if (SimplifySymIndices) {
@@ -4523,13 +4775,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     }
 
     ref<Expr> offset = mo->getOffsetExpr(address);
+    #ifdef VB
     llvm::outs() << "address for memop " << address << "\n";
     llvm::outs() << "default offset for target address " << offset << "\n";
     llvm::outs() << "base memory address " << mo->getBaseExpr() << "\n";
+    #endif
     /* SYSREL EXTENSION */
     if (forcedOffset) {
        offset = ConstantExpr::alloc(0, Expr::Int64);
+       #ifdef VB
        llvm::outs() << "(forced) offset for target address " << offset << "\n";
+      #endif
     }
     /* SYSREL EXTENSION */
 
@@ -4546,9 +4802,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       terminateStateEarly(state, "Query timed out (bounds check).");
       return false;
     }
-
+    #ifdef VB
     llvm::outs() << "bounds check expression " << mo->getBoundsCheckOffset(offset, bytes) << "\n";
     llvm::outs() << "in bounds? " << inBounds << "\n";
+    #endif
 
     if (inBounds) {
       const ObjectState *os = op.second;
@@ -4564,7 +4821,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
           else
           /* SYSREL EXTENSION */
              wos->write(offset, value);
+          #ifdef VB
           llvm::outs() << "just wrote:\n";
+          #endif
         }
       } else {
         ref<Expr> result = os->read(offset, type);
@@ -4576,7 +4835,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
+            #ifdef VB
             llvm::outs() << "load orig result: " << result << "\n";
+            #endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -4588,8 +4849,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
+               #ifdef VB 
                llvm::outs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
+               #endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -4600,13 +4863,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
+                 #ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << "\n";
+                 #endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
+                  #ifdef VB
                   llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
+                  #endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -4616,11 +4883,15 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (abort) {
                      return true;
                   }
+                  #ifdef VB
                   llvm::errs() << "mem obj addr=" << laddr << "\n";
+                  #endif
                   mo->name = state.getUnique(rso2str);
                   if (mksym)
                      executeMakeSymbolic(state, mo, rso2str, t, true);
+                  #ifdef VB
                   llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
+                  #endif
                   forcedOffset = true;
                   executeMemoryOperation(state, true, address, laddr, 0);
                   forcedOffset = false;
@@ -4631,12 +4902,16 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
        }
         /* SYSREL EXTENSION */
 
+        #ifdef VB
         if (getDestCell(state, target).value.get())
          llvm::errs() << "address to be dest: " << getDestCell(state, target).value << "\n";
+        #endif
 
         bindLocal(target, state, result);
 
+       #ifdef VB
        llvm::outs() << " load result: " << result << "\n";
+       #endif
 
        if (lazyInit) {
         if (!forcedOffset) {
@@ -4650,7 +4925,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
               if (!t->isPointerTy()) { // not interested in the pointer's address
                  std::string tname = getTypeName(t);
                  state.typeToAddr[t] =  address;
+                 #ifdef VB
                  llvm::outs() <<  "recorded memory to type mapping (1) as " <<  address << "->" << tname <<"\n";
+                 #endif
               }
           }
         }
@@ -4694,7 +4971,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
              wos->write(ConstantExpr::alloc(0, Expr::Int64), value);
           else
              wos->write(mo->getOffsetExpr(address), value);
+          #ifdef VB
           llvm::outs() << "just wrote:\n";
+          #endif
         }
       } else {
         ref<Expr> result;
@@ -4703,7 +4982,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         else
            result = os->read(mo->getOffsetExpr(address), type);
         bindLocal(target, *bound, result);
+        #ifdef VB
         llvm::outs() << " load result: " << result << "\n";
+        #endif 
       }
     }
 
@@ -4717,14 +4998,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     if (incomplete) {
       terminateStateEarly(*unbound, "Query timed out (resolve).");
     } else {
-
+      #ifdef VB
       llvm::outs() << "Offending address " << address << "\n";
+      #endif
       std::string s;
       llvm::raw_string_ostream ors(s);
       ors << "Memory out of bound\n";
       state.dumpStack(ors);
+      #ifdef VB 
       llvm::outs() << ors.str() ;
       ExprPPrinter::printConstraints(llvm::outs(), state.constraints);
+      #endif
       terminateStateOnError(*unbound, "memory error: out of bound pointer", Ptr,
                             NULL, getAddressInfo(*unbound, address));
     }
@@ -4822,21 +5106,29 @@ void Executor::clearFunctionPointers(const MemoryObject *mo, ObjectState *os, Ty
        return;
     llvm::StructType *st = dyn_cast<llvm::StructType>(at);
     if (st) {
+       #ifdef VB
        llvm::errs() << "Struct type=" << getTypeName(st) << "\n";
+       #endif
        const llvm::DataLayout &dl = kmodule->module->getDataLayout();
        const llvm::StructLayout *sl =  dl.getStructLayout(st);
        for(unsigned i=0; i < st->getNumElements(); i++) {
           Type *temp = st->getElementType(i);
+          #ifdef VB
           llvm::errs() << "field " << i << " offset= " << sl->getElementOffset(i) << " type=" << getTypeName(temp) << " typeid=" << temp->getTypeID() << " vs " << llvm::Type::FunctionTyID << "\n";
+          #endif
           if (temp->isPointerTy()) {
              temp = temp->getPointerElementType();
+             #ifdef VB 
              llvm::errs() << "pointer element of field" << i << " offset= " << sl->getElementOffset(i) << " type=" << getTypeName(temp) << " typeid=" << temp->getTypeID() << " vs " << llvm::Type::FunctionTyID << "\n";
+             #endif
              // The second condition is to deal with a bug in the clang compiler..
              // Otherwise, some function pointers are not recognized. This may have a side effect of concretizing
              // some of the symbolic pointers and hence preventing lazy initialization of such pointer fields..
              if (temp->isFunctionTy() || getTypeName(temp) == "{}") {
+                #ifdef VB
                 llvm::errs() << "Setting function pointer field " << i << " of (out of " << st->getNumElements() << ")" << getTypeName(st) << "\n";
                 llvm::errs() << "base addr=" << mo->getBaseExpr() << " offset " << sl->getElementOffset(i) << " type " << getTypeName(temp) << "\n";
+                #endif 
                 os->write(ConstantExpr::create(sl->getElementOffset(i), 64), Expr::createPointer(0));
              }
           }
@@ -4854,7 +5146,9 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
      llvm::raw_string_ostream rso(type_str);
      at->print(rso);
      if (at->isPointerTy()) {
+        #ifdef VB
         llvm::outs() << "arg " << ind << " type " << rso.str() << "\n";
+        #endif
         at = at->getPointerElementType();
         bool singleInstance = false;
         int count = 0;
@@ -4892,19 +5186,23 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance,
                               count, rType, laddr, mksym, abort);
               if (abort) return;
+              #ifdef VB
               llvm::outs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
+              #endif
               mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
               if (!nosym && mksym) {
                  executeMakeSymbolic(state, mo,
-                                     entryFunc->getName().str() + std::string("_arg_") + std::to_string(ind),
+                                     mo->name,
                                      at, true);
               }
               bindArgument(kf, ind, state, laddr);
+              #ifdef VB
               llvm::outs() << "binding arg " << ind << " of type " << rso.str() << " to address " << laddr <<
                                                                 " (in " << mo->getBaseExpr() << ")\n";
+              #endif
            //}
         //}
        // else llvm::outs() << "skipping lazy init for " << rso.str() << "\n";
@@ -4927,7 +5225,9 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         ObjectState *sos = bindObjectInState(state, mo, true, array);
         ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
         bindArgument(kf, ind, state, result);
+        #ifdef VB
         llvm::outs() << "binding nonpointer arg " << ind << " of type " << rso.str() << " to value " << result << "\n";
+        #endif
      }
      ind++;
    }
@@ -4965,7 +5265,9 @@ void Executor::runFunctionAsMain(Function *f,
   int envc;
   for (envc=0; envp[envc]; ++envc) ;
 
+  #ifdef VB
   llvm::outs() << "num args " << argc << " num envc " << envc << "\n";
+  #endif 
 
   unsigned NumPtrBytes = Context::get().getPointerWidth() / 8;
   KFunction *kf = kmodule->functionMap[f];
@@ -5064,7 +5366,9 @@ void Executor::runFunctionAsMain(Function *f,
                      embeddings = embeddingTypes[et];
                  embeddings.insert(STy);
                  embeddingTypes[et] = embeddings;
+                 #ifdef VB
                  llvm::outs() << getTypeName(et) << " is an embedded type, embedded by " << getTypeName(STy) << "\n";
+                 #endif
               }
            }
        }
@@ -5114,8 +5418,11 @@ void Executor::runFunctionAsMain(Function *f,
   state->ptreeNode = processTree->root;
   /* SYSREL extension */
   // the very first state should be constructed according to the first step of life-cycle model, in other words initialize
-  if (state->hasLCM())
+  if (state->hasLCM()) {
      state->updateLCMState();
+     if (LifeCycleModelState::lcm->getStep(state->getLCMState())->getValue() == sidechannelentry)
+        sidechannelstarted = true; 
+  }
   if (lazyInit) {
    // Lazy init args of the entryFunc
    bool abort = false;

@@ -153,6 +153,11 @@ public:
 
   const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
 
+  bool checkHighArgumentFlow(ExecutionState &state, 
+                                  KInstruction *target,
+                                  llvm::Function *function,
+                                  std::vector< ref<Expr> > &arguments);
+
   void symbolizeArguments(ExecutionState &state, 
                                   KInstruction *target,
                                   llvm::Function *function,
