@@ -115,6 +115,8 @@ ExecutionState::ExecutionState(KFunction *kf) :
     lcmState = new LifeCycleModelState();
   else lcmState = NULL;
   pmstack.clear();
+  inEnclave = true;
+  lastEnclaveFunction = "";
   /* SYSREL */  
 }
 
@@ -128,6 +130,8 @@ ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
   if (LifeCycleModelState::lcm)
     lcmState = new LifeCycleModelState();
   pmstack.clear();
+  inEnclave = true;
+  lastEnclaveFunction = "";
   /* SYSREL */  
 }
 
@@ -225,6 +229,8 @@ ExecutionState::ExecutionState(const ExecutionState& state):
   lazyInitSingleInstances = state.lazyInitSingleInstances;
   for(auto pmf : pmstack) 
      pmstack.push_back(new PMFrame(*pmf));
+  inEnclave = state.inEnclave;
+  lastEnclaveFunction = state.lastEnclaveFunction;
   /* SYSREL */ 
 }
 
@@ -1311,6 +1317,14 @@ ref<Expr> ExecutionState::addSymbolicReturnAsPublicOutput(std::string entry, std
    ObjectState *sos = ((Executor*)theInterpreter)->bindObjectInState(*this, mo, true, array);
    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), ((Executor*)theInterpreter)->getWidthForLLVMType(t));
    return result; 
+}
+
+void ExecutionState::setLastEnclaveFunction(std::string last) {
+  lastEnclaveFunction = last;
+}
+
+std::string ExecutionState::getLastEnclaveFunction() {
+   return lastEnclaveFunction;
 }
 
 /* SYSREL */

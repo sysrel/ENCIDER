@@ -24,6 +24,8 @@
 #include "klee/Statistics.h"
 #include "klee/util/ExprPPrinter.h"
 #include "../../lib/Core/SpecialFunctionHandler.h"
+#include "../../lib/Core/AnalyzeConstraint.h"
+#include "../../lib/Core/ResourceUsage.h"
 
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Type.h"
@@ -61,6 +63,7 @@
 #include <sstream>
 #include <climits>
 
+
 using namespace llvm;
 using namespace klee;
 
@@ -74,6 +77,7 @@ parallel := identifier '|' parallel
 parallel := identifier
 sequential := identifier
 */
+class RD;
 int minInstCount = INT_MAX;
 int maxInstCount = 0;
 const Module * moduleHandle = NULL;
@@ -91,6 +95,7 @@ std::map<std::string, int> lazyInitNumInstances;
 bool progModel = false;
 APIHandler *apiHandler = NULL;
 std::map<std::string, std::vector<std::string> > inferenceClue;
+std::set<std::string> prefixRedact;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -182,6 +187,10 @@ namespace {
    SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
                                              \n \t (use naive for using all leaf nodes (may not terminate)\n \
                                              \n \t (use decompose for focusing on relevant candidates only\n"));
+   cl::opt<std::string>
+   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
+                                                    to map an undefined function to its model function\n"));
+
                                              
   /* SYSREL extension */
 
@@ -1066,6 +1075,18 @@ void externalsAndGlobalsCheck(const Module *m) {
 /* SYSREL static */ Interpreter *theInterpreter = 0;
 
 /* SYSREL extension */
+void readPrefixes(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) { 
+        std::string prefix = ltrim(rtrim(line));
+        prefixRedact.insert(ltrim(rtrim(line)));
+        llvm::outs() << " recording prefix " << prefix << "\n";  
+     }
+  }
+  cf.close();
+}
 
 void readFrameworkDts(const char *name) {
   std::fstream cf(name, std::fstream::in);
@@ -1765,6 +1786,10 @@ int main(int argc, char **argv, char **envp) {
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());
   }
 
+  if (PrefixRedact != "") {
+     readPrefixes(PrefixRedact.c_str());
+  }
+
   /* end SYSREL extension */
 
   externalsAndGlobalsCheck(finalModule);
@@ -1925,6 +1950,8 @@ int main(int argc, char **argv, char **envp) {
   stats << "\n";
   stats << "KLEE: done: minInst = " << minInstCount << "\n";
   stats << "KLEE: done: maxInst = " << maxInstCount << "\n";
+  stats << "KLEE: done: HAncestors = " << RD::numHAncestors << "\n";
+  stats << "KLEE: done: HLMixedConstraints = " << RD::numHLMixedConstraints << "\n"; 
   stats << "KLEE: done: total instructions = "
         << instructions << "\n";
   stats << "KLEE: done: completed paths = "

@@ -95,22 +95,33 @@
 #include <errno.h>
 #include <cxxabi.h>
 
+#include "ResourceUsage.h"
+#include "AnalyzeConstraint.h"
+
 using namespace llvm;
 using namespace klee;
 
 /* SYSREL extension */
 
 /* Side channel begin */
-#include "AnalyzeConstraint.h"
-#include "ResourceUsage.h"
 klee::ref<Expr> branchCondition;
 std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
 extern std::string entryFunctionName;
+extern std::map<std::string, std::set<int> > dynamicHighLoc, dynamicLowLoc;
 std::string publicOutputVarName = "return_value";
 std::string publicOutputReturningFName;
 ref<Expr> publicOutputVar;
 extern std::string sidechannelentry;
 bool sidechannelstarted = false;
+extern std::set<std::string> * highLoc;
+extern std::set<std::string> * lowLoc;
+extern std::map<int, RD*> * rdmap;
+extern std::vector<std::string> * untrusted;
+extern std::set<std::string> prefixRedact;
+RD *root;
+RD *currentRD;
+bool fset = false;
+Function *ff;
 /* Side channel end */
 
 //#define VBSC
@@ -777,11 +788,13 @@ void Executor::initializeGlobalObject(ExecutionState &state, ObjectState *os,
     ref<ConstantExpr> C = evalConstant(c);
 
     // Extend the constant if necessary;
-    assert(StoreBits >= C->getWidth() && "Invalid store size!");
-    if (StoreBits > C->getWidth())
+   // assert(StoreBits >= C->getWidth() && "Invalid store size!");
+    if (StoreBits > C->getWidth()) {
+      llvm::errs() << "WARNING: StoreBits " << StoreBits << " greater than width " << C->getWidth() << "\n";
       C = C->ZExt(StoreBits);
-
+    }
     os->write(offset, C);
+ 
   }
 }
 
@@ -828,7 +841,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
     globalAddresses.insert(std::make_pair(f, addr));
 
     /* SYSREL extension */
-    globalAddressesRev.insert(std::make_pair(addr,f));
+    //   globalAddressesRev.insert(std::make_pair(addr,f));
     /* SYSREL extension */
   }
 
@@ -914,7 +927,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
       globalAddresses.insert(std::make_pair(v, mo->getBaseExpr()));
 
       /* SYSREL extension */
-      globalAddressesRev.insert(std::make_pair(mo->getBaseExpr(), v));
+      //globalAddressesRev.insert(std::make_pair(mo->getBaseExpr(), v));
       /* SYSREL extension */
 
       // Program already running = object already initialized.  Read
@@ -953,7 +966,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
       globalAddresses.insert(std::make_pair(v, mo->getBaseExpr()));
 
       /* SYSREL extnesion */
-      globalAddressesRev.insert(std::make_pair(mo->getBaseExpr(), v));
+      //globalAddressesRev.insert(std::make_pair(mo->getBaseExpr(), v));
       /* SYSREL extnesion */
 
 
@@ -969,7 +982,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
     // addresses for everything, even undefined functions.
     globalAddresses.insert(std::make_pair(&*i, evalConstant(i->getAliasee())));
     /* SYSREL extension */
-    globalAddressesRev.insert(std::make_pair(evalConstant(i->getAliasee()), &*i));
+     //  globalAddressesRev.insert(std::make_pair(evalConstant(i->getAliasee()), &*i));
     /* SYSREL extension */
 
   }
@@ -1809,8 +1822,19 @@ static inline const llvm::fltSemantics * fpWidthToSemantics(unsigned width) {
 
 void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
-
   Instruction *i = ki->inst;
+
+  /* SYSREL extension */
+  /* side channel begin */
+  if (!state.inEnclave && i->getParent()->getParent() && 
+         ((Function*)i->getParent()->getParent())->getName() == state.getLastEnclaveFunction()) {
+     llvm::errs() << "returned back to the enclave inside " << state.getLastEnclaveFunction() << "\n";
+     state.inEnclave = true;
+  }
+  /* side channel end */  
+  /* SYSREL extension */
+ 
+
   switch (i->getOpcode()) {
     // Control flow
   case Instruction::Ret: {
@@ -1835,6 +1859,15 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          ref<Expr> eq = EqExpr::create(publicOutputVar,result); 
          rd->LC =  AndExpr::create(rd->LC, eq);
       }
+      // reconstruct the arguments
+      Function *f = ri->getParent()->getParent();
+      KFunction *kf = kmodule->functionMap[f];
+      std::vector<ref<Expr> > args;
+      unsigned numFormals = f->arg_size();
+      for (unsigned ind=0; ind<numFormals; ++ind) { 
+          args.push_back(getArgumentCell(state, kf, ind).value);
+      }
+      symbolizeAndMarkArgumentsOnReturn(state, ki, ri->getParent()->getParent(), args);
       /* side channel */   
       if (state.hasLCM()) {
          #ifdef VB
@@ -2248,6 +2281,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Function *f = getTargetFunction(fp, state);
 
     /* begin SYSREL extension */
+    /* side channel begin */
+    // making an 
+    if (state.inEnclave && f && std::find(untrusted->begin(), untrusted->end(), f->getName()) != untrusted->end()) {
+       llvm::errs() << "making ocall " << f->getName() << " from " << ((Function*)i->getParent()->getParent())->getName() << "\n";
+       state.setLastEnclaveFunction(((Function*)i->getParent()->getParent())->getName());
+       state.inEnclave = false;
+    }
+    /* side channel end */
     if (asyncMode) {
       if (isAsyncInitiate(f->getName())) {
          std::string asyncName = getAsyncFunction(f->getName());
@@ -2687,6 +2728,17 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       llvm::outs() << "index: " << index << "\n";
       llvm::outs() << "pointer: " << Expr::createPointer(elementSize) << "\n";
       #endif
+
+      /* SYSREL extension */ 
+      /* side channel begin */
+      if (state.inEnclave && exprHasVar(index, highLoc)) {
+          llvm::errs() << "CRITICAL: Security sensitive index in GetElementPtr:\n";
+          ki->inst->print(llvm::errs());
+          llvm::errs() << index << "\n"; 
+      }
+      /* side channel end */
+      /* SYSREL extension */ 
+
       base = AddExpr::create(base,
                              MulExpr::create(Expr::createSExtToPointerWidth(index),
                                              Expr::createPointer(elementSize)));
@@ -2695,6 +2747,16 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       #endif
     }
     if (kgepi->offset) {
+      /* SYSREL extension */ 
+      /* side channel begin */
+      if (state.inEnclave && exprHasVar(Expr::createPointer(kgepi->offset), highLoc)) {
+          llvm::errs() << "CRITICAL: Security sensitive offset in GetElementPtr:\n";
+          ki->inst->print(llvm::errs());
+          llvm::errs() << kgepi->offset << "\n";
+      } 
+      /* side channel end */
+      /* SYSREL extension */ 
+ 
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
       #ifdef VB
@@ -3415,7 +3477,6 @@ void Executor::run(ExecutionState &initialState) {
   searcher->update(0, newStates, std::vector<ExecutionState *>());
   /* SYSREL side channel begin */
   bool isbranch = false;
-  readMemLoc();
   /* SYSREL side channel end */
   while (!states.empty() && !haltExecution) {
     ExecutionState &state = searcher->selectState();
@@ -3580,6 +3641,7 @@ void Executor::run(ExecutionState &initialState) {
 		      rdd->numSucc = successorsPaths->size();
 		      done = true;
 	              printsucc = true;
+                      RD::numHAncestors++;
 	           }
 	   	   srd->HA = currentRD;
 		   srd->HAset = true;
@@ -3598,6 +3660,9 @@ void Executor::run(ExecutionState &initialState) {
                 }                                                 
              }   
 	     else {
+                if (hasHloc && hasLloc)
+                   RD::numHLMixedConstraints++;
+
                 if (hasLloc) {
    	           ref<Expr> proj = getProjection(r1, lowLoc);
                    // check if the projection is consistent with the path condition
@@ -4052,13 +4117,13 @@ void Executor::callExternalFunction(ExecutionState &state,
   if (!success) {
 
     /* SYSREL EXTENSION */
-
+   
 
     if (progModel) {
        // let the generic API handler handle the arg and return value symbolization
        std::vector<ExecutionState*> successors;
-       #ifdef VB 
        llvm::errs() << "state=" << &state << " are we handling external function " << function->getName() << "\n";
+       #ifdef VB 
        for(int a=0; a<arguments.size(); a++)
           llvm::errs() << "arg" << a << "=" << arguments[a] << "\n";
        #endif
@@ -4069,6 +4134,20 @@ void Executor::callExternalFunction(ExecutionState &state,
           return;
        }
        if (!resHandled) {
+          // check if prefix redaction works
+          for(auto pr: prefixRedact) {
+             if (function->getName().find(pr) == 0) {
+                std::string modelName =  pr.substr(pr.length());
+                Function *modelFn = moduleHandle->getFunction(modelName);
+                llvm::errs() << "Checking model function " << modelName << " using redacted prefix " << pr << "\n";
+                if (modelFn) {
+                   llvm::errs() << "WARNING: Using " << modelName << " for " << function->getName() << "\n";
+                   ((CallInst*)target->inst)->setCalledFunction(modelFn);
+                   executeCall(state, target, modelFn, arguments);
+                   return;
+                }
+             }
+          }          
           /* side channel */
           checkHighArgumentFlow(state, target, function, arguments);
           /* side channel */
@@ -4296,6 +4375,94 @@ bool Executor::checkHighArgumentFlow(ExecutionState &state,
      return flows;
 }
 
+void Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
+                                  KInstruction *target,
+                                  Function *function,
+                                  std::vector< ref<Expr> > &arguments) {
+
+    if (dynamicHighLoc.find(function->getName()) == dynamicHighLoc.end() && 
+         dynamicLowLoc.find(function->getName()) == dynamicLowLoc.end()) {
+       return; 
+    }
+    std::set<int> argsH, argsL; 
+    if (dynamicHighLoc.find(function->getName()) != dynamicHighLoc.end())
+       argsH = dynamicHighLoc[function->getName()];
+    if (dynamicLowLoc.find(function->getName()) != dynamicLowLoc.end())
+       argsL = dynamicLowLoc[function->getName()];
+    unsigned int ai = 0;
+    for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
+       if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end()) { 
+          // a local var
+          Type *at = agi->getType();
+          if (at->isPointerTy()) {
+             Type *bt = at->getPointerElementType();
+                 std::string type_str;
+                 llvm::raw_string_ostream rso(type_str);
+                 at->print(rso);
+                DataLayout *TD = kmodule->targetData;
+                // find the MemoryObject for this value
+                ObjectPair op;
+                bool asuccess;
+                //ref<Expr> base = eval(target, ai+1, state).value;
+                ref<Expr> base = arguments[ai];
+                if (SimplifySymIndices) {
+                   if (!isa<ConstantExpr>(base))
+                      base = state.constraints.simplifyExpr(base);
+                }
+                solver->setTimeout(coreSolverTimeout);
+                if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+                   base = toConstant(state, base, "resolveOne failure");
+                   asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+                }
+                solver->setTimeout(0);
+                if (asuccess) {
+                   MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
+                           op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
+                   #ifdef VB
+                   llvm::errs() << "Symbolizing and marking argument " << ai << " of function as high" << function->getName() 
+                                << ", address=" << sm->getBaseExpr() << "\n";
+                   llvm::errs() << "base addres=" << base << "\n";
+                   #endif
+                   unsigned id = 0;
+                   std::string name = "function";
+                   std::string uniqueName = name;
+                   while (!state.arrayNames.insert(uniqueName).second) {
+                       if (argsH.find(ai) != argsH.end())
+                          uniqueName = name + "_high_" + std::to_string(ai) + "_" + llvm::utostr(++id);
+                       if (argsL.find(ai) != argsL.end())
+                          uniqueName = name + "_low_" + std::to_string(ai) + "_" + llvm::utostr(++id);
+                   }
+                   if (argsH.find(ai) != argsH.end())
+                      highLoc->insert(uniqueName); 
+                   if (argsL.find(ai) != argsL.end())
+                      lowLoc->insert(uniqueName); 
+                   // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
+                   const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
+                   ObjectState *sos = bindObjectInState(state, sm, true, array);
+                   ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
+                   ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
+                   // compute offset: base - op.first->getBaseExpr()
+                   ref<Expr> offsetexpr = SubExpr::create(base, op.first->getBaseExpr());
+                   // check sanity
+                   const ConstantExpr *co = dyn_cast<ConstantExpr>(offsetexpr);
+                   if (co) {
+                      if ((op.first->size - co->getZExtValue()) < sm->size) {
+                         #ifdef VB
+                         llvm::errs() << "Lazy init of a void pointer mismatches real type, "
+                                       << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
+                         #endif
+                         terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
+                            NULL, getAddressInfo(state, op.first->getBaseExpr()));
+                         return;
+                      }
+                   }
+                   wos->write(offsetexpr, result);
+               }
+         }
+       }
+      }
+
+}
 
 void Executor::symbolizeArguments(ExecutionState &state,
                                   KInstruction *target,
@@ -5246,7 +5413,7 @@ void Executor::runFunctionAsMain(Function *f,
   /* SYSREL EXTENSION */
   entryFunc = f;
   // side channel - Reading unstrusted function list
-  readConfig();
+  readSCAInput();
   /* SYSREL EXTENSION */
 
   std::vector<ref<Expr> > arguments;
@@ -5465,7 +5632,7 @@ void Executor::runFunctionAsMain(Function *f,
   globalObjects.clear();
   globalAddresses.clear();
   /* SYSREL extension */
-  globalAddressesRev.clear();
+  //globalAddressesRev.clear();
   /* SYSREL extension */
 
 

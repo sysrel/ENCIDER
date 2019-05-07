@@ -206,6 +206,10 @@ public:
   unsigned ru = 0;
   int rdid = -1;
   ref<Expr> addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &array);
+  bool inEnclave; 
+  std::string lastEnclaveFunction;
+  void setLastEnclaveFunction(std::string);
+  std::string getLastEnclaveFunction();  
   /* Side channel end */
   int instCount;
   std::map<ref<Expr>,int> lockModel;
