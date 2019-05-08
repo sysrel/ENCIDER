@@ -5360,6 +5360,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
               #endif
               mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
+              llvm::errs() << "lazy init arg " << mo->name << "\n";
               if (!nosym && mksym) {
                  executeMakeSymbolic(state, mo,
                                      mo->name,
@@ -5387,6 +5388,8 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         while (!state.arrayNames.insert(uniqueName).second) {
               uniqueName = name + "_" + llvm::utostr(++id);
         }
+        mo->name = uniqueName;
+        llvm::errs() << "lazy init arg " << mo->name << "\n";
         // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
         const Array *array = arrayCache.CreateArray(uniqueName, mo->size);
         ObjectState *sos = bindObjectInState(state, mo, true, array);

@@ -8,10 +8,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "klee/Internal/ADT/KTest.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <iostream>
 
 #define KTEST_VERSION 3
 #define KTEST_MAGIC_SIZE 5
@@ -19,7 +19,6 @@
 
 // for compatibility reasons
 #define BOUT_MAGIC "BOUT\n"
-
 /***/
 
 static int read_uint32(FILE *f, unsigned *value_out) {
@@ -96,58 +95,80 @@ KTest *kTest_fromFile(const char *path) {
   KTest *res = 0;
   unsigned i, version;
 
-  if (!f) 
+  if (!f) { 
+    std::cerr << "unable to open file " << path << "\n";
     goto error;
-  if (!kTest_checkHeader(f)) 
+  }
+  if (!kTest_checkHeader(f))  {
+     std::cerr << "unable to check header\n";
     goto error;
-
+  }
   res = (KTest*) calloc(1, sizeof(*res));
   if (!res) 
     goto error;
 
-  if (!read_uint32(f, &version)) 
+  if (!read_uint32(f, &version)) {
+    std::cerr << "unable to read version \n";
     goto error;
+  }
   
-  if (version > kTest_getCurrentVersion())
+  if (version > kTest_getCurrentVersion()) {
+    std::cerr << "unable to get current version \n";
     goto error;
+  }
 
   res->version = version;
 
-  if (!read_uint32(f, &res->numArgs)) 
+  if (!read_uint32(f, &res->numArgs))  {
+    std::cerr << "unable to read numargs\n";
     goto error;
+  }
   res->args = (char**) calloc(res->numArgs, sizeof(*res->args));
   if (!res->args) 
     goto error;
   
   for (i=0; i<res->numArgs; i++)
-    if (!read_string(f, &res->args[i]))
+    if (!read_string(f, &res->args[i])) {
+      std::cerr << "unable to read string \n";
       goto error;
+    }
 
-  if (version >= 2) {
-    if (!read_uint32(f, &res->symArgvs)) 
+  if (version >= 2) { 
+    if (!read_uint32(f, &res->symArgvs)) { 
+      std::cerr << "unable to read sym argvs\n";
       goto error;
-    if (!read_uint32(f, &res->symArgvLen)) 
+    }
+    if (!read_uint32(f, &res->symArgvLen))  {
+      std::cerr << "unable to read sym argv len\n";
       goto error;
+    }
   }
 
-  if (!read_uint32(f, &res->numObjects))
+  if (!read_uint32(f, &res->numObjects)) {
+    std::cerr << "unable to read numobj\n";
     goto error;
+  }
   res->objects = (KTestObject*) calloc(res->numObjects, sizeof(*res->objects));
   if (!res->objects)
     goto error;
   for (i=0; i<res->numObjects; i++) {
     KTestObject *o = &res->objects[i];
-    if (!read_string(f, &o->name))
+    if (!read_string(f, &o->name)) {
+      std::cerr << "unable to read o->name " << o->name << "\n";
       goto error;
-    if (!read_uint32(f, &o->numBytes))
+    } 
+    if (!read_uint32(f, &o->numBytes)) {
+      std::cerr << "unable to read numbytes \n";
       goto error;
+    }
     o->bytes = (unsigned char*) malloc(o->numBytes);
-    if (fread(o->bytes, o->numBytes, 1, f)!=1)
+    if (fread(o->bytes, o->numBytes, 1, f)!=1) {
+      std::cerr << "unable to read certain byte from bytes \n";
       goto error;
+    }
   }
 
   fclose(f);
-
   return res;
  error:
   if (res) {
@@ -179,35 +200,63 @@ int kTest_toFile(KTest *bo, const char *path) {
   FILE *f = fopen(path, "wb");
   unsigned i;
 
-  if (!f) 
+  if (!f) {
+    std::cerr << "unable to open file " << path << "\n";
     goto error;
-  if (fwrite(KTEST_MAGIC, strlen(KTEST_MAGIC), 1, f)!=1)
+  }
+  if (fwrite(KTEST_MAGIC, strlen(KTEST_MAGIC), 1, f)!=1) {
+    std::cerr << "unable to write magic no \n";
     goto error;
-  if (!write_uint32(f, KTEST_VERSION))
+  }
+  if (!write_uint32(f, KTEST_VERSION)) {
+    std::cerr << "unable to write version \n";
     goto error;
+  }
       
-  if (!write_uint32(f, bo->numArgs))
+  if (!write_uint32(f, bo->numArgs)) {
+    std::cerr << "unable to write numargs\n";
     goto error;
+  }
   for (i=0; i<bo->numArgs; i++) {
-    if (!write_string(f, bo->args[i]))
+    if (!write_string(f, bo->args[i])) {
+      std::cerr << "unable to write string arg\n";
       goto error;
+    }
   }
 
-  if (!write_uint32(f, bo->symArgvs))
+  if (!write_uint32(f, bo->symArgvs)) {
+    std::cerr << "unable to write sym argvs\n";
     goto error;
-  if (!write_uint32(f, bo->symArgvLen))
+  }
+  if (!write_uint32(f, bo->symArgvLen)) {
+    std::cerr << "unable to write  argv len\n";   
     goto error;
+  }
   
-  if (!write_uint32(f, bo->numObjects))
+  if (!write_uint32(f, bo->numObjects)) {
+    std::cerr << "unable to write numobjs\n";
     goto error;
+  }
   for (i=0; i<bo->numObjects; i++) {
     KTestObject *o = &bo->objects[i];
-    if (!write_string(f, o->name))
+    /* SYSREL extension */
+    if (o->numBytes == 0) {
+       //std::cerr << "WARNING: skipping object " << o->name << "; no solution\n";
+       continue;
+    }
+    /* SYSREL extension */
+    if (!write_string(f, o->name)) {
+      std::cerr << "unable to write  o->name " << o->name << "\n";
       goto error;
-    if (!write_uint32(f, o->numBytes))
+    }
+    if (!write_uint32(f, o->numBytes)) {
+      std::cerr << "unable to write o->numBytes\n";
       goto error;
-    if (fwrite(o->bytes, o->numBytes, 1, f)!=1)
+    }
+    if (fwrite(o->bytes, o->numBytes, 1, f)!=1) {
+      std::cerr << "unable to write o->bytes\n, o->numBytes=" << o->numBytes << "\n";
       goto error;
+    }
   }
 
   fclose(f);
