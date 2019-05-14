@@ -27,6 +27,7 @@ void readMemLoc() {
 			if((*rit).compare(umarker)==0) {
 				++rit;
 				highLoc->insert(*rit);
+                                llvm::errs() << "high " << (*rit) << "\n";
 			}
 		}
 	}
@@ -42,6 +43,7 @@ void readMemLoc() {
 			if((*rit).compare(umarker2)==0) {
 				++rit;
 				lowLoc->insert(*rit);
+                                llvm::errs() << "low " << (*rit) << "\n";
 			}
 		}
 	}

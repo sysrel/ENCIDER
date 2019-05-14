@@ -43,6 +43,12 @@ public:
   unsigned id;
   uint64_t address;
 
+  /* SYSREL extension */
+  /* side channel */
+  mutable bool ishigh;
+  mutable bool islow;
+  /* SYSREL extension */
+
   /// size in bytes
   unsigned size;
   mutable std::string name;
@@ -80,7 +86,9 @@ public:
       size(0),
       isFixed(true),
       parent(NULL),
-      allocSite(0) {
+      allocSite(0),
+      ishigh(false),
+      islow(false) {
   }
 
   MemoryObject(uint64_t _address, unsigned _size, 
@@ -97,7 +105,9 @@ public:
       isFixed(_isFixed),
       isUserSpecified(false),
       parent(_parent), 
-      allocSite(_allocSite) {
+      allocSite(_allocSite),
+      ishigh(false),
+      islow(false) {
   }
 
   ~MemoryObject();

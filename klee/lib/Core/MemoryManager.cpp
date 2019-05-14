@@ -39,6 +39,8 @@ extern bool isEmbeddedType(llvm::Type *t);
 extern Interpreter *theInterpreter;
 extern bool isAllocTypeLazyInit(llvm::Type *t, bool &single, int &count) ;
 extern std::map<std::string, std::vector<std::string> > inferenceClue;
+// to avoid assertion failure when size cannot be determined
+#define SIZE_FOR_UNTYPED 2000
 /* SYSREL EXTENSION */
 
 namespace {
@@ -273,10 +275,15 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
            //assert(0 && "could not resolve embedded type address\n");
         }
      }
+     size_t allocsize;
+     if (!allocType->isSized())
+        allocsize = SIZE_FOR_UNTYPED;
+     else 
+        allocsize = dl.getTypeAllocSize(allocType);
      #ifdef VB
-     llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
+     llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
      #endif
-     mo = allocate(dl.getTypeAllocSize(allocType)*count, false, /*true*/false, inst, allocationAlignment);
+     mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
      resaddr = mo->getBaseExpr();
      rallocType = allocType;
      llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
@@ -511,10 +518,15 @@ MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::In
       return mo;
    }
  }
+ size_t allocsize;
+ if (!allocType->isSized())
+     allocsize =  SIZE_FOR_UNTYPED;
+ else 
+     allocsize = dl.getTypeAllocSize(allocType); 
  #ifdef VB 
- llvm::outs() << "allocation size: " << dl.getTypeAllocSize(allocType)*count << "\n"; 
+ llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
  #endif 
- mo = allocate(dl.getTypeAllocSize(allocType)*count, false, /*true*/false, inst, allocationAlignment);
+ mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
  llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
  if (st) {
     std::string tname = getTypeName(allocType); 

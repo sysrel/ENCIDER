@@ -212,6 +212,9 @@ public:
   std::string getLastEnclaveFunction();  
   /* Side channel end */
   int instCount;
+  // for tracking security sensitive object fields
+  std::set<ref<Expr> > highAddresses;
+  std::set<ref<Expr> > lowAddresses;
   std::map<ref<Expr>,int> lockModel;
   std::map<ref<Expr>,int> stateModel;
   std::map<ref<Expr>, ref<Expr> > assocModel; 

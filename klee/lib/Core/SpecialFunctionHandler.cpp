@@ -472,7 +472,7 @@ void SpecialFunctionHandler::handleMalloc(ExecutionState &state,
   // we need this to handle kmalloc and kzalloc via malloc
   assert(arguments.size()>=1 && "invalid number of arguments to malloc");
   //assert(arguments.size()==1 && "invalid number of arguments to malloc");
-  llvm::outs() << "argument to malloc: " << arguments[0] << "\n";
+  //llvm::outs() << "argument to malloc: " << arguments[0] << "\n";
   /* SYSREL EXTENSION */
   executor.executeAlloc(state, arguments[0], false, target, false, true);
 }

@@ -231,6 +231,8 @@ ExecutionState::ExecutionState(const ExecutionState& state):
      pmstack.push_back(new PMFrame(*pmf));
   inEnclave = state.inEnclave;
   lastEnclaveFunction = state.lastEnclaveFunction;
+  highAddresses = state.highAddresses;
+  lowAddresses = state.lowAddresses;
   /* SYSREL */ 
 }
 

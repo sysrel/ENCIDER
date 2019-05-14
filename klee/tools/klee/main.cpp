@@ -96,6 +96,7 @@ bool progModel = false;
 APIHandler *apiHandler = NULL;
 std::map<std::string, std::vector<std::string> > inferenceClue;
 std::set<std::string> prefixRedact;
+extern std::set<std::string> * highLoc, *lowLoc;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -1931,6 +1932,14 @@ int main(int argc, char **argv, char **envp) {
   uint64_t forks =
     *theStatisticManager->getStatisticByName("Forks");
 
+
+  llvm::errs() << "all high vars: \n";
+  for(auto h : *highLoc)
+      llvm::errs() << h << "\n";
+  llvm::errs() << "all low vars: \n";
+  for(auto lw : *lowLoc)
+      llvm::errs() << lw << "\n"; 
+
   handler->getInfoStream()
     << "KLEE: done: explored paths = " << 1 + forks << "\n";
 
@@ -1951,7 +1960,9 @@ int main(int argc, char **argv, char **envp) {
   stats << "KLEE: done: minInst = " << minInstCount << "\n";
   stats << "KLEE: done: maxInst = " << maxInstCount << "\n";
   stats << "KLEE: done: HAncestors = " << RD::numHAncestors << "\n";
-  stats << "KLEE: done: HLMixedConstraints = " << RD::numHLMixedConstraints << "\n"; 
+  stats << "KLEE: done: HLMixedConstraints = " << RD::numHLMixedConstraints << "\n";
+  stats << "KLEE: done: HVars= " << highLoc->size() << "\n"; 
+  stats << "KLEE: done: LVars= " << lowLoc->size() << "\n"; 
   stats << "KLEE: done: total instructions = "
         << instructions << "\n";
   stats << "KLEE: done: completed paths = "

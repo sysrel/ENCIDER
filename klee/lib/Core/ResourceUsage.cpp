@@ -362,6 +362,8 @@ void printLeakage(RD* rd, Executor* ex) {
 						//Instruction * inst = (*(rd->succ->begin()))->i;
 						Instruction * inst = rd->i;
 						const InstructionInfo &ii = ex->kmodule->infos->getInfo(inst);
+                                                llvm::errs() << "Instruction:\n";
+                                                llvm::errs() << (*inst) << "\n";
 						//inst->getParent()->dump();
 						printInfo(ii);
 						vil->push_back(inst);

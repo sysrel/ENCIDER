@@ -128,7 +128,11 @@ Function *ff;
 
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
-#define PRIM_LAZY_INIT_SIZE  1000
+#define PRIM_LAZY_INIT_SIZE  4096
+#define STRUCT_LAZY_INIT_INS 10
+// this is to avoid assertion failure
+// represents size in bits so SIZE_FOR_UNTYPED (2000) * 8
+#define SIZE_FOR_UNKNOWN_TYPES 16000
 
 cl::opt<bool>
 InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"),
@@ -268,17 +272,27 @@ bool isLazyInit(Type *t, bool &single, int &count) {
         single = isLazySingle(typestr);
         return true;
      }
-
-  if (t->getPrimitiveSizeInBits()) {
-      count = PRIM_LAZY_INIT_SIZE; 
-      single = false;
-      return true;
+  // Support lazy init for double pointer to a primitive type
+  if (t->isPointerTy()) {
+     Type *el = t->getPointerElementType();
+     if (el->isPointerTy()) {
+        el = el->getPointerElementType();             
+        StructType *st = dyn_cast<StructType>(el);
+        if (st) {
+           count = STRUCT_LAZY_INIT_INS;
+           single = false;
+           return true;
+        }
+        else { // if (el->getPrimitiveSizeInBits()) {
+           count = PRIM_LAZY_INIT_SIZE; 
+           single = false;
+           return true;
+        }
+     }
   }
-  else {
-    count = origvalue;
-    single = false;
-    return false;
-  }
+  count = origvalue;
+  single = false;
+  return false;
 }
 
 bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
@@ -342,7 +356,7 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
               //lazyTypes.insert(ltypename);
               lazyTypes.push_back(ltypename);
               lazyInitNumInstances[ltypename] = numLazyInst;
-              //llvm::outs() << "lazy type: " << ltypename << " extracted\n";
+              llvm::errs() << "lazy type: " << ltypename << " extracted\n";
            }
            for(unsigned i=0; i < st->getNumElements(); i++) {
               /*Type *temp = st->getElementType(i);
@@ -357,10 +371,10 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
      }
      else if (t->getPrimitiveSizeInBits()) {
         if (pointerType) {
-           //llvm::outs() << "lazy type: " << rso.str() << " extracted\n";
+           llvm::errs() << "lazy primitive type: " << rso.str() << " extracted\n";
            //lazyTypes.insert(rso.str());
            lazyTypes.push_back(rso.str());
-           lazyInitNumInstances[rso.str()] = numLazyInst;
+           lazyInitNumInstances[rso.str()] = PRIM_LAZY_INIT_SIZE ;//numLazyInst;
         }
      }
 
@@ -2712,7 +2726,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   case Instruction::GetElementPtr: {
     KGEPInstruction *kgepi = static_cast<KGEPInstruction*>(ki);
     ref<Expr> base = eval(ki, 0, state).value;
-
+    /* side channel */
+    bool high = false;
+    bool low = false;
+    if (state.highAddresses.find(base) != state.highAddresses.end())
+       high = true;  
+    if (state.lowAddresses.find(base) != state.lowAddresses.end())
+       low = true;    
+    /* side channel */
     #ifdef VB 
     llvm::outs() << "GetElementPtr info:\n";
     ki->inst->print(llvm::outs());
@@ -2739,9 +2760,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* side channel end */
       /* SYSREL extension */ 
 
+      
       base = AddExpr::create(base,
                              MulExpr::create(Expr::createSExtToPointerWidth(index),
                                              Expr::createPointer(elementSize)));
+
       #ifdef VB
       llvm::outs() << "base: " << base << "\n";
       #endif
@@ -2768,6 +2791,21 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     llvm::outs() << "geptr final base: " << base << "\n";
     #endif
     bindLocal(ki, state, base);
+
+    /* side channel */
+    if (high) {
+       state.highAddresses.insert(base);
+       #ifdef VB 
+       llvm::errs() << "recording address " << base << " as transitive security sensitive \n";
+       #endif
+    }
+    if (low) {
+       state.lowAddresses.insert(base);
+       #ifdef VB 
+       llvm::errs() << "recording address " << base << " as transitive security insensitive \n";
+       #endif
+    }
+    /* side channel */
     break;
   }
 
@@ -3629,11 +3667,14 @@ void Executor::run(ExecutionState &initialState) {
                 bool success = solver->mayBeTrue(*s, proj, result);
                 assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
                 if (result) {
-                   #ifdef VBSC
+                   //#ifdef VBSC
                           std::cerr << "Projection on high\n";
     	                  std::cerr << "\n>>>> Projection : ";
 	                  proj->dump();
-                   #endif
+                          const InstructionInfo &ii = kmodule->infos->getInfo(state.prevPC->inst);
+                          state.prevPC->inst->print(llvm::errs());
+                          printInfo(ii);
+                   //#endif
                    //Update currentstate
 		   if (!done) {
 		      rdd->isHBr = true;
@@ -4122,8 +4163,8 @@ void Executor::callExternalFunction(ExecutionState &state,
     if (progModel) {
        // let the generic API handler handle the arg and return value symbolization
        std::vector<ExecutionState*> successors;
-       llvm::errs() << "state=" << &state << " are we handling external function " << function->getName() << "\n";
        #ifdef VB 
+       llvm::errs() << "state=" << &state << " are we handling external function " << function->getName() << "\n";
        for(int a=0; a<arguments.size(); a++)
           llvm::errs() << "arg" << a << "=" << arguments[a] << "\n";
        #endif
@@ -4783,7 +4824,7 @@ void Executor::executeAlloc(ExecutionState &state,
 
           /* SYSREL extension */
           if (lazyInit) {
-             llvm::errs() << "concretized symbolic size as 10\n";
+             llvm::errs() << "concretized symbolic size as " << 10 << "\n";
               executeAlloc(*hugeSize.second, ConstantExpr::create(10,64), isLocal,
                    target, zeroMemory, record, reallocFrom);
 
@@ -5055,7 +5096,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   #endif
                   mo->name = state.getUnique(rso2str);
                   if (mksym)
-                     executeMakeSymbolic(state, mo, rso2str, t, true);
+                     executeMakeSymbolic(state, mo, mo->name, t, true);
                   #ifdef VB
                   llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
                   #endif
@@ -5063,6 +5104,30 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   executeMemoryOperation(state, true, address, laddr, 0);
                   forcedOffset = false;
                   result = laddr;
+                  /* side channel */
+                  // check if initializing a pointer field of a high security memory object
+                  if (state.highAddresses.find(address) != state.highAddresses.end()) {
+                     highLoc->insert(mo->name);
+                     state.highAddresses.insert(mo->getBaseExpr()); 
+                     state.highAddresses.insert(laddr);
+                     mo->ishigh = true;
+                     #ifdef VB
+                     llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
+                                  << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
+                     #endif
+                  }
+                  if (state.lowAddresses.find(address) != state.lowAddresses.end()) {
+                     lowLoc->insert(mo->name);
+                     state.lowAddresses.insert(mo->getBaseExpr()); 
+                     state.lowAddresses.insert(laddr);
+                     mo->islow = true;
+                     #ifdef VB
+                     llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
+                                  << " and container base " << mo->getBaseExpr() << " marked security insensitive\n";
+                     #endif
+                  }
+
+                  /* side channel */
               }
             }
         }
@@ -5360,7 +5425,25 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
               #endif
               mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
+              #ifdef VB
               llvm::errs() << "lazy init arg " << mo->name << "\n";
+              #endif 
+              // check if it is a security sensitive arg, if so mark the memory object ishigh
+              if (highLoc->find(mo->name) != highLoc->end()) {
+                 mo->ishigh = true;
+                 state.highAddresses.insert(mo->getBaseExpr());
+                 #ifdef VB
+                 llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive\n";
+                 #endif 
+              }
+              if (lowLoc->find(mo->name) != lowLoc->end()) {
+                 mo->islow = true;
+                 state.lowAddresses.insert(mo->getBaseExpr());
+                 #ifdef VB
+                 llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as insecurity insensitive\n";
+                 #endif 
+              }
+
               if (!nosym && mksym) {
                  executeMakeSymbolic(state, mo,
                                      mo->name,
@@ -5782,6 +5865,10 @@ void Executor::doImpliedValueConcretization(ExecutionState &state,
 }
 
 Expr::Width Executor::getWidthForLLVMType(llvm::Type *type) const {
+  /* SYSREL extension */
+  if (!type->isSized())
+      return SIZE_FOR_UNKNOWN_TYPES;
+  /* SYSREL extension */ 
   return kmodule->targetData->getTypeSizeInBits(type);
 }
 
