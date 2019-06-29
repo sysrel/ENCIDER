@@ -92,11 +92,14 @@ int numLazyInst = 20;
 std::vector<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
+std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
 bool progModel = false;
 APIHandler *apiHandler = NULL;
 std::map<std::string, std::vector<std::string> > inferenceClue;
 std::set<std::string> prefixRedact;
 extern std::set<std::string> * highLoc, *lowLoc;
+extern int maxForkMulRes;
+extern int primArraySize;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -154,6 +157,12 @@ namespace {
                cl::init("main"));
 
   /* SYSREL extension */
+  cl::opt<int>
+  PrimitiveArraySize("prim-array-size", cl::desc("Lazy initialization size for arrays of primitive size (default 32)"));
+
+  cl::opt<int>
+  MaxForkMulResolution("max-fork-mul-res", cl::desc("Max number of forked states during memory op with multiple resolution (default is 10)"));
+
   cl::list<std::string>
   AsyncEntryPoints("async-func",
                    cl::desc("async functions"), cl::CommaSeparated);
@@ -169,6 +178,9 @@ namespace {
 
   cl::opt<std::string>
   LazySingle("lazy-single-ins",cl::desc("Lazily initialized types that should have a single instance"));
+
+  cl::opt<std::string>
+  LazyInitializer("lazy-set-at-init", cl::desc("The file that contains lazy init types and their byte offsets that need to be initialized to NULL\n"));
 
   cl::opt<std::string>
   FrameworkDts("framework-dts", cl::desc("Framework data structure types file \
@@ -1123,6 +1135,34 @@ void readLazySingles(const char *name) {
   }
 }
 
+void readLazyInitInitializers(const char * name) {
+ 
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string   line;
+     llvm::outs() << "Lazy init initializers:\n";
+     while (std::getline(cf,line)) { 
+        std::string tname, offset;  
+        std::string tline = ltrim(rtrim(line));
+        llvm::outs() << tline << "\n";
+        std::istringstream iss(line);
+        getline(iss, tname, ',');
+        tname = ltrim(rtrim(tname));
+        std::vector<unsigned int> offsets;
+        llvm::outs() << "lazy init type=" << tname << ", offsets to be set to NULL:\n";
+        while (getline(iss, offset, ',')) {
+          offset = ltrim(rtrim(offset));
+          unsigned int value = std::stoi(offset);
+          llvm::outs() << value << " ";
+          offsets.push_back(value); 
+        }
+        llvm::outs() << "\n";
+        lazyInitInitializers[tname] = offsets;
+     }
+     cf.close();
+  }
+}  
+
 /*
 
 void readProgModelSpec(const char *name) {
@@ -1734,6 +1774,12 @@ int main(int argc, char **argv, char **envp) {
   const Module *finalModule =
     interpreter->setModule(mainModule, Opts);
   /* begin SYSREL extension */
+  if (PrimitiveArraySize)
+     primArraySize = PrimitiveArraySize;
+
+  if (MaxForkMulResolution)
+     maxForkMulRes = MaxForkMulResolution;
+
   if (AsyncMode) {
      moduleHandle = finalModule; 
      asyncMode = true;
@@ -1775,7 +1821,8 @@ int main(int argc, char **argv, char **envp) {
      llvm::outs() << "lazy single spec file? " << LazySingle.c_str() << "\n";
      if (LazySingle != "")
         readLazySingles(LazySingle.c_str()); 
-
+     if (LazyInitializer != "")
+        readLazyInitInitializers(LazyInitializer.c_str());     
      if (InferenceClue != "")
         llvm::outs() << "Reading inference clue from " << InferenceClue.c_str() << "\n";
         readInferenceClue(InferenceClue.c_str());

@@ -169,7 +169,7 @@ bin/klee-replay: tools/klee-replay/CMakeFiles/klee-replay.dir/klee-replay.c.o
 bin/klee-replay: tools/klee-replay/CMakeFiles/klee-replay.dir/klee_init_env.c.o
 bin/klee-replay: tools/klee-replay/CMakeFiles/klee-replay.dir/build.make
 bin/klee-replay: lib/libkleeBasic.a
-bin/klee-replay: /usr/lib/x86_64-linux-gnu/libcap.so
+bin/klee-replay: /lib/x86_64-linux-gnu/libcap.so
 bin/klee-replay: /usr/lib/x86_64-linux-gnu/libutil.so
 bin/klee-replay: lib/libkleaverSolver.a
 bin/klee-replay: lib/libkleeBasic.a
@@ -177,6 +177,7 @@ bin/klee-replay: lib/libkleaverSolver.a
 bin/klee-replay: lib/libkleaverExpr.a
 bin/klee-replay: lib/libkleeSupport.a
 bin/klee-replay: /usr/lib/x86_64-linux-gnu/libz.so
+bin/klee-replay: /usr/lib/libtcmalloc.so
 bin/klee-replay: /usr/lib/llvm-3.8/lib/libLLVMSupport.a
 bin/klee-replay: /usr/local/lib/libstp.a
 bin/klee-replay: /usr/lib/x86_64-linux-gnu/libboost_program_options.a

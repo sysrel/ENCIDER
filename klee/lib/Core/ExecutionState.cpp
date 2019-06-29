@@ -62,6 +62,8 @@ extern std::map<std::string, int> lazyInitNumInstances;
 
 extern bool isLazyInit(Type *t, bool &single, int &count);
 extern bool isAllocTypeLazyInit(Type *t, bool &single, int &count);
+extern void cloneHighAddresses(const ExecutionState &from, ExecutionState &to);
+extern void cloneLowAddresses(const ExecutionState &from, ExecutionState &to);
 /* SYSREL */
 
 /***/
@@ -231,8 +233,6 @@ ExecutionState::ExecutionState(const ExecutionState& state):
      pmstack.push_back(new PMFrame(*pmf));
   inEnclave = state.inEnclave;
   lastEnclaveFunction = state.lastEnclaveFunction;
-  highAddresses = state.highAddresses;
-  lowAddresses = state.lowAddresses;
   /* SYSREL */ 
 }
 
@@ -245,6 +245,12 @@ ExecutionState *ExecutionState::branch() {
 
   weight *= .5;
   falseState->weight -= weight;
+
+  /* SYSREL extension */
+  // side channel
+  cloneHighAddresses(*this, *falseState);
+  cloneLowAddresses(*this, *falseState);
+  /* SYSREL extension */
 
   return falseState;
 }

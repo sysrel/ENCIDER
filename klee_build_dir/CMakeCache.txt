@@ -305,6 +305,12 @@ MAKE_BINARY:FILEPATH=/usr/bin/make
 //The directory containing a CMake configuration file for STP.
 STP_DIR:PATH=/usr/local/lib/cmake/STP
 
+//Path to a file.
+TCMALLOC_INCLUDE_DIR:PATH=/usr/include
+
+//TCMalloc libraries
+TCMALLOC_LIBRARIES:FILEPATH=/usr/lib/libtcmalloc.so
+
 //Use find_package(LLVM CONFIG) to find LLVM
 USE_CMAKE_FIND_PACKAGE_LLVM:BOOL=OFF
 
@@ -327,25 +333,25 @@ ZLIB_LIBRARY_DEBUG:FILEPATH=ZLIB_LIBRARY_DEBUG-NOTFOUND
 ZLIB_LIBRARY_RELEASE:FILEPATH=/usr/lib/x86_64-linux-gnu/libz.so
 
 //Dependencies for the target
-kleaverExpr_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMSupport;
+kleaverExpr_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;
 
 //Dependencies for the target
-kleaverSolver_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMSupport;general;kleeBasic;general;kleaverExpr;general;kleeSupport;general;libstp;general;/usr/lib/libz3.so;
+kleaverSolver_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;general;kleeBasic;general;kleaverExpr;general;kleeSupport;general;libstp;general;/usr/lib/libz3.so;
 
 //Dependencies for the target
-kleeBasic_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMSupport;general;kleaverSolver;
+kleeBasic_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;general;kleaverSolver;
 
 //Dependencies for the target
-kleeCore_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMX86Disassembler;general;LLVMX86AsmParser;general;LLVMX86CodeGen;general;LLVMSelectionDAG;general;LLVMAsmPrinter;general;LLVMCodeGen;general;LLVMScalarOpts;general;LLVMInstCombine;general;LLVMInstrumentation;general;LLVMProfileData;general;LLVMTransformUtils;general;LLVMBitWriter;general;LLVMX86Desc;general;LLVMMCDisassembler;general;LLVMX86Info;general;LLVMX86AsmPrinter;general;LLVMX86Utils;general;LLVMMCJIT;general;LLVMExecutionEngine;general;LLVMTarget;general;LLVMAnalysis;general;LLVMRuntimeDyld;general;LLVMObject;general;LLVMMCParser;general;LLVMBitReader;general;LLVMMC;general;LLVMCore;general;LLVMSupport;general;kleeBasic;general;kleeModule;general;kleaverSolver;general;kleaverExpr;general;kleeSupport;
+kleeCore_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMX86Disassembler;general;LLVMX86AsmParser;general;LLVMX86CodeGen;general;LLVMSelectionDAG;general;LLVMAsmPrinter;general;LLVMCodeGen;general;LLVMScalarOpts;general;LLVMInstCombine;general;LLVMInstrumentation;general;LLVMProfileData;general;LLVMTransformUtils;general;LLVMBitWriter;general;LLVMX86Desc;general;LLVMMCDisassembler;general;LLVMX86Info;general;LLVMX86AsmPrinter;general;LLVMX86Utils;general;LLVMMCJIT;general;LLVMExecutionEngine;general;LLVMTarget;general;LLVMAnalysis;general;LLVMRuntimeDyld;general;LLVMObject;general;LLVMMCParser;general;LLVMBitReader;general;LLVMMC;general;LLVMCore;general;LLVMSupport;general;kleeBasic;general;kleeModule;general;kleaverSolver;general;kleaverExpr;general;kleeSupport;
 
 //Dependencies for the target
-kleeModule_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMipo;general;LLVMVectorize;general;LLVMLinker;general;LLVMIRReader;general;LLVMAsmParser;general;LLVMCodeGen;general;LLVMTarget;general;LLVMScalarOpts;general;LLVMInstCombine;general;LLVMInstrumentation;general;LLVMProfileData;general;LLVMObject;general;LLVMMCParser;general;LLVMTransformUtils;general;LLVMMC;general;LLVMAnalysis;general;LLVMBitWriter;general;LLVMBitReader;general;LLVMCore;general;LLVMSupport;general;kleeSupport;general;kleeCore;
+kleeModule_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMipo;general;LLVMVectorize;general;LLVMLinker;general;LLVMIRReader;general;LLVMAsmParser;general;LLVMCodeGen;general;LLVMTarget;general;LLVMScalarOpts;general;LLVMInstCombine;general;LLVMInstrumentation;general;LLVMProfileData;general;LLVMObject;general;LLVMMCParser;general;LLVMTransformUtils;general;LLVMMC;general;LLVMAnalysis;general;LLVMBitWriter;general;LLVMBitReader;general;LLVMCore;general;LLVMSupport;general;kleeSupport;general;kleeCore;
 
 //Dependencies for target
 kleeRuntest_LIB_DEPENDS:STATIC=
 
 //Dependencies for the target
-kleeSupport_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMSupport;
+kleeSupport_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;/usr/lib/x86_64-linux-gnu/libz.so;general;LLVMSupport;
 
 //The directory containing a CMake configuration file for metaSMT.
 metaSMT_DIR:PATH=metaSMT_DIR-NOTFOUND
@@ -538,10 +544,20 @@ HAS__Wextra_CXX:INTERNAL=1
 HAS__Wno_unused_parameter_C:INTERNAL=1
 //Test HAS__Wno_unused_parameter_CXX
 HAS__Wno_unused_parameter_CXX:INTERNAL=1
+//Test HAS__fno_builtin_calloc
+HAS__fno_builtin_calloc:INTERNAL=1
+//Test HAS__fno_builtin_free
+HAS__fno_builtin_free:INTERNAL=1
+//Test HAS__fno_builtin_malloc
+HAS__fno_builtin_malloc:INTERNAL=1
+//Test HAS__fno_builtin_realloc
+HAS__fno_builtin_realloc:INTERNAL=1
 //Test HAS__fno_exceptions
 HAS__fno_exceptions:INTERNAL=1
 //Have function __ctype_b_loc
 HAVE_CTYPE_EXTERNALS:INTERNAL=1
+//Have include gperftools/malloc_extension.h
+HAVE_GPERFTOOLS_MALLOC_EXTENSION_H:INTERNAL=1
 //Have function mallinfo
 HAVE_MALLINFO:INTERNAL=1
 //Have include malloc/malloc.h

@@ -492,13 +492,14 @@ public:
   /* SYSREL extension */
   StatePair forkThread(ExecutionState &current, ref<Expr> condition, bool isInternal, int tid) ;
 
-private:
   /* SYSREL extension */
   /// Add the given (boolean) condition as a constraint on state. This
   /// function is a wrapper around the state's addConstraint function
   /// which also manages propagation of implied values,
   /// validity checks, and seed patching.
   void addConstraint(ExecutionState &state, ref<Expr> condition);
+
+private:
 
   // Called on [for now] concrete reads, replaces constant with a symbolic
   // Used for testing.

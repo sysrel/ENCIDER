@@ -118,6 +118,7 @@ bin/klee: /usr/lib/libz3.so
 bin/klee: lib/libkleaverExpr.a
 bin/klee: lib/libkleeSupport.a
 bin/klee: /usr/lib/x86_64-linux-gnu/libz.so
+bin/klee: /usr/lib/libtcmalloc.so
 bin/klee: /usr/lib/llvm-3.8/lib/libLLVMipo.a
 bin/klee: /usr/lib/llvm-3.8/lib/libLLVMVectorize.a
 bin/klee: /usr/lib/llvm-3.8/lib/libLLVMLinker.a

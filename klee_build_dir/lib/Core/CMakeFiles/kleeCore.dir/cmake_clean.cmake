@@ -20,6 +20,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/kleeCore.dir/StatsTracker.cpp.o"
   "CMakeFiles/kleeCore.dir/TimingSolver.cpp.o"
   "CMakeFiles/kleeCore.dir/UserSearcher.cpp.o"
+  "CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o"
+  "CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o"
   "../libkleeCore.pdb"
   "../libkleeCore.a"
 )

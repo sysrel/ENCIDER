@@ -17,7 +17,7 @@
 #define HAVE_CTYPE_EXTERNALS 1
 
 /* Define to 1 if you have the <gperftools/malloc_extension.h> header file. */
-/* #undef HAVE_GPERFTOOLS_MALLOC_EXTENSION_H */
+#define HAVE_GPERFTOOLS_MALLOC_EXTENSION_H 1
 
 /* Define if mallinfo() is available on this platform. */
 #define HAVE_MALLINFO 1

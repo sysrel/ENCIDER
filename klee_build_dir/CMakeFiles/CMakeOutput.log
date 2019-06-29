@@ -1276,3 +1276,77 @@ make[1]: Leaving directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_
     Feature record: C_FEATURE:0c_restrict
     Feature record: C_FEATURE:0c_static_assert
     Feature record: C_FEATURE:0c_variadic_macros
+Determining if the include file gperftools/malloc_extension.h exists passed with the following output:
+Change Dir: /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_76a09/fast"
+/usr/bin/make -f CMakeFiles/cmTC_76a09.dir/build.make CMakeFiles/cmTC_76a09.dir/build
+make[1]: Entering directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_76a09.dir/CheckIncludeFile.cxx.o
+/usr/bin/c++     -Wall -Wextra -Wno-unused-parameter    -o CMakeFiles/cmTC_76a09.dir/CheckIncludeFile.cxx.o -c /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp/CheckIncludeFile.cxx
+Linking CXX executable cmTC_76a09
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_76a09.dir/link.txt --verbose=1
+/usr/bin/c++    -Wall -Wextra -Wno-unused-parameter     CMakeFiles/cmTC_76a09.dir/CheckIncludeFile.cxx.o  -o cmTC_76a09 -rdynamic 
+make[1]: Leaving directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+
+
+Performing C++ SOURCE FILE Test HAS__fno_builtin_malloc succeeded with the following output:
+Change Dir: /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_dda4b/fast"
+/usr/bin/make -f CMakeFiles/cmTC_dda4b.dir/build.make CMakeFiles/cmTC_dda4b.dir/build
+make[1]: Entering directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_dda4b.dir/src.cxx.o
+/usr/bin/c++     -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_malloc   -fno-builtin-malloc -o CMakeFiles/cmTC_dda4b.dir/src.cxx.o -c /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_dda4b
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dda4b.dir/link.txt --verbose=1
+/usr/bin/c++    -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_malloc    CMakeFiles/cmTC_dda4b.dir/src.cxx.o  -o cmTC_dda4b -rdynamic 
+make[1]: Leaving directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAS__fno_builtin_calloc succeeded with the following output:
+Change Dir: /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_af473/fast"
+/usr/bin/make -f CMakeFiles/cmTC_af473.dir/build.make CMakeFiles/cmTC_af473.dir/build
+make[1]: Entering directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_af473.dir/src.cxx.o
+/usr/bin/c++     -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_calloc   -fno-builtin-calloc -o CMakeFiles/cmTC_af473.dir/src.cxx.o -c /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_af473
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_af473.dir/link.txt --verbose=1
+/usr/bin/c++    -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_calloc    CMakeFiles/cmTC_af473.dir/src.cxx.o  -o cmTC_af473 -rdynamic 
+make[1]: Leaving directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAS__fno_builtin_realloc succeeded with the following output:
+Change Dir: /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_92f95/fast"
+/usr/bin/make -f CMakeFiles/cmTC_92f95.dir/build.make CMakeFiles/cmTC_92f95.dir/build
+make[1]: Entering directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_92f95.dir/src.cxx.o
+/usr/bin/c++     -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_realloc   -fno-builtin-realloc -o CMakeFiles/cmTC_92f95.dir/src.cxx.o -c /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_92f95
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_92f95.dir/link.txt --verbose=1
+/usr/bin/c++    -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_realloc    CMakeFiles/cmTC_92f95.dir/src.cxx.o  -o cmTC_92f95 -rdynamic 
+make[1]: Leaving directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAS__fno_builtin_free succeeded with the following output:
+Change Dir: /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_9cfe9/fast"
+/usr/bin/make -f CMakeFiles/cmTC_9cfe9.dir/build.make CMakeFiles/cmTC_9cfe9.dir/build
+make[1]: Entering directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_9cfe9.dir/src.cxx.o
+/usr/bin/c++     -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_free   -fno-builtin-free -o CMakeFiles/cmTC_9cfe9.dir/src.cxx.o -c /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_9cfe9
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9cfe9.dir/link.txt --verbose=1
+/usr/bin/c++    -Wall -Wextra -Wno-unused-parameter -DHAS__fno_builtin_free    CMakeFiles/cmTC_9cfe9.dir/src.cxx.o  -o cmTC_9cfe9 -rdynamic 
+make[1]: Leaving directory '/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }

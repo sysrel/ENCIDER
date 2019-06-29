@@ -13,9 +13,14 @@
 #include "stdint.h"
 #include "stddef.h"
 
+#define PRIM_LAZY_INIT_SIZE  64
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
   
   /* Add an accesible memory object at a user specified location. It
    * is the users responsibility to make sure that these memory

@@ -1,0 +1,967 @@
+//===-- Executor.cpp ------------------------------------------------------===//
+//
+//                     The KLEE Symbolic Virtual Machine
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#include "Executor.h"
+#include "Context.h"
+#include "CoreStats.h"
+#include "ExternalDispatcher.h"
+#include "ImpliedValue.h"
+#include "Memory.h"
+#include "MemoryManager.h"
+#include "PTree.h"
+#include "Searcher.h"
+#include "SeedInfo.h"
+#include "SpecialFunctionHandler.h"
+#include "StatsTracker.h"
+#include "TimingSolver.h"
+#include "UserSearcher.h"
+#include "ExecutorTimerInfo.h"
+
+
+#include "klee/ExecutionState.h"
+#include "klee/Expr.h"
+#include "klee/Interpreter.h"
+#include "klee/TimerStatIncrementer.h"
+#include "klee/CommandLine.h"
+#include "klee/Common.h"
+#include "klee/util/Assignment.h"
+#include "klee/util/ExprPPrinter.h"
+#include "klee/util/ExprSMTLIBPrinter.h"
+#include "klee/util/ExprUtil.h"
+#include "klee/util/GetElementPtrTypeIterator.h"
+#include "klee/Config/Version.h"
+#include "klee/Internal/ADT/KTest.h"
+#include "klee/Internal/ADT/RNG.h"
+#include "klee/Internal/Module/Cell.h"
+#include "klee/Internal/Module/InstructionInfoTable.h"
+#include "klee/Internal/Module/KInstruction.h"
+#include "klee/Internal/Module/KModule.h"
+#include "klee/Internal/Support/ErrorHandling.h"
+#include "klee/Internal/Support/FloatEvaluation.h"
+#include "klee/Internal/Support/ModuleUtil.h"
+#include "klee/Internal/System/Time.h"
+#include "klee/Internal/System/MemoryUsage.h"
+#include "klee/SolverStats.h"
+#include "klee/sysrel.h"
+
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/TypeBuilder.h"
+#include "llvm/IR/TypeFinder.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Process.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/DerivedTypes.h"
+
+#if LLVM_VERSION_CODE < LLVM_VERSION(3, 5)
+#include "llvm/Support/CallSite.h"
+#else
+#include "llvm/IR/CallSite.h"
+#endif
+
+#ifdef HAVE_ZLIB_H
+#include "klee/Internal/Support/CompressionStream.h"
+#endif
+
+#include <cassert>
+#include <algorithm>
+#include <iomanip>
+#include <iosfwd>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+
+#include <sys/mman.h>
+
+#include <errno.h>
+#include <cxxabi.h>
+
+#include "ResourceUsage.h"
+#include "AnalyzeConstraint.h"
+
+using namespace llvm;
+using namespace klee;
+
+/* SYSREL extension */
+
+/* Side channel begin */
+std::map<long, std::set<ref<Expr> > > highAddresses;
+std::map<long, std::set<ref<Expr> > > lowAddresses;
+klee::ref<Expr> branchCondition;
+std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
+extern std::string entryFunctionName;
+extern std::map<std::string, std::set<int> > dynamicHighLoc, dynamicLowLoc;
+std::string publicOutputVarName = "return_value";
+std::string publicOutputReturningFName;
+ref<Expr> publicOutputVar;
+extern std::string sidechannelentry;
+bool sidechannelstarted = false;
+extern std::set<std::string> * highLoc;
+extern std::set<std::string> * lowLoc;
+extern std::map<int, RD*> * rdmap;
+extern std::vector<std::string> * untrusted;
+extern std::set<std::string> prefixRedact;
+RD *root;
+RD *currentRD;
+bool fset = false;
+Function *ff;
+int maxForkMulRes = 10;
+/* Side channel end */
+
+//#define VBSC
+
+#define ASYNC_STR "async_initiate"
+#define ENABLE_STR "enable_entry"
+//#define PRIM_LAZY_INIT_SIZE  64
+#define PRIM_LAZY_INIT_SIZE  32
+#define STRUCT_LAZY_INIT_INS 10
+// this is to avoid assertion failure
+// represents size in bits so SIZE_FOR_UNTYPED (2000) * 8
+#define SIZE_FOR_UNKNOWN_TYPES 8*8
+
+cl::opt<bool>
+InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"),
+             cl::init(false));
+
+
+extern std::set<std::string> assemblyFunctions;
+
+KModule *kmoduleExt;
+llvm::Function *entryFunc;
+extern const Module * moduleHandle;
+extern bool asyncMode;
+extern std::vector<std::string> asyncFunc;
+extern std::vector<std::string> enabledFunc;
+extern APIHandler *apiHandler;
+extern bool progModel;
+
+std::string getAsyncFunction(std::string fn) {
+
+  return fn.substr(fn.find(ASYNC_STR) + strlen(ASYNC_STR) + 1, fn.size());
+}
+
+std::string getEnableFunction(std::string fn) {
+
+  return fn.substr(fn.find(ENABLE_STR) + strlen(ENABLE_STR) + 1, fn.size());
+}
+
+bool isAssemblyFunc(std::string name) {
+  for(auto af : assemblyFunctions)
+     if (af == name)
+        return true;
+  return false;
+}
+
+extern int minInstCount;
+extern int maxInstCount;
+
+extern bool lazyInit;
+extern bool lazySpec;
+extern int numLazyInst;
+extern std::vector<std::string> lazyInits;
+extern std::set<std::string> lazyInitSingles;
+extern std::map<std::string, int> lazyInitNumInstances;
+//std::set<std::string> embeddedTypes;
+std::set<Type*> embeddedTypes;
+//std::map<std::string, std::set<std::string> >  embeddings;
+std::map<Type*, std::set<Type*> >  embeddingTypes;
+bool singleSuccessor = true;
+
+
+// trim from left
+inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
+{
+    s.erase(0, s.find_first_not_of(t));
+    return s;
+}
+
+// trim from right
+inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
+{
+    s.erase(s.find_last_not_of(t) + 1);
+    return s;
+}
+
+std::string getTypeName(Type *t) {
+   std::string type_str;
+   llvm::raw_string_ostream rso(type_str);
+   t->print(rso);
+   std::istringstream iss(rso.str());
+   std::string typestr;
+   getline(iss, typestr, ' ');
+   return typestr;
+}
+
+
+bool isEmbeddedType(Type *t) {
+  if (!dyn_cast<StructType>(t))
+      return false;
+  /*std::string type_str;
+  llvm::raw_string_ostream rso(type_str);
+  t->print(rso);
+  std::istringstream iss(rso.str());
+  std::string typestr;
+  getline(iss, typestr, ' ');
+  for(auto et : embeddedTypes) {
+      if (et == typestr)
+          return true;
+  }
+  return false;
+   */
+  return embeddedTypes.find(t) != embeddedTypes.end();
+}
+
+bool isLazySingle(Type *t, std::string pointertype="**") {
+  std::string type_str;
+  llvm::raw_string_ostream rso(type_str);
+  t->print(rso);
+  std::istringstream iss(rso.str());
+  std::string typestr;
+  getline(iss, typestr, ' ');
+  for(auto el : lazyInitSingles)
+    if (typestr.find(el) != std::string::npos) {
+       return true;
+    }
+  return false;
+}
+
+bool isLazySingle(std::string typestr, std::string pointertype="**") {
+  for(auto el : lazyInitSingles)
+    if (typestr.find(el) != std::string::npos) {
+       return true;
+    }
+  return false;
+}
+
+
+bool isLazyInit(Type *t, bool &single, int &count) {
+  int origvalue = count;
+  std::string pointertype = "**";
+  count = 0;
+  std::string type_str;
+  llvm::raw_string_ostream rso(type_str);
+  t->print(rso);
+  std::istringstream iss(rso.str());
+  std::string typestr;
+  getline(iss, typestr, ' ');
+  /*for(auto el : lazyInits)
+     if (typestr.find(el+pointertype) != std::string::npos) {
+        count = lazyInitNumInstances[el];
+        single = isLazySingle(typestr);
+        return true;
+     }
+  */
+  for(int i=0; i<lazyInits.size(); i++)
+     if (typestr.find(lazyInits[i]+pointertype) != std::string::npos) {
+        count = lazyInitNumInstances[lazyInits[i]];
+        single = isLazySingle(typestr);
+        return true;
+     }
+  // Support lazy init for double pointer to a primitive type
+  if (t->isPointerTy()) {
+     Type *el = t->getPointerElementType();
+     if (el->isPointerTy()) {
+        el = el->getPointerElementType();             
+        StructType *st = dyn_cast<StructType>(el);
+        if (st) {
+           count = STRUCT_LAZY_INIT_INS;
+           single = false;
+           return true;
+        }
+        else { // if (el->getPrimitiveSizeInBits()) {
+           count = PRIM_LAZY_INIT_SIZE; 
+           single = false;
+           return true;
+        }
+     }
+  }
+  count = origvalue;
+  single = false;
+  return false;
+}
+
+bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
+  //std::string pointertype = "*";
+  int origvalue = count;
+  count = 0;
+  std::string type_str;
+  llvm::raw_string_ostream rso(type_str);
+  t->print(rso);
+  std::istringstream iss(rso.str());
+  std::string typestr;
+  getline(iss, typestr, ' ');
+  /*for(auto el : lazyInits) {
+     llvm::outs() << typestr << " vs " << el <<"\n";
+     if (typestr.find(el) != std::string::npos) {
+        count = lazyInitNumInstances[el];
+        single = isLazySingle(typestr);
+        return true;
+     }
+  }*/
+  for(int i=0; i<lazyInits.size(); i++) {
+     if (typestr.find(lazyInits[i]) != std::string::npos) {
+        count = lazyInitNumInstances[lazyInits[i]];
+        single = isLazySingle(typestr);
+        return true;
+     }
+  }
+  if (t->getPrimitiveSizeInBits()) {
+      count = PRIM_LAZY_INIT_SIZE; 
+      single = false;
+      return true;
+  }
+  else {
+     count = origvalue;
+     single = false;
+  }
+  return false;
+}
+
+void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, std::set<std::string> &visited) {
+
+     bool pointerType = false;
+     if (t->isPointerTy()) {
+        pointerType = true;
+        while (t->isPointerTy()) {
+           t = t->getPointerElementType();
+        }
+     }
+     std::string type_str;
+     llvm::raw_string_ostream rso(type_str);
+     t->print(rso);
+     StructType *st = dyn_cast<StructType>(t);
+     if (st) {
+        std::istringstream ist(rso.str());
+        std::string temp;
+        getline(ist, temp, '=');
+        std::string ltypename = ltrim(rtrim(temp));
+        if (visited.find(ltypename) == visited.end()) {
+           visited.insert(ltypename);
+           if (pointerType) {
+              //lazyTypes.insert(ltypename);
+              lazyTypes.push_back(ltypename);
+              lazyInitNumInstances[ltypename] = numLazyInst;
+              //llvm::errs() << "lazy type: " << ltypename << " extracted\n";
+           }
+           for(unsigned i=0; i < st->getNumElements(); i++) {
+              /*Type *temp = st->getElementType(i);
+              if (temp->isPointerTy()) {
+                 temp = temp->getPointerElementType();
+                 if (temp->isFunctionTy())
+                    llvm::errs() << "Function pointer field " << i << " of " << getTypeName(st) << "\n";
+              }*/
+              collectEmbeddedPointerTypes(st->getElementType(i), lazyTypes, visited);
+           }
+        }
+     }
+     else if (t->getPrimitiveSizeInBits()) {
+        if (pointerType) {
+           //llvm::errs() << "lazy primitive type: " << rso.str() << " extracted\n";
+           //lazyTypes.insert(rso.str());
+           lazyTypes.push_back(rso.str());
+           lazyInitNumInstances[rso.str()] = PRIM_LAZY_INIT_SIZE ;//numLazyInst;
+        }
+     }
+
+}
+
+/* end SYSREL extension */
+
+
+/* SYSREL extension */
+//namespace {
+/* SYSREL extension */
+  cl::opt<bool>
+  DumpStatesOnHalt("dump-states-on-halt",
+                   cl::init(true),
+		   cl::desc("Dump test cases for all active states on exit (default=on)"));
+
+  cl::opt<bool>
+  AllowExternalSymCalls("allow-external-sym-calls",
+                        cl::init(false),
+			cl::desc("Allow calls with symbolic arguments to external functions.  This concretizes the symbolic arguments.  (default=off)"));
+
+  /// The different query logging solvers that can switched on/off
+  enum PrintDebugInstructionsType {
+    STDERR_ALL, ///
+    STDERR_SRC,
+    STDERR_COMPACT,
+    FILE_ALL,    ///
+    FILE_SRC,    ///
+    FILE_COMPACT ///
+  };
+
+  llvm::cl::bits<PrintDebugInstructionsType> DebugPrintInstructions(
+      "debug-print-instructions",
+      llvm::cl::desc("Log instructions during execution."),
+      llvm::cl::values(
+          clEnumValN(STDERR_ALL, "all:stderr", "Log all instructions to stderr "
+                                               "in format [src, inst_id, "
+                                               "llvm_inst]"),
+          clEnumValN(STDERR_SRC, "src:stderr",
+                     "Log all instructions to stderr in format [src, inst_id]"),
+          clEnumValN(STDERR_COMPACT, "compact:stderr",
+                     "Log all instructions to stderr in format [inst_id]"),
+          clEnumValN(FILE_ALL, "all:file", "Log all instructions to file "
+                                           "instructions.txt in format [src, "
+                                           "inst_id, llvm_inst]"),
+          clEnumValN(FILE_SRC, "src:file", "Log all instructions to file "
+                                           "instructions.txt in format [src, "
+                                           "inst_id]"),
+          clEnumValN(FILE_COMPACT, "compact:file",
+                     "Log all instructions to file instructions.txt in format "
+                     "[inst_id]")
+          KLEE_LLVM_CL_VAL_END),
+      llvm::cl::CommaSeparated);
+#ifdef HAVE_ZLIB_H
+  cl::opt<bool> DebugCompressInstructions(
+      "debug-compress-instructions", cl::init(false),
+      cl::desc("Compress the logged instructions in gzip format."));
+#endif
+
+  cl::opt<bool>
+  DebugCheckForImpliedValues("debug-check-for-implied-values");
+
+
+  cl::opt<bool>
+  SimplifySymIndices("simplify-sym-indices",
+                     cl::init(false),
+		     cl::desc("Simplify symbolic accesses using equalities from other constraints (default=off)"));
+
+  cl::opt<bool>
+  EqualitySubstitution("equality-substitution",
+		       cl::init(true),
+		       cl::desc("Simplify equality expressions before querying the solver (default=on)."));
+
+  cl::opt<unsigned>
+  MaxSymArraySize("max-sym-array-size",
+                  cl::init(0));
+
+  cl::opt<bool>
+  SuppressExternalWarnings("suppress-external-warnings",
+			   cl::init(false),
+			   cl::desc("Supress warnings about calling external functions."));
+
+  cl::opt<bool>
+  AllExternalWarnings("all-external-warnings",
+		      cl::init(false),
+		      cl::desc("Issue an warning everytime an external call is made,"
+			       "as opposed to once per function (default=off)"));
+
+  cl::opt<bool>
+  OnlyOutputStatesCoveringNew("only-output-states-covering-new",
+                              cl::init(false),
+			      cl::desc("Only output test cases covering new code (default=off)."));
+
+  cl::opt<bool>
+  EmitAllErrors("emit-all-errors",
+                cl::init(false),
+                cl::desc("Generate tests cases for all errors "
+                         "(default=off, i.e. one per (error,instruction) pair)"));
+
+  cl::opt<bool>
+  NoExternals("no-externals",
+           cl::desc("Do not allow external function calls (default=off)"));
+
+  cl::opt<bool>
+  AlwaysOutputSeeds("always-output-seeds",
+		    cl::init(true));
+
+  cl::opt<bool>
+  OnlyReplaySeeds("only-replay-seeds",
+		  cl::init(false),
+                  cl::desc("Discard states that do not have a seed (default=off)."));
+
+  cl::opt<bool>
+  OnlySeed("only-seed",
+	   cl::init(false),
+           cl::desc("Stop execution after seeding is done without doing regular search (default=off)."));
+
+  cl::opt<bool>
+  AllowSeedExtension("allow-seed-extension",
+		     cl::init(false),
+                     cl::desc("Allow extra (unbound) values to become symbolic during seeding (default=false)."));
+
+  cl::opt<bool>
+  ZeroSeedExtension("zero-seed-extension",
+		    cl::init(false),
+		    cl::desc("(default=off)"));
+
+  cl::opt<bool>
+  AllowSeedTruncation("allow-seed-truncation",
+		      cl::init(false),
+                      cl::desc("Allow smaller buffers than in seeds (default=off)."));
+
+  cl::opt<bool>
+  NamedSeedMatching("named-seed-matching",
+		    cl::init(false),
+                    cl::desc("Use names to match symbolic objects to inputs (default=off)."));
+
+  cl::opt<double>
+  MaxStaticForkPct("max-static-fork-pct",
+		   cl::init(1.),
+		   cl::desc("(default=1.0)"));
+
+  cl::opt<double>
+  MaxStaticSolvePct("max-static-solve-pct",
+		    cl::init(1.),
+		    cl::desc("(default=1.0)"));
+
+  cl::opt<double>
+  MaxStaticCPForkPct("max-static-cpfork-pct",
+		     cl::init(1.),
+		     cl::desc("(default=1.0)"));
+
+  cl::opt<double>
+  MaxStaticCPSolvePct("max-static-cpsolve-pct",
+		      cl::init(1.),
+		      cl::desc("(default=1.0)"));
+
+  cl::opt<double>
+  MaxInstructionTime("max-instruction-time",
+                     cl::desc("Only allow a single instruction to take this much time (default=0s (off)). Enables --use-forked-solver"),
+                     cl::init(0));
+
+  cl::opt<double>
+  SeedTime("seed-time",
+           cl::desc("Amount of time to dedicate to seeds, before normal search (default=0 (off))"),
+           cl::init(0));
+
+  cl::list<Executor::TerminateReason>
+  ExitOnErrorType("exit-on-error-type",
+		  cl::desc("Stop execution after reaching a specified condition.  (default=off)"),
+		  cl::values(
+		    clEnumValN(Executor::Abort, "Abort", "The program crashed"),
+		    clEnumValN(Executor::Assert, "Assert", "An assertion was hit"),
+		    clEnumValN(Executor::BadVectorAccess, "BadVectorAccess", "Vector accessed out of bounds"),
+		    clEnumValN(Executor::Exec, "Exec", "Trying to execute an unexpected instruction"),
+		    clEnumValN(Executor::External, "External", "External objects referenced"),
+		    clEnumValN(Executor::Free, "Free", "Freeing invalid memory"),
+		    clEnumValN(Executor::Model, "Model", "Memory model limit hit"),
+		    clEnumValN(Executor::Overflow, "Overflow", "An overflow occurred"),
+		    clEnumValN(Executor::Ptr, "Ptr", "Pointer error"),
+		    clEnumValN(Executor::ReadOnly, "ReadOnly", "Write to read-only memory"),
+		    clEnumValN(Executor::ReportError, "ReportError", "klee_report_error called"),
+		    clEnumValN(Executor::User, "User", "Wrong klee_* functions invocation"),
+		    clEnumValN(Executor::Unhandled, "Unhandled", "Unhandled instruction hit")
+		    KLEE_LLVM_CL_VAL_END),
+		  cl::ZeroOrMore);
+
+  cl::opt<unsigned long long>
+  StopAfterNInstructions("stop-after-n-instructions",
+                         cl::desc("Stop execution after specified number of instructions (default=0 (off))"),
+                         cl::init(0));
+
+  cl::opt<unsigned>
+  MaxForks("max-forks",
+           cl::desc("Only fork this many times (default=-1 (off))"),
+           cl::init(~0u));
+
+  cl::opt<unsigned>
+  MaxDepth("max-depth",
+           cl::desc("Only allow this many symbolic branches (default=0 (off))"),
+           cl::init(0));
+
+  cl::opt<unsigned>
+  MaxMemory("max-memory",
+            cl::desc("Refuse to fork when above this amount of memory (in MB, default=2000)"),
+            cl::init(2000));
+
+  cl::opt<bool>
+  MaxMemoryInhibit("max-memory-inhibit",
+            cl::desc("Inhibit forking at memory cap (vs. random terminate) (default=on)"),
+            cl::init(true));
+/* SYSREL extension */
+//}
+/* SYSREL extension */
+
+namespace klee {
+  RNG theRNG;
+}
+
+const char *Executor::TerminateReasonNames[] = {
+  [ Abort ] = "abort",
+  [ Assert ] = "assert",
+  [ BadVectorAccess ] = "bad_vector_access",
+  [ Exec ] = "exec",
+  [ External ] = "external",
+  [ Free ] = "free",
+  [ Model ] = "model",
+  [ Overflow ] = "overflow",
+  [ Ptr ] = "ptr",
+  [ ReadOnly ] = "readonly",
+  [ ReportError ] = "reporterror",
+  [ User ] = "user",
+  [ Unhandled ] = "xxx",
+  [ NegativeRefcount ] = "negrefcount",
+};
+
+/* SYSREL extension */
+
+void initHighLowAddress(ExecutionState &state) {
+   long saddr = (long)&state;
+   std::set<ref<Expr> > empty;
+   highAddresses[saddr] = empty;
+   lowAddresses[saddr] = empty;
+}
+
+bool isAHighAddress(ExecutionState &state, ref<Expr> addr) {
+   long saddr = (long)&state;
+   if (highAddresses.find(saddr) == highAddresses.end())
+      assert(0 && "highAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = highAddresses[saddr];
+   return addrs.find(addr) !=  addrs.end();
+}
+  
+bool isALowAddress(ExecutionState &state, ref<Expr> addr) {
+   long laddr = (long)&state; 
+   if (lowAddresses.find(laddr) == lowAddresses.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = lowAddresses[laddr];
+   return addrs.find(addr) !=  addrs.end();
+}
+
+void addHighAddress(ExecutionState &state, ref<Expr> addr) {
+   long haddr = (long)&state;
+   if (highAddresses.find(haddr) == highAddresses.end())
+      assert(0 && "highAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = highAddresses[haddr];
+   addrs.insert(addr);
+}
+
+void addLowAddress(ExecutionState &state, ref<Expr> addr) {
+   long laddr = (long)&state;
+   if (lowAddresses.find(laddr) == lowAddresses.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = lowAddresses[laddr];
+   addrs.insert(addr);
+}
+
+void cloneHighAddresses(const ExecutionState &from, ExecutionState &to) {
+   long faddr = (long)&from;
+   long taddr = (long)&to;
+   if (highAddresses.find(faddr) == highAddresses.end())
+      assert(0 && "highAddress set not initialized for state!");
+   if (highAddresses.find(taddr) != highAddresses.end())
+      assert(0 && "highAddress set exists for cloned state!");
+   highAddresses[taddr] = highAddresses[faddr];
+}
+
+void cloneLowAddresses(ExecutionState &from, ExecutionState &to) {
+   long faddr = (long)&from;
+   long taddr = (long)&to;
+   if (lowAddresses.find(faddr) == lowAddresses.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   if (lowAddresses.find(taddr) != lowAddresses.end())
+      assert(0 && "lowAddress set exists for cloned state!");
+   lowAddresses[taddr] = lowAddresses[faddr];
+}
+
+bool isAsyncInitiate(std::string name) {
+  return name.find(ASYNC_STR) == 0;
+}
+
+bool isEnableEntry(std::string name) {
+  return name.find(ENABLE_STR) == 0;
+}
+
+bool isAsync(std::string name) {
+  for(unsigned int i=0; i < asyncFunc.size(); i++)
+    if (asyncFunc[i] == name)
+      return true;
+  return false;
+}
+
+bool isEnabled(std::string name) {
+  for(unsigned int i=0; i < enabledFunc.size(); i++)
+    if (enabledFunc[i] == name)
+      return true;
+  return false;
+}
+/* SYSREL extension */
+
+
+Executor::Executor(LLVMContext &ctx, const InterpreterOptions &opts,
+    InterpreterHandler *ih)
+    : Interpreter(opts), kmodule(0), interpreterHandler(ih), searcher(0),
+      externalDispatcher(new ExternalDispatcher(ctx)), statsTracker(0),
+      pathWriter(0), symPathWriter(0), specialFunctionHandler(0),
+      processTree(0), replayKTest(0), replayPath(0), usingSeeds(0),
+      atMemoryLimit(false), inhibitForking(false), haltExecution(false),
+      ivcEnabled(false),
+      coreSolverTimeout(MaxCoreSolverTime != 0 && MaxInstructionTime != 0
+                            ? std::min(MaxCoreSolverTime, MaxInstructionTime)
+                            : std::max(MaxCoreSolverTime, MaxInstructionTime)),
+      debugInstFile(0), debugLogBuffer(debugBufferString) {
+
+  if (coreSolverTimeout) UseForkedCoreSolver = true;
+  Solver *coreSolver = klee::createCoreSolver(CoreSolverToUse);
+  if (!coreSolver) {
+    klee_error("Failed to create core solver\n");
+  }
+
+  Solver *solver = constructSolverChain(
+      coreSolver,
+      interpreterHandler->getOutputFilename(ALL_QUERIES_SMT2_FILE_NAME),
+      interpreterHandler->getOutputFilename(SOLVER_QUERIES_SMT2_FILE_NAME),
+      interpreterHandler->getOutputFilename(ALL_QUERIES_KQUERY_FILE_NAME),
+      interpreterHandler->getOutputFilename(SOLVER_QUERIES_KQUERY_FILE_NAME));
+
+  this->solver = new TimingSolver(solver, EqualitySubstitution);
+  memory = new MemoryManager(&arrayCache);
+
+  initializeSearchOptions();
+
+  if (OnlyOutputStatesCoveringNew && !StatsTracker::useIStats())
+    klee_error("To use --only-output-states-covering-new, you need to enable --output-istats.");
+
+  if (DebugPrintInstructions.isSet(FILE_ALL) ||
+      DebugPrintInstructions.isSet(FILE_COMPACT) ||
+      DebugPrintInstructions.isSet(FILE_SRC)) {
+    std::string debug_file_name =
+        interpreterHandler->getOutputFilename("instructions.txt");
+    std::string ErrorInfo;
+#ifdef HAVE_ZLIB_H
+    if (!DebugCompressInstructions) {
+#endif
+
+#if LLVM_VERSION_CODE >= LLVM_VERSION(3, 6)
+    std::error_code ec;
+    debugInstFile = new llvm::raw_fd_ostream(debug_file_name.c_str(), ec,
+                                             llvm::sys::fs::OpenFlags::F_Text);
+    if (ec)
+	    ErrorInfo = ec.message();
+#elif LLVM_VERSION_CODE >= LLVM_VERSION(3, 5)
+    debugInstFile = new llvm::raw_fd_ostream(debug_file_name.c_str(), ErrorInfo,
+                                             llvm::sys::fs::OpenFlags::F_Text);
+#else
+    debugInstFile =
+        new llvm::raw_fd_ostream(debug_file_name.c_str(), ErrorInfo);
+#endif
+#ifdef HAVE_ZLIB_H
+    } else {
+      debugInstFile = new compressed_fd_ostream(
+          (debug_file_name + ".gz").c_str(), ErrorInfo);
+    }
+#endif
+    if (ErrorInfo != "") {
+      klee_error("Could not open file %s : %s", debug_file_name.c_str(),
+                 ErrorInfo.c_str());
+    }
+  }
+}
+
+const Function *Executor::getFunctionFromAddress(ref<Expr> addr) {
+   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(addr)) {
+      if (globalAddressesRev.find(CE) != globalAddressesRev.end()) {
+         const Function *f = dyn_cast<Function>(globalAddressesRev.find(CE)->second);
+         return f;
+      }
+   }
+   return NULL;
+}
+
+const Module *Executor::setModule(llvm::Module *module,
+                                  const ModuleOptions &opts) {
+  assert(!kmodule && module && "can only register one module"); // XXX gross
+
+  kmodule = new KModule(module);
+  /* SYSREL EXTENSION */
+  kmoduleExt = kmodule;
+  /* SYSREL EXTENSION */
+
+
+  // Initialize the context.
+  DataLayout *TD = kmodule->targetData;
+  Context::initialize(TD->isLittleEndian(),
+                      (Expr::Width) TD->getPointerSizeInBits());
+
+  specialFunctionHandler = new SpecialFunctionHandler(*this);
+
+  specialFunctionHandler->prepare();
+  kmodule->prepare(opts, interpreterHandler);
+  specialFunctionHandler->bind();
+
+  if (StatsTracker::useStatistics() || userSearcherRequiresMD2U()) {
+    statsTracker =
+      new StatsTracker(*this,
+                       interpreterHandler->getOutputFilename("assembly.ll"),
+                       userSearcherRequiresMD2U());
+  }
+
+  return module;
+}
+
+Executor::~Executor() {
+  delete memory;
+  delete externalDispatcher;
+  delete processTree;
+  delete specialFunctionHandler;
+  delete statsTracker;
+  delete solver;
+  delete kmodule;
+  while(!timers.empty()) {
+    delete timers.back();
+    timers.pop_back();
+  }
+  delete debugInstFile;
+}
+
+/***/
+
+void Executor::initializeGlobalObject(ExecutionState &state, ObjectState *os,
+                                      const Constant *c,
+                                      unsigned offset) {
+  DataLayout *targetData = kmodule->targetData;
+  if (const ConstantVector *cp = dyn_cast<ConstantVector>(c)) {
+    unsigned elementSize =
+      targetData->getTypeStoreSize(cp->getType()->getElementType());
+    for (unsigned i=0, e=cp->getNumOperands(); i != e; ++i)
+      initializeGlobalObject(state, os, cp->getOperand(i),
+			     offset + i*elementSize);
+  } else if (isa<ConstantAggregateZero>(c)) {
+    unsigned i, size = targetData->getTypeStoreSize(c->getType());
+    for (i=0; i<size; i++)
+      os->write8(offset+i, (uint8_t) 0);
+  } else if (const ConstantArray *ca = dyn_cast<ConstantArray>(c)) {
+    unsigned elementSize =
+      targetData->getTypeStoreSize(ca->getType()->getElementType());
+    for (unsigned i=0, e=ca->getNumOperands(); i != e; ++i)
+      initializeGlobalObject(state, os, ca->getOperand(i),
+			     offset + i*elementSize);
+  } else if (const ConstantStruct *cs = dyn_cast<ConstantStruct>(c)) {
+    const StructLayout *sl =
+      targetData->getStructLayout(cast<StructType>(cs->getType()));
+    for (unsigned i=0, e=cs->getNumOperands(); i != e; ++i)
+      initializeGlobalObject(state, os, cs->getOperand(i),
+			     offset + sl->getElementOffset(i));
+  } else if (const ConstantDataSequential *cds =
+               dyn_cast<ConstantDataSequential>(c)) {
+    unsigned elementSize =
+      targetData->getTypeStoreSize(cds->getElementType());
+    for (unsigned i=0, e=cds->getNumElements(); i != e; ++i)
+      initializeGlobalObject(state, os, cds->getElementAsConstant(i),
+                             offset + i*elementSize);
+  } else if (!isa<UndefValue>(c)) {
+    unsigned StoreBits = targetData->getTypeStoreSizeInBits(c->getType());
+    ref<ConstantExpr> C = evalConstant(c);
+
+    // Extend the constant if necessary;
+   // assert(StoreBits >= C->getWidth() && "Invalid store size!");
+    if (StoreBits > C->getWidth()) {
+      llvm::errs() << "WARNING: StoreBits " << StoreBits << " greater than width " << C->getWidth() << "\n";
+      C = C->ZExt(StoreBits);
+    }
+    os->write(offset, C);
+ 
+  }
+}
+
+MemoryObject * Executor::addExternalObject(ExecutionState &state,
+                                           void *addr, unsigned size,
+                                           bool isReadOnly) {
+  auto mo = memory->allocateFixed(reinterpret_cast<std::uint64_t>(addr),
+                                  size, nullptr);
+  ObjectState *os = bindObjectInState(state, mo, false);
+  for(unsigned i = 0; i < size; i++)
+    os->write8(i, ((uint8_t*)addr)[i]);
+  if(isReadOnly)
+    os->setReadOnly(true);
+  return mo;
+}
+
+
+extern void *__dso_handle __attribute__ ((__weak__));
+
+void Executor::initializeGlobals(ExecutionState &state) {
+  Module *m = kmodule->module;
+
+  if (m->getModuleInlineAsm() != "")
+    klee_warning("executable has module level assembly (ignoring)");
+  // represent function globals using the address of the actual llvm function
+  // object. given that we use malloc to allocate memory in states this also
+  // ensures that we won't conflict. we don't need to allocate a memory object
+  // since reading/writing via a function pointer is unsupported anyway.
+  for (Module::iterator i = m->begin(), ie = m->end(); i != ie; ++i) {
+    Function *f = &*i;
+    ref<ConstantExpr> addr(0);
+
+    // If the symbol has external weak linkage then it is implicitly
+    // not defined in this module; if it isn't resolvable then it
+    // should be null.
+    if (f->hasExternalWeakLinkage() &&
+        !externalDispatcher->resolveSymbol(f->getName())) {
+      addr = Expr::createPointer(0);
+    } else {
+      addr = Expr::createPointer(reinterpret_cast<std::uint64_t>(f));
+      legalFunctions.insert(reinterpret_cast<std::uint64_t>(f));
+    }
+
+    globalAddresses.insert(std::make_pair(f, addr));
+
+    /* SYSREL extension */
+    //   globalAddressesRev.insert(std::make_pair(addr,f));
+    /* SYSREL extension */
+  }
+
+#ifndef WINDOWS
+  int *errno_addr = getErrnoLocation(state);
+  MemoryObject *errnoObj =
+      addExternalObject(state, (void *)errno_addr, sizeof *errno_addr, false);
+  // Copy values from and to program space explicitly
+  errnoObj->isUserSpecified = true;
+#endif
+
+  // Disabled, we don't want to promote use of live externals.
+#ifdef HAVE_CTYPE_EXTERNALS
+#ifndef WINDOWS
+#ifndef DARWIN
+  /* from /usr/include/ctype.h:
+       These point into arrays of 384, so they can be indexed by any `unsigned
+       char' value [0,255]; by EOF (-1); or by any `signed char' value
+       [-128,-1).  ISO C requires that the ctype functions work for `unsigned */
+  const uint16_t **addr = __ctype_b_loc();
+  addExternalObject(state, const_cast<uint16_t*>(*addr-128),
+                    384 * sizeof **addr, true);
+  addExternalObject(state, addr, sizeof(*addr), true);
+
+  const int32_t **lower_addr = __ctype_tolower_loc();
+  addExternalObject(state, const_cast<int32_t*>(*lower_addr-128),
+                    384 * sizeof **lower_addr, true);
+  addExternalObject(state, lower_addr, sizeof(*lower_addr), true);
+
+  const int32_t **upper_addr = __ctype_toupper_loc();
+  addExternalObject(state, const_cast<int32_t*>(*upper_addr-128),
+                    384 * sizeof **upper_addr, true);
+  addExternalObject(state, upper_addr, sizeof(*upper_addr), true);
+#endif
+#endif
+#endif
+
+  // allocate and initialize globals, done in two passes since we may
+  // need address of a global in order to initialize some other one.
+
+  // allocate memory objects for all globals
+  for (Module::const_global_iterator i = m->global_begin(),
+         e = m->global_end();
+       i != e; ++i) {
+    const GlobalVariable *v = &*i;

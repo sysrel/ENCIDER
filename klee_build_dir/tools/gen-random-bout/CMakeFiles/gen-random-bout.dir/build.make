@@ -97,6 +97,7 @@ bin/gen-random-bout: lib/libkleaverSolver.a
 bin/gen-random-bout: lib/libkleaverExpr.a
 bin/gen-random-bout: lib/libkleeSupport.a
 bin/gen-random-bout: /usr/lib/x86_64-linux-gnu/libz.so
+bin/gen-random-bout: /usr/lib/libtcmalloc.so
 bin/gen-random-bout: /usr/lib/llvm-3.8/lib/libLLVMSupport.a
 bin/gen-random-bout: /usr/local/lib/libstp.a
 bin/gen-random-bout: /usr/lib/x86_64-linux-gnu/libboost_program_options.a

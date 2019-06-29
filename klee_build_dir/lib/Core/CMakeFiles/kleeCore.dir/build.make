@@ -561,6 +561,54 @@ lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o.provides: lib/Core/CMakeFile
 lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o.provides.build: lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o
 
 
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o: lib/Core/CMakeFiles/kleeCore.dir/flags.make
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o: /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/AnalyzeConstraint.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o"
+	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o -c /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/AnalyzeConstraint.cpp
+
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.i"
+	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/AnalyzeConstraint.cpp > CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.i
+
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.s"
+	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/AnalyzeConstraint.cpp -o CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.s
+
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.requires:
+
+.PHONY : lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.requires
+
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.provides: lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.requires
+	$(MAKE) -f lib/Core/CMakeFiles/kleeCore.dir/build.make lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.provides.build
+.PHONY : lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.provides
+
+lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.provides.build: lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o
+
+
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o: lib/Core/CMakeFiles/kleeCore.dir/flags.make
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o: /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/ResourceUsage.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o"
+	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o -c /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/ResourceUsage.cpp
+
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/kleeCore.dir/ResourceUsage.cpp.i"
+	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/ResourceUsage.cpp > CMakeFiles/kleeCore.dir/ResourceUsage.cpp.i
+
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/kleeCore.dir/ResourceUsage.cpp.s"
+	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/ResourceUsage.cpp -o CMakeFiles/kleeCore.dir/ResourceUsage.cpp.s
+
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.requires:
+
+.PHONY : lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.requires
+
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.provides: lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.requires
+	$(MAKE) -f lib/Core/CMakeFiles/kleeCore.dir/build.make lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.provides.build
+.PHONY : lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.provides
+
+lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.provides.build: lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o
+
+
 # Object files for target kleeCore
 kleeCore_OBJECTS = \
 "CMakeFiles/kleeCore.dir/AddressSpace.cpp.o" \
@@ -583,7 +631,9 @@ kleeCore_OBJECTS = \
 "CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o" \
 "CMakeFiles/kleeCore.dir/StatsTracker.cpp.o" \
 "CMakeFiles/kleeCore.dir/TimingSolver.cpp.o" \
-"CMakeFiles/kleeCore.dir/UserSearcher.cpp.o"
+"CMakeFiles/kleeCore.dir/UserSearcher.cpp.o" \
+"CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o" \
+"CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o"
 
 # External object files for target kleeCore
 kleeCore_EXTERNAL_OBJECTS =
@@ -609,9 +659,11 @@ lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/SpecialFunctionHandler.cpp.o
 lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o
 lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o
 lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o
+lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o
+lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o
 lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/build.make
 lib/libkleeCore.a: lib/Core/CMakeFiles/kleeCore.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Linking CXX static library ../libkleeCore.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CXX static library ../libkleeCore.a"
 	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && $(CMAKE_COMMAND) -P CMakeFiles/kleeCore.dir/cmake_clean_target.cmake
 	cd /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/lib/Core && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/kleeCore.dir/link.txt --verbose=$(VERBOSE)
 
@@ -641,6 +693,8 @@ lib/Core/CMakeFiles/kleeCore.dir/requires: lib/Core/CMakeFiles/kleeCore.dir/Spec
 lib/Core/CMakeFiles/kleeCore.dir/requires: lib/Core/CMakeFiles/kleeCore.dir/StatsTracker.cpp.o.requires
 lib/Core/CMakeFiles/kleeCore.dir/requires: lib/Core/CMakeFiles/kleeCore.dir/TimingSolver.cpp.o.requires
 lib/Core/CMakeFiles/kleeCore.dir/requires: lib/Core/CMakeFiles/kleeCore.dir/UserSearcher.cpp.o.requires
+lib/Core/CMakeFiles/kleeCore.dir/requires: lib/Core/CMakeFiles/kleeCore.dir/AnalyzeConstraint.cpp.o.requires
+lib/Core/CMakeFiles/kleeCore.dir/requires: lib/Core/CMakeFiles/kleeCore.dir/ResourceUsage.cpp.o.requires
 
 .PHONY : lib/Core/CMakeFiles/kleeCore.dir/requires
 

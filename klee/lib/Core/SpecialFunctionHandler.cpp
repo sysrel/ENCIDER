@@ -60,6 +60,7 @@ namespace {
  typedef std::pair<ExecutionState*,ExecutionState*> StatePair;
 std::set<std::string> assemblyFunctions;
  typedef std::pair<ExecutionState*,ExecutionState*> StatePair;
+extern int primArraySize;
 extern Interpreter *theInterpreter;
 extern const Module * moduleHandle;
 extern KModule *kmoduleExt;
@@ -1227,7 +1228,7 @@ AllocAPIHandler::AllocAPIHandler() : APIHandler() {
 
 bool AllocAPIHandler::assignsRetValue(APIAction *action) {
      std::vector<std::string> pars = action->getParams();
-     llvm::outs() << "Alloc API assigns to return value? " << pars[4] << "entered\n";
+     //llvm::outs() << "Alloc API assigns to return value? " << pars[4] << "entered\n";
      return (pars[4] == "true");   
 }
 
@@ -1332,14 +1333,14 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
        assert(false && "Could not find anonymous alloc type!");
     }
     std::string fname = par[0];
-    llvm::outs() << "Handling alloc api " << fname << " in thread " << tid << "\n";
-    llvm::outs() << "Target instruction " << (*target->inst) << "\n";
+    //llvm::outs() << "Handling alloc api " << fname << " in thread " << tid << "\n";
+    //llvm::outs() << "Target instruction " << (*target->inst) << "\n";
     bool zeroMemory = (par[2] == "true");
     llvm::CallInst *ci = dyn_cast<CallInst>(target->inst);
     if (!ci)
        assert(false && "Expected a call instruction for allocation API!\n");
     int param = std::stoi(par[1]); 
-    llvm::errs() << "size=" << arguments[param] << " vs " << ConstantExpr::create(0,32) << "\n"; 
+    //llvm::errs() << "size=" << arguments[param] << " vs " << ConstantExpr::create(0,32) << "\n"; 
     if (arguments[param] == ConstantExpr::create(0,32)) {
        llvm::errs() << "Skipping 0 size alloc API: \n"; action->print(); 
        return true;
@@ -1378,11 +1379,22 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
        if (constexp)
           allocationSize = constexp->getZExtValue();
       else {
-           llvm::errs() << "Terminating path due to a symbolic size for AllocAPIHandler!\n";	
-           ((Executor*)(theInterpreter))->terminateStateOnError(state, "concretized symbolic size",
+           // check if we can derive a solution consistent with primArraySize
+           ref<Expr> primeq = EqExpr::create(arguments[param], ConstantExpr::create(primArraySize, 32));
+           bool ret = false;
+           bool success = ((Executor*)(theInterpreter))->solver->mayBeTrue(state, primeq, ret);
+           if(!success || !ret) {
+             llvm::errs() << "Terminating path due to a symbolic size for AllocAPIHandler!\n";	
+             ((Executor*)(theInterpreter))->terminateStateOnError(state, "concretized symbolic size",
                                 Executor::Model, NULL, "A symbolic size is passed to an AllocAPIHandler"); 
-           return false;
-           //assert(false && "alloc size is symbolic!");
+             return false;
+           }
+           else  {
+              llvm::errs() << "Using " << primArraySize << " for the symbolic size expression \ 
+                         and constraining the path condition accordingly\n";
+              ((Executor*)(theInterpreter))->addConstraint(state, primeq); 
+              allocationSize = primArraySize;
+           }
       }
     }
     MemoryObject *mo = ((Executor*)(theInterpreter))->memory->allocate(allocationSize, false, false,
@@ -1391,7 +1403,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
        llvm::outs() << "Could not allocate memory object while handling alloc API!\n";
        return false;
     }
-    llvm::outs() << "Allocated memory object at " << mo->getBaseExpr() << " to handle alloc API " << fname << "\n"; 
+    //llvm::outs() << "Allocated memory object at " << mo->getBaseExpr() << " to handle alloc API " << fname << "\n"; 
     state.recordAlloc(mo->getBaseExpr());
     state.addSymbolDef(par[5], mo->getBaseExpr());
     state.addSymbolType(par[5], t);
@@ -1400,7 +1412,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
     if (st) {
        std::string tname = getTypeName(t); 
        state.typeToAddr[t] = mo->getBaseExpr();
-       llvm::outs() << "mapping lazy instance of " << tname << " to " << mo->getBaseExpr() << "\n";
+       //llvm::outs() << "mapping lazy instance of " << tname << " to " << mo->getBaseExpr() << "\n";
     }   
      
  

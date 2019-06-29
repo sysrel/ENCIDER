@@ -40,7 +40,7 @@ extern Interpreter *theInterpreter;
 extern bool isAllocTypeLazyInit(llvm::Type *t, bool &single, int &count) ;
 extern std::map<std::string, std::vector<std::string> > inferenceClue;
 // to avoid assertion failure when size cannot be determined
-#define SIZE_FOR_UNTYPED 2000
+#define SIZE_FOR_UNTYPED 8
 /* SYSREL EXTENSION */
 
 namespace {

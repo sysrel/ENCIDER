@@ -75,7 +75,7 @@ namespace klee {
     }
     
     // @pre(0 < N <= 64)
-    inline uint64_t truncateToNBits(uint64_t x, unsigned N) {
+    inline uint64_t truncateToNBits(uint64_t x, unsigned N) {	
       assert(N > 0 && N <= 64);
       return x&((UINT64_C(-1)) >> (64 - N));
     }

@@ -103,7 +103,11 @@ using namespace klee;
 
 /* SYSREL extension */
 
+std::set<std::string> reached;
+
 /* Side channel begin */
+std::map<long, std::set<ref<Expr> > > highAddresses;
+std::map<long, std::set<ref<Expr> > > lowAddresses;
 klee::ref<Expr> branchCondition;
 std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
 extern std::string entryFunctionName;
@@ -122,17 +126,21 @@ RD *root;
 RD *currentRD;
 bool fset = false;
 Function *ff;
+//int maxForkMulRes = 10;
+int maxForkMulRes = 2147483647;
+int primArraySize = 32;
 /* Side channel end */
 
 //#define VBSC
 
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
-#define PRIM_LAZY_INIT_SIZE  4096
+//#define PRIM_LAZY_INIT_SIZE  64
+//#define PRIM_LAZY_INIT_SIZE  32
 #define STRUCT_LAZY_INIT_INS 10
 // this is to avoid assertion failure
 // represents size in bits so SIZE_FOR_UNTYPED (2000) * 8
-#define SIZE_FOR_UNKNOWN_TYPES 16000
+#define SIZE_FOR_UNKNOWN_TYPES 8*8
 
 cl::opt<bool>
 InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"),
@@ -149,6 +157,7 @@ extern std::vector<std::string> asyncFunc;
 extern std::vector<std::string> enabledFunc;
 extern APIHandler *apiHandler;
 extern bool progModel;
+extern std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
 
 std::string getAsyncFunction(std::string fn) {
 
@@ -207,6 +216,24 @@ std::string getTypeName(Type *t) {
    return typestr;
 }
 
+void initializeLazyInit(ObjectState *obj, Type *t) {
+  if (!t) return;
+  StructType *st = dyn_cast<StructType>(t);
+  if (st) {
+     std::string tname = getTypeName(t);
+     int pos = tname.find("struct");
+     tname = tname.substr(pos);       
+     llvm::errs() << "checking initializers for type " << tname << "!\n";
+     if (lazyInitInitializers.find(tname) != lazyInitInitializers.end()) {
+       llvm::errs() << "initializer found!\n"; 
+        std::vector<unsigned int> offsets = lazyInitInitializers[tname];
+        for(auto offset : offsets) {
+           llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset << " to a NULL pointer\n";
+           obj->write(offset, Expr::createPointer(0));
+        }
+     }
+  }
+}
 
 bool isEmbeddedType(Type *t) {
   if (!dyn_cast<StructType>(t))
@@ -284,7 +311,7 @@ bool isLazyInit(Type *t, bool &single, int &count) {
            return true;
         }
         else { // if (el->getPrimitiveSizeInBits()) {
-           count = PRIM_LAZY_INIT_SIZE; 
+           count = primArraySize; 
            single = false;
            return true;
         }
@@ -321,7 +348,7 @@ bool isAllocTypeLazyInit(Type *t, bool &single, int &count) {
      }
   }
   if (t->getPrimitiveSizeInBits()) {
-      count = PRIM_LAZY_INIT_SIZE; 
+      count = primArraySize; 
       single = false;
       return true;
   }
@@ -356,7 +383,7 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
               //lazyTypes.insert(ltypename);
               lazyTypes.push_back(ltypename);
               lazyInitNumInstances[ltypename] = numLazyInst;
-              llvm::errs() << "lazy type: " << ltypename << " extracted\n";
+              //llvm::errs() << "lazy type: " << ltypename << " extracted\n";
            }
            for(unsigned i=0; i < st->getNumElements(); i++) {
               /*Type *temp = st->getElementType(i);
@@ -371,10 +398,10 @@ void collectEmbeddedPointerTypes(Type *t, std::vector<std::string> &lazyTypes, s
      }
      else if (t->getPrimitiveSizeInBits()) {
         if (pointerType) {
-           llvm::errs() << "lazy primitive type: " << rso.str() << " extracted\n";
+           //llvm::errs() << "lazy primitive type: " << rso.str() << " extracted\n";
            //lazyTypes.insert(rso.str());
            lazyTypes.push_back(rso.str());
-           lazyInitNumInstances[rso.str()] = PRIM_LAZY_INIT_SIZE ;//numLazyInst;
+           lazyInitNumInstances[rso.str()] = primArraySize ;//numLazyInst;
         }
      }
 
@@ -612,6 +639,64 @@ const char *Executor::TerminateReasonNames[] = {
 };
 
 /* SYSREL extension */
+
+void initHighLowAddress(ExecutionState &state) {
+   long saddr = (long)&state;
+   std::set<ref<Expr> > empty;
+   highAddresses[saddr] = empty;
+   lowAddresses[saddr] = empty;
+}
+
+bool isAHighAddress(ExecutionState &state, ref<Expr> addr) {
+   long saddr = (long)&state;
+   if (highAddresses.find(saddr) == highAddresses.end())
+      assert(0 && "highAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = highAddresses[saddr];
+   return addrs.find(addr) !=  addrs.end();
+}
+  
+bool isALowAddress(ExecutionState &state, ref<Expr> addr) {
+   long laddr = (long)&state; 
+   if (lowAddresses.find(laddr) == lowAddresses.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = lowAddresses[laddr];
+   return addrs.find(addr) !=  addrs.end();
+}
+
+void addHighAddress(ExecutionState &state, ref<Expr> addr) {
+   long haddr = (long)&state;
+   if (highAddresses.find(haddr) == highAddresses.end())
+      assert(0 && "highAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = highAddresses[haddr];
+   addrs.insert(addr);
+   highAddresses[haddr] = addrs;
+}
+
+void addLowAddress(ExecutionState &state, ref<Expr> addr) {
+   long laddr = (long)&state;
+   if (lowAddresses.find(laddr) == lowAddresses.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   std::set<ref<Expr> > addrs = lowAddresses[laddr];
+   addrs.insert(addr);
+   lowAddresses[laddr] = addrs;
+}
+
+void cloneHighAddresses(const ExecutionState &from, ExecutionState &to) {
+   long faddr = (long)&from;
+   long taddr = (long)&to;
+   if (highAddresses.find(faddr) == highAddresses.end())
+      assert(0 && "highAddress set not initialized for state!");
+   highAddresses[taddr] = highAddresses[faddr];
+}
+
+void cloneLowAddresses(const ExecutionState &from, ExecutionState &to) {
+   long faddr = (long)&from;
+   long taddr = (long)&to;
+   if (lowAddresses.find(faddr) == lowAddresses.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   lowAddresses[taddr] = lowAddresses[faddr];
+}
+
 bool isAsyncInitiate(std::string name) {
   return name.find(ASYNC_STR) == 0;
 }
@@ -1612,7 +1697,20 @@ void Executor::executeCall(ExecutionState &state,
       transferToBasicBlock(ii->getNormalDest(), i->getParent(), state);
   } else {
 
+
        /* SYSREL extension */
+
+      // check if PROSE version of the function exists, if so use that one
+      std::string prosename = f->getName().str() + "_PROSE"; 
+      Function *proseFn = moduleHandle->getFunction(prosename);
+      if (proseFn) {
+         llvm::errs() << "WARNING: Using " << prosename << " for " << f->getName() << "\n";
+         ((CallInst*)ki->inst)->setCalledFunction(proseFn);
+         executeCall(state, ki, proseFn, arguments);
+         return;
+      }
+
+
        //llvm::errs() << "checking regular function call for high/low flows\n";
        //checkHighArgumentFlow(state, ki, f, arguments);
        // Handle certain functions in a special way, e.g., those that have inline assembly
@@ -2729,15 +2827,15 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     /* side channel */
     bool high = false;
     bool low = false;
-    if (state.highAddresses.find(base) != state.highAddresses.end())
+    if (isAHighAddress(state,base))
        high = true;  
-    if (state.lowAddresses.find(base) != state.lowAddresses.end())
+    if (isALowAddress(state,base)) 
        low = true;    
     /* side channel */
     #ifdef VB 
-    llvm::outs() << "GetElementPtr info:\n";
-    ki->inst->print(llvm::outs());
-    llvm::outs() << "\n initial base: " << base << "\n";
+    //llvm::outs() << "GetElementPtr info:\n";
+    //ki->inst->print(llvm::outs());
+    //llvm::outs() << "\n initial base: " << base << "\n";
     #endif
     for (std::vector< std::pair<unsigned, uint64_t> >::iterator
            it = kgepi->indices.begin(), ie = kgepi->indices.end();
@@ -2794,13 +2892,13 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
     /* side channel */
     if (high) {
-       state.highAddresses.insert(base);
+       addHighAddress(state,base);
        #ifdef VB 
        llvm::errs() << "recording address " << base << " as transitive security sensitive \n";
        #endif
     }
     if (low) {
-       state.lowAddresses.insert(base);
+       addLowAddress(state,base);
        #ifdef VB 
        llvm::errs() << "recording address " << base << " as transitive security insensitive \n";
        #endif
@@ -3349,6 +3447,7 @@ void Executor::bindModuleConstants() {
   kmodule->constantTable = new Cell[kmodule->constants.size()];
   for (unsigned i=0; i<kmodule->constants.size(); ++i) {
     Cell &c = kmodule->constantTable[i];
+    //llvm::errs() << "module constant " << kmodule->constants[i] << "\n";
     c.value = evalConstant(kmodule->constants[i]);
   }
 }
@@ -3667,14 +3766,14 @@ void Executor::run(ExecutionState &initialState) {
                 bool success = solver->mayBeTrue(*s, proj, result);
                 assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
                 if (result) {
-                   //#ifdef VBSC
+                   #ifdef VBSC
                           std::cerr << "Projection on high\n";
     	                  std::cerr << "\n>>>> Projection : ";
 	                  proj->dump();
                           const InstructionInfo &ii = kmodule->infos->getInfo(state.prevPC->inst);
                           state.prevPC->inst->print(llvm::errs());
                           printInfo(ii);
-                   //#endif
+                   #endif
                    //Update currentstate
 		   if (!done) {
 		      rdd->isHBr = true;
@@ -4161,6 +4260,16 @@ void Executor::callExternalFunction(ExecutionState &state,
    
 
     if (progModel) {
+
+      // check if PROSE version of the function exists, if so use that one
+      std::string prosename = function->getName().str() + "_PROSE"; 
+      Function *proseFn = moduleHandle->getFunction(prosename);
+      if (proseFn) {
+         llvm::errs() << "WARNING: Using " << prosename << " for " << function->getName() << "\n";
+         ((CallInst*)target->inst)->setCalledFunction(proseFn);
+         executeCall(state, target, proseFn, arguments);
+         return;
+      }
        // let the generic API handler handle the arg and return value symbolization
        std::vector<ExecutionState*> successors;
        #ifdef VB 
@@ -4941,6 +5050,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   static bool forcedOffset = false;
   /* SYSREL EXTENSION */
 
+  if (reached.find(state.prevPC->inst->getParent()->getParent()->getName()) == reached.end()) { 
+     llvm::errs() << "reached " << state.prevPC->inst->getParent()->getParent()->getName() << "\n";
+     reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
+  }
+
   #ifdef VB
   llvm::outs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::outs());
@@ -5106,20 +5220,20 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   result = laddr;
                   /* side channel */
                   // check if initializing a pointer field of a high security memory object
-                  if (state.highAddresses.find(address) != state.highAddresses.end()) {
+                  if (isAHighAddress(state, address)) {
                      highLoc->insert(mo->name);
-                     state.highAddresses.insert(mo->getBaseExpr()); 
-                     state.highAddresses.insert(laddr);
+                     addHighAddress(state, mo->getBaseExpr()); 
+                     addHighAddress(state, laddr);
                      mo->ishigh = true;
                      #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
                      #endif
                   }
-                  if (state.lowAddresses.find(address) != state.lowAddresses.end()) {
+                  if (isALowAddress(state,address)) {
                      lowLoc->insert(mo->name);
-                     state.lowAddresses.insert(mo->getBaseExpr()); 
-                     state.lowAddresses.insert(laddr);
+                     addLowAddress(state, mo->getBaseExpr()); 
+                     addLowAddress(state, laddr);
                      mo->islow = true;
                      #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
@@ -5183,6 +5297,8 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   // XXX there is some query wasteage here. who cares?
   ExecutionState *unbound = &state;
 
+  int index = 0;
+
   for (ResolutionList::iterator i = rl.begin(), ie = rl.end(); i != ie; ++i) {
     const MemoryObject *mo = i->first;
     const ObjectState *os = i->second;
@@ -5209,6 +5325,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         }
       } else {
         ref<Expr> result;
+        llvm::errs() << "on an error path in executeMem, going to read!\n";
         if (forcedOffset)
            result = os->read(ConstantExpr::alloc(0, Expr::Int64), type);
         else
@@ -5218,11 +5335,19 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         llvm::outs() << " load result: " << result << "\n";
         #endif 
       }
+      
     }
 
     unbound = branches.second;
     if (!unbound)
       break;
+
+    /* SYSREL extension */
+    // Bounding path forks due to multiple resolutions
+    index++;
+    if (index > maxForkMulRes)
+       break; 
+    /* SYSREL extension */ 
   }
 
   // XXX should we distinguish out of bounds and overlapped cases?
@@ -5268,6 +5393,7 @@ void Executor::executeMakeSymbolic(ExecutionState &state,
     /* SYSREL extension */
     if (clrFncPtr)
        clearFunctionPointers(mo, os, t);
+    initializeLazyInit(os, t);
     /* SYSREL extension */
 
     std::map< ExecutionState*, std::vector<SeedInfo> >::iterator it =
@@ -5431,14 +5557,14 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               // check if it is a security sensitive arg, if so mark the memory object ishigh
               if (highLoc->find(mo->name) != highLoc->end()) {
                  mo->ishigh = true;
-                 state.highAddresses.insert(mo->getBaseExpr());
+                 addHighAddress(state, mo->getBaseExpr());
                  #ifdef VB
                  llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive\n";
                  #endif 
               }
               if (lowLoc->find(mo->name) != lowLoc->end()) {
                  mo->islow = true;
-                 state.lowAddresses.insert(mo->getBaseExpr());
+                 addLowAddress(state, mo->getBaseExpr());
                  #ifdef VB
                  llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as insecurity insensitive\n";
                  #endif 
@@ -5666,6 +5792,10 @@ void Executor::runFunctionAsMain(Function *f,
   }
 
   initializeGlobals(*state);
+  /* SYSREL extension */
+  // side channel
+  initHighLowAddress(*state);
+  /* SYSREL extension */
 
   processTree = new PTree(state);
   state->ptreeNode = processTree->root;
@@ -5866,11 +5996,16 @@ void Executor::doImpliedValueConcretization(ExecutionState &state,
 
 Expr::Width Executor::getWidthForLLVMType(llvm::Type *type) const {
   /* SYSREL extension */
-  if (!type->isSized())
-      return SIZE_FOR_UNKNOWN_TYPES;
+  //if (!type->isSized())
+    //  return SIZE_FOR_UNKNOWN_TYPES;
   /* SYSREL extension */ 
-  return kmodule->targetData->getTypeSizeInBits(type);
+  Expr::Width width = kmodule->targetData->getTypeSizeInBits(type);
+  if (width == 0)
+     width = 64;
+  // hack
+  return width; 
 }
+
 
 size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
   // FIXME: 8 was the previous default. We shouldn't hard code this
@@ -5904,6 +6039,9 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
     if (fn)
       allocationSiteName = fn->getName().str();
 
+    
+    llvm::errs() << (*allocSite) << "\n";
+ 
     klee_warning_once(fn != NULL ? fn : allocSite,
                       "Alignment of memory from call \"%s\" is not "
                       "modelled. Using alignment of %zu.",
