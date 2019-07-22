@@ -158,6 +158,7 @@ extern std::vector<std::string> enabledFunc;
 extern APIHandler *apiHandler;
 extern bool progModel;
 extern std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
+extern std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
 
 std::string getAsyncFunction(std::string fn) {
 
@@ -223,13 +224,27 @@ void initializeLazyInit(ObjectState *obj, Type *t) {
      std::string tname = getTypeName(t);
      int pos = tname.find("struct");
      tname = tname.substr(pos);       
-     llvm::errs() << "checking initializers for type " << tname << "!\n";
+     //llvm::errs() << "checking initializers for type " << tname << "!\n";
      if (lazyInitInitializers.find(tname) != lazyInitInitializers.end()) {
-       llvm::errs() << "initializer found!\n"; 
+       //llvm::errs() << "initializer found!\n"; 
         std::vector<unsigned int> offsets = lazyInitInitializers[tname];
         for(auto offset : offsets) {
-           llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset << " to a NULL pointer\n";
+           //llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset << " to a NULL pointer\n";
            obj->write(offset, Expr::createPointer(0));
+        }
+     }
+     // initialize function pointers, if any specified
+     if (lazyFuncPtrInitializers.find(tname) != lazyFuncPtrInitializers.end()) {
+        std::map<unsigned int, std::string> fmap = lazyFuncPtrInitializers[tname];
+        for(auto e : fmap) {
+           // lookup the function 
+           Function *f = moduleHandle->getFunction(e.second);
+           if (!f) {
+              llvm::errs() << "Unable to find function " << e.second << " in the module to init func pointer!!!\n";
+              exit(1);
+           }
+           // assign the function address to the offset
+           obj->write(e.first, Expr::createPointer((uint64_t)f));
         }
      }
   }
@@ -3516,8 +3531,10 @@ void Executor::run(ExecutionState &initialState) {
      sidechannelstarted = true;
   }
   llvm::errs() << "Registering publicOutputReturningFName as " << publicOutputReturningFName << "\n";
-  publicOutputVar = initialState.addSymbolicReturnAsPublicOutput(publicOutputReturningFName, publicOutputVarName, memory, arrayCache);
-  lowLoc->insert(publicOutputVarName);
+  bool validOutputExp = false;
+  publicOutputVar = initialState.addSymbolicReturnAsPublicOutput(publicOutputReturningFName, publicOutputVarName, memory, arrayCache, validOutputExp);
+  if (validOutputExp)
+     lowLoc->insert(publicOutputVarName);
   root = newNode(&initialState);
   initialState.rdid = root->stateid;
   rdmapinsert(initialState.rdid, root);
@@ -4304,14 +4321,16 @@ void Executor::callExternalFunction(ExecutionState &state,
           #ifdef VB
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
           #endif
-          bool term = false;
-          symbolizeArguments(state, target, function, arguments, term);
-          if (!term) {
+          if (!symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments)) {
+           bool term = false;
+           symbolizeArguments(state, target, function, arguments, term);
+           if (!term) {
              symbolizeReturnValue(state, target, function, abort);
              if (abort) {
                 terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
                 return;
              }
+           }
           }
        }
        return;
@@ -4525,14 +4544,14 @@ bool Executor::checkHighArgumentFlow(ExecutionState &state,
      return flows;
 }
 
-void Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
+bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,
                                   Function *function,
                                   std::vector< ref<Expr> > &arguments) {
 
     if (dynamicHighLoc.find(function->getName()) == dynamicHighLoc.end() && 
          dynamicLowLoc.find(function->getName()) == dynamicLowLoc.end()) {
-       return; 
+       return false; 
     }
     std::set<int> argsH, argsL; 
     if (dynamicHighLoc.find(function->getName()) != dynamicHighLoc.end())
@@ -4603,7 +4622,7 @@ void Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                          #endif
                          terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
                             NULL, getAddressInfo(state, op.first->getBaseExpr()));
-                         return;
+                         return false;
                       }
                    }
                    wos->write(offsetexpr, result);
@@ -4611,7 +4630,7 @@ void Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
          }
        }
       }
-
+    return true;
 }
 
 void Executor::symbolizeArguments(ExecutionState &state,
@@ -5055,14 +5074,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
-  llvm::outs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
-  state.prevPC->inst->print(llvm::outs());
-  llvm::outs() << "\n address: " << address << "\n";
-  llvm::outs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
+  //#ifdef VB
+  llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
+  state.prevPC->inst->print(llvm::errs());
+  llvm::errs() << "\n address: " << address << "\n";
+  llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
-     llvm::outs() << "storing value " << value << "\n";
-  #endif
+     llvm::errs() << "storing value " << value << "\n";
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -5157,9 +5176,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            #ifdef VB
-            llvm::outs() << "load orig result: " << result << "\n";
-            #endif
+            //#ifdef VB
+            llvm::errs() << "load orig result: " << result << "\n";
+            //#endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -5171,10 +5190,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               #ifdef VB 
-               llvm::outs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
+               //#ifdef VB 
+               llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               #endif
+               //#endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -5185,17 +5204,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 #ifdef VB
+                 //#ifdef VB
                   llvm::errs() << "Yes!\n";
-                  llvm::errs() << "original load result: " << result << "\n";
-                 #endif
+                  llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
+                 //#endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
-                  #endif
+                  //#endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -5205,15 +5224,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (abort) {
                      return true;
                   }
-                  #ifdef VB
-                  llvm::errs() << "mem obj addr=" << laddr << "\n";
-                  #endif
+                  //#ifdef VB
+                  llvm::errs() << "mem obj addr=" << laddr << " in state " << &state << "\n";
+                  //#endif
                   mo->name = state.getUnique(rso2str);
-                  if (mksym)
+                  if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
-                  #ifdef VB
-                  llvm::outs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << "\n";
-                  #endif
+                     llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
+                  } 
+                  //#ifdef VB
+                  llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
+                  //#endif
                   forcedOffset = true;
                   executeMemoryOperation(state, true, address, laddr, 0);
                   forcedOffset = false;
@@ -5225,20 +5246,20 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                      addHighAddress(state, mo->getBaseExpr()); 
                      addHighAddress(state, laddr);
                      mo->ishigh = true;
-                     #ifdef VB
+                     //#ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
-                     #endif
+                     //#endif
                   }
                   if (isALowAddress(state,address)) {
                      lowLoc->insert(mo->name);
                      addLowAddress(state, mo->getBaseExpr()); 
                      addLowAddress(state, laddr);
                      mo->islow = true;
-                     #ifdef VB
+                     //#ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security insensitive\n";
-                     #endif
+                     //#endif
                   }
 
                   /* side channel */
@@ -5255,9 +5276,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
         bindLocal(target, state, result);
 
-       #ifdef VB
-       llvm::outs() << " load result: " << result << "\n";
-       #endif
+       //#ifdef VB
+       llvm::errs() << " load result: " << result << "\n";
+       //#endif
 
        if (lazyInit) {
         if (!forcedOffset) {

@@ -206,7 +206,7 @@ public:
   /* Rsource Usage Related Fields */
   unsigned ru = 0;
   int rdid = -1;
-  ref<Expr> addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &array);
+  ref<Expr> addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &array, bool &);
   bool inEnclave; 
   std::string lastEnclaveFunction;
   void setLastEnclaveFunction(std::string);

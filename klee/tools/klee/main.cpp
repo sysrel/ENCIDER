@@ -93,6 +93,7 @@ std::vector<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
 std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
+std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
 bool progModel = false;
 APIHandler *apiHandler = NULL;
 std::map<std::string, std::vector<std::string> > inferenceClue;
@@ -180,7 +181,7 @@ namespace {
   LazySingle("lazy-single-ins",cl::desc("Lazily initialized types that should have a single instance"));
 
   cl::opt<std::string>
-  LazyInitializer("lazy-set-at-init", cl::desc("The file that contains lazy init types and their byte offsets that need to be initialized to NULL\n"));
+  LazyInitializer("lazy-set-at-init", cl::desc("The file that contains lazy init types and their byte offsets that need to be initialized to NULL or to functions for function pointers\n"));
 
   cl::opt<std::string>
   FrameworkDts("framework-dts", cl::desc("Framework data structure types file \
@@ -1135,6 +1136,12 @@ void readLazySingles(const char *name) {
   }
 }
 
+/* 
+  Syntax for setting to NULL:
+  typename,offset_1,offset_2,...
+  Syntax for setting a function pointer to a function
+  typename,fptr,offset,functionname
+*/
 void readLazyInitInitializers(const char * name) {
  
   std::fstream cf(name, std::fstream::in);
@@ -1142,22 +1149,41 @@ void readLazyInitInitializers(const char * name) {
      std::string   line;
      llvm::outs() << "Lazy init initializers:\n";
      while (std::getline(cf,line)) { 
-        std::string tname, offset;  
+        std::string tname, offset, token, fname;  
         std::string tline = ltrim(rtrim(line));
         llvm::outs() << tline << "\n";
         std::istringstream iss(line);
         getline(iss, tname, ',');
         tname = ltrim(rtrim(tname));
-        std::vector<unsigned int> offsets;
-        llvm::outs() << "lazy init type=" << tname << ", offsets to be set to NULL:\n";
-        while (getline(iss, offset, ',')) {
+        getline(iss,token, ',');
+        token = ltrim(rtrim(token));
+        if (token == "fptr") {
+           getline(iss, offset, ',');
+           offset = ltrim(rtrim(offset));
+           unsigned int value = std::stoi(offset);
+           getline(iss, fname, ',');
+           fname = ltrim(rtrim(fname));
+           std::map<unsigned int, std::string> fmap;
+           fmap = lazyFuncPtrInitializers[tname]; 
+           if (fmap.find(value) != fmap.end()) {
+              llvm::errs() << "setting the same functin pointer field twice!\n";
+              exit(1); 
+           }
+           fmap[value] = fname;
+           lazyFuncPtrInitializers[tname] = fmap;
+        } 
+        else { 
+         std::vector<unsigned int> offsets;
+         llvm::outs() << "lazy init type=" << tname << ", offsets to be set to NULL:\n";
+         while (getline(iss, offset, ',')) {
           offset = ltrim(rtrim(offset));
           unsigned int value = std::stoi(offset);
           llvm::outs() << value << " ";
           offsets.push_back(value); 
-        }
-        llvm::outs() << "\n";
-        lazyInitInitializers[tname] = offsets;
+         }
+         llvm::outs() << "\n";
+         lazyInitInitializers[tname] = offsets;
+       }
      }
      cf.close();
   }

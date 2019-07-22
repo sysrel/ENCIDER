@@ -158,7 +158,7 @@ public:
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments);
 
-  void symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
+  bool symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments);
