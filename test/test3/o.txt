@@ -1,25 +1,48 @@
-KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test1/klee-out-0"
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test3/klee-out-0"
 KLEE: Using STP solver backend
-Uncov init=813
+Uncov init=820
 Couldn't open file 
 KLEE: WARNING: undefined reference to function: printf
+high foo_0_arg_1
+low foo_0_arg_0
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy primitive type: i8 extracted
+lazy init arg foo_0_arg_0
+lazy init arg foo_0_arg_1
 Registering publicOutputReturningFName as foo
-KLEE: WARNING ONCE: calling external: printf(39344040, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:23
+KLEE: WARNING ONCE: calling external: printf(38999976, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:31
 16
 64
 32
 2048
 128
-512
 256
+512
 1024
 Size of rdmap : 15
 
 ===============
 Found Violation at : 
 diff : 24
+Instruction:
+  %27 = getelementptr inbounds %struct.secret_t, %struct.secret_t* %H, i32 0, i32 0, !dbg !156
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:36
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:44
 
 [ (Slt 4294967286
       (ReadLSB w32 0 foo_0_arg_1))
@@ -28,7 +51,7 @@ diff : 24
               (ReadLSB w32 0 foo_0_arg_0)))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 122 , 122 ]
+ ]   ---->  [ 128 , 128 ]
 
 [ (Eq false
      (Slt 4294967286
@@ -38,31 +61,33 @@ diff : 24
               (ReadLSB w32 0 foo_0_arg_0)))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 146 , 146 ]
+ ]   ---->  [ 152 , 152 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:47
-  br i1 %27, label %36, label %39, !dbg !166
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:55
+  br i1 %32, label %41, label %44, !dbg !174
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:37
-  br i1 %27, label %29, label %32, !dbg !157
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:45
+  br i1 %32, label %34, label %37, !dbg !165
 
 foo
 
 Predecessor : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 ===============
 
 ===============
 Found Violation at : 
 diff : 24
+Instruction:
+  %27 = getelementptr inbounds %struct.secret_t, %struct.secret_t* %H, i32 0, i32 0, !dbg !156
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:36
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:44
 
 [ (Slt 4294967286
       (ReadLSB w32 0 foo_0_arg_1))
@@ -70,7 +95,7 @@ diff : 24
           (ReadLSB w32 0 foo_0_arg_0))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 110 , 110 ]
+ ]   ---->  [ 116 , 116 ]
 
 [ (Eq false
      (Slt 4294967286
@@ -79,31 +104,33 @@ diff : 24
           (ReadLSB w32 0 foo_0_arg_0))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 134 , 134 ]
+ ]   ---->  [ 140 , 140 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:47
-  br i1 %27, label %36, label %39, !dbg !166
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:55
+  br i1 %32, label %41, label %44, !dbg !174
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:37
-  br i1 %27, label %29, label %32, !dbg !157
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:45
+  br i1 %32, label %34, label %37, !dbg !165
 
 foo
 
 Predecessor : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 ===============
 
 ===============
 Found Violation at : 
 diff : 24
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (And (Eq false
           (Slt 0
@@ -114,7 +141,7 @@ diff : 24
       (And (Eq 4294967295 N0)
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 134 , 134 ]
+ ]   ---->  [ 140 , 140 ]
 
 [ (And (Eq false
           (Slt 0
@@ -125,17 +152,17 @@ diff : 24
       (And (Eq 4294967295 N0)
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 110 , 110 ]
+ ]   ---->  [ 116 , 116 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -145,9 +172,11 @@ Predecessor :
 
 ===============
 Found Violation at : 
-diff : 66
+diff : 68
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (And (Eq false
           (Slt 0
@@ -158,7 +187,7 @@ diff : 66
       (And (Eq 4294967295 N0)
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 134 , 134 ]
+ ]   ---->  [ 140 , 140 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -166,17 +195,17 @@ diff : 66
            1)
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 68 , 68 ]
+ ]   ---->  [ 72 , 72 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -187,8 +216,10 @@ Predecessor :
 ===============
 Found Violation at : 
 diff : 24
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (And (Eq false
           (Slt 0
@@ -199,7 +230,7 @@ diff : 24
       (And (Eq false (Eq 4294967295 N0))
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 146 , 146 ]
+ ]   ---->  [ 152 , 152 ]
 
 [ (And (Eq false
           (Slt 0
@@ -210,17 +241,17 @@ diff : 24
       (And (Eq false (Eq 4294967295 N0))
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 122 , 122 ]
+ ]   ---->  [ 128 , 128 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -230,9 +261,11 @@ Predecessor :
 
 ===============
 Found Violation at : 
-diff : 78
+diff : 80
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (And (Eq false
           (Slt 0
@@ -243,7 +276,7 @@ diff : 78
       (And (Eq false (Eq 4294967295 N0))
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 146 , 146 ]
+ ]   ---->  [ 152 , 152 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -251,17 +284,17 @@ diff : 78
            1)
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 68 , 68 ]
+ ]   ---->  [ 72 , 72 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -271,9 +304,11 @@ Predecessor :
 
 ===============
 Found Violation at : 
-diff : 42
+diff : 44
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (And (Eq false
           (Slt 0
@@ -284,7 +319,7 @@ diff : 42
       (And (Eq 4294967295 N0)
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 110 , 110 ]
+ ]   ---->  [ 116 , 116 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -292,17 +327,17 @@ diff : 42
            1)
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 68 , 68 ]
+ ]   ---->  [ 72 , 72 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -312,9 +347,11 @@ Predecessor :
 
 ===============
 Found Violation at : 
-diff : 54
+diff : 56
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (And (Eq false
           (Slt 0
@@ -325,7 +362,7 @@ diff : 54
       (And (Eq false (Eq 4294967295 N0))
            (Eq 1
                (ReadLSB w32 0 return_value))))
- ]   ---->  [ 122 , 122 ]
+ ]   ---->  [ 128 , 128 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -333,17 +370,17 @@ diff : 54
            1)
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 68 , 68 ]
+ ]   ---->  [ 72 , 72 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -353,9 +390,11 @@ Predecessor :
 
 ===============
 Found Violation at : 
-diff : 57
+diff : 56
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (Eq false
      (Slt 0
@@ -365,7 +404,7 @@ diff : 57
                0))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 152 , 152 ]
+ ]   ---->  [ 156 , 156 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -375,17 +414,17 @@ diff : 57
            (Eq false (Slt N0 5)))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 95 , 95 ]
+ ]   ---->  [ 100 , 100 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -396,8 +435,10 @@ Predecessor :
 ===============
 Found Violation at : 
 diff : 84
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (Eq false
      (Slt 0
@@ -407,7 +448,7 @@ diff : 84
                0))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 152 , 152 ]
+ ]   ---->  [ 156 , 156 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -415,17 +456,17 @@ diff : 84
            1)
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 68 , 68 ]
+ ]   ---->  [ 72 , 72 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -435,9 +476,11 @@ Predecessor :
 
 ===============
 Found Violation at : 
-diff : 69
+diff : 68
+Instruction:
+  %1 = alloca i32, align 4
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 
 [ (Eq false
      (Slt 0
@@ -447,7 +490,7 @@ diff : 69
                0))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 152 , 152 ]
+ ]   ---->  [ 156 , 156 ]
 
 [ (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
@@ -457,17 +500,17 @@ diff : 69
            (Slt N0 5))
       (Eq 1
           (ReadLSB w32 0 return_value)))
- ]   ---->  [ 83 , 83 ]
+ ]   ---->  [ 88 , 88 ]
 
 Successors : 
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:35
-  %22 = icmp slt i32 %6, 0, !dbg !144
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:43
+  %25 = icmp slt i32 %8, 0, !dbg !152
 
 foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:21
-  %8 = icmp slt i32 %6, 1, !dbg !126
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:29
+  %10 = icmp slt i32 %8, 1, !dbg !134
 
 foo
 
@@ -483,22 +526,22 @@ Predecessor :
 	=====================
 	Function : foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:36
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:44
 	=====================
 
 	=====================
 	Function : foo
 
-	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test1/test1.c:20
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c:28
 	=====================
 
 >>>> Found violations at  : 2 locations.
 
-KLEE: done: minInst = 69
-KLEE: done: maxInst = 153
+KLEE: done: minInst = 73
+KLEE: done: maxInst = 157
 KLEE: done: HAncestors = 2
 KLEE: done: HLMixedConstraints = 0
-KLEE: done: total instructions = 823
+KLEE: done: total instructions = 830
 KLEE: done: completed paths = 8
 KLEE: done: generated tests = 8
 Lazy initialization is ON 

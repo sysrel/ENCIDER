@@ -1,0 +1,79 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test7/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=813
+Couldn't open file 
+KLEE: WARNING: undefined reference to function: printf
+high foo_0_arg_1
+low foo_0_arg_0
+lazy init arg foo_0_arg_0
+lazy init arg foo_0_arg_1
+Registering publicOutputReturningFName as foo
+reached foo
+state=0x3bce000 memory operation (inside foo) 
+  store i32 %L, i32* %2, align 4
+ address: 61626528
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 0 foo_0_arg_0)
+state=0x3bce000 memory operation (inside foo) 
+  store i32 %H, i32* %3, align 4
+ address: 61626544
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 0 foo_0_arg_1)
+state=0x3bce000 memory operation (inside foo) 
+  %4 = load i32, i32* %3, align 4
+ address: 61626544
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %4 = load i32, i32* %3, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_1)
+state=0x3bce000 memory operation (inside foo) 
+  %6 = load i32, i32* %2, align 4
+ address: 61626528
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_0)
+Is i32* (count=0) to be lazy init?
+  %6 = load i32, i32* %2, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_0)
+making ocall loop from foo
+state=0x3bcef00 memory operation (inside foo) 
+  %13 = load i32, i32* %2, align 4
+ address: 61626528
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_0)
+Is i32* (count=0) to be lazy init?
+  %13 = load i32, i32* %2, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_0)
+making ocall loop from foo
+state=0x3bce500 memory operation (inside foo) 
+  %24 = load i32, i32* %3, align 4
+ address: 61626544
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %24 = load i32, i32* %3, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_1)
+state=0x3bce500 memory operation (inside foo) 
+  %26 = load i32, i32* %2, align 4
+ address: 61626528
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_0)
+Is i32* (count=0) to be lazy init?
+  %26 = load i32, i32* %2, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_0)
+making ocall loop from foo
+making ocall loop from foo
+making ocall loop from foo
+making ocall loop from foo
+making ocall loop from foo
+making ocall loop from foo
+0  klee            0x000000000135f848 llvm::sys::PrintStackTrace(llvm::raw_ostream&) + 56
+1  klee            0x000000000135dad6 llvm::sys::RunSignalHandlers() + 54
+2  klee            0x000000000135dc39
+3  libpthread.so.0 0x0000148503e26390
+4  klee            0x0000000000647bcc klee::Executor::run(klee::ExecutionState&) + 2620
+5  klee            0x0000000000648e57 klee::Executor::runFunctionAsMain(llvm::Function*, int, char**, char**) + 2775
+6  klee            0x00000000005e862c main + 12108
+7  libc.so.6       0x00001485031ca830 __libc_start_main + 240
+8  klee            0x000000000060b059 _start + 41
+./run.sh: line 1: 51134 Segmentation fault      (core dumped) /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/bin/klee -entry-point=$2 -lazy-init=true -prog-model-spec=pm.txt $1
