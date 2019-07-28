@@ -419,7 +419,7 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 	std::string ni = indent + "-";
 	for(std::set<RD*>::iterator srit = rd->succ->begin();
 			srit != rd->succ->end(); ++srit) {
-			rd->finalized++; // TDOD: keep a lookput for this if multi-threaded
+			rd->finalized++; // TDOD: keep a lookout for this if multi-threaded
 			propagate(*srit, ni, ex);
 	}
 
@@ -494,6 +494,17 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 void rdmapinsert(int i, RD* rd){
 	std::pair<int, RD* > p = std::pair<int, RD* > (i, rd);
 	rdmap->insert(p);
+}
+
+RD *rdmapreplace(int i, RD* rd){
+     RD *rdd = NULL;
+     std::map<int, RD*>::iterator it = rdmap->find(i); 
+     if (rdmap->find(i) != rdmap->end()) {
+        rdd = it->second;
+     }
+     std::pair<int, RD* > p = std::pair<int, RD* > (i, rd);
+     rdmap->insert(p);
+     return rdd;
 }
 
 RD* getrdmap(ExecutionState * s) {

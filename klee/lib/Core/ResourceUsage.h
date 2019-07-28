@@ -89,6 +89,8 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex);
 
 void rdmapinsert(int i, RD* rd);
 
+RD *rdmapreplace(int i, RD* rd);
+
 RD* getrdmap(ExecutionState * s);
 
 void printResourceUsage(RD * s);

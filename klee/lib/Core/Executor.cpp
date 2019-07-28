@@ -122,6 +122,7 @@ extern std::set<std::string> * lowLoc;
 extern std::map<int, RD*> * rdmap;
 extern std::vector<std::string> * untrusted;
 extern std::set<std::string> prefixRedact;
+std::set<RD*> resourceTreeRootList;
 RD *root;
 RD *currentRD;
 bool fset = false;
@@ -192,6 +193,14 @@ std::set<Type*> embeddedTypes;
 std::map<Type*, std::set<Type*> >  embeddingTypes;
 bool singleSuccessor = true;
 
+void timeSideChannelAnalysis(Executor *executor) {
+ for(rroot : resourceTreeRootList) {
+    propagate(rroot, "", executor);
+    checkLeakage(rroot, executor);
+ }
+ std::cerr << "\n\n\n\n>>>> Listing violations :  \n";
+ printviolations(executor);
+}
 
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
@@ -1977,6 +1986,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     #ifdef VB 
     llvm::outs() << "handling return for function " << ri->getParent()->getParent()->getName()  << "\n";
     #endif
+
     if (!isVoidReturn) {
       result = eval(ki, 0, state).value;
       /* SYSREL EXTENSION */
@@ -2411,6 +2421,26 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     /* side channel begin */
     // making an 
     if (state.inEnclave && f && std::find(untrusted->begin(), untrusted->end(), f->getName()) != untrusted->end()) {
+       // First create a branch to be terminated to simulate the fact the that attacker can detect ocalls and measure the elapsed time
+       ExecutionState *tobeterm = state.branch();
+       addedStates.push_back(tobeterm);
+       state.ptreeNode->data = 0;
+       std::pair<PTree::Node*, PTree::Node*> res = processTree->split(state.ptreeNode, tobeterm, &state);
+       tobeterm->ptreeNode = res.first;
+       state.ptreeNode = res.second;
+       llvm::errs() << "copy of state " << &state << " to be terminated: " << tobeterm << "\n"; 
+       RD *rdd = getrdmap(&state);
+       RD *rddterm = newNode(tobeterm);
+       tobeterm->rdid = rddterm->stateid;
+       rdmapinsert(tobeterm->rdid, rddterm);
+       RD *rddreset =  newNode(&state);
+       state.rdid = rddreset->stateid;
+       rdmapinsert(state.rdid, rddreset);
+       // This ensures that time side channel analysis can be started from this node as well
+       resourceTreeRootList.insert(rddreset);
+       rdd->succ->insert(rddterm);
+       rdd->succ->insert(rddreset);
+       terminateStateOnExit(*tobeterm);
        llvm::errs() << "making ocall " << f->getName() << " from " << ((Function*)i->getParent()->getParent())->getName() << "\n";
        state.setLastEnclaveFunction(((Function*)i->getParent()->getParent())->getName());
        state.inEnclave = false;
@@ -3542,6 +3572,7 @@ void Executor::run(ExecutionState &initialState) {
     printResourceUsage(root);
   #endif
   currentRD = root;
+  resourceTreeRootList.insert(root);
   /* SYSREL side channel end */
   if (usingSeeds) {
     std::vector<SeedInfo> &v = seedMap[&initialState];
@@ -3874,10 +3905,7 @@ void Executor::run(ExecutionState &initialState) {
   std::cerr << "Size of rdmap : " << rdmap->size() << "\n";
   doDumpStates();
   /* SYSREL side channel begin */
-  propagate(root, "", this);
-  checkLeakage(root, this);
-  std::cerr << "\n\n\n\n>>>> Listing violations :  \n";
-  printviolations(this);
+  timeSideChannelAnalysis(this);
   /* SYSREL side channel end */
 
 }
