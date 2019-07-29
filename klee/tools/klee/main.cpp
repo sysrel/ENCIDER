@@ -101,6 +101,7 @@ std::set<std::string> prefixRedact;
 extern std::set<std::string> * highLoc, *lowLoc;
 extern int maxForkMulRes;
 extern int primArraySize;
+unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -197,10 +198,15 @@ namespace {
   SideChannelEntryPoint("side-channel-entry", cl::desc("function name from which time side channel analysis will be initiated \ 
                                             \n \t (default is the symbolic execution entry point) \n"));
 
-   cl::opt<std::string>
-   SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
+  cl::opt<std::string>
+  SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
                                              \n \t (use naive for using all leaf nodes (may not terminate)\n \
                                              \n \t (use decompose for focusing on relevant candidates only\n"));
+
+  cl::opt<unsigned>
+  CacheLineBits("cache-line-bits", cl::desc("cache line bits (log of cache line size) (default 6) \n"));
+   
+ 
    cl::opt<std::string>
    PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
                                                     to map an undefined function to its model function\n"));
@@ -1859,6 +1865,9 @@ int main(int argc, char **argv, char **envp) {
      progModel = true;
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());
   }
+
+  if (CacheLineBits)
+     cacheLineBits = CacheLineBits;
 
   if (PrefixRedact != "") {
      readPrefixes(PrefixRedact.c_str());

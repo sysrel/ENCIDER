@@ -1,8 +1,12 @@
 #include <iostream>
 #include "AnalyzeConstraint.h"
 #include "klee/util/ExprUtil.h"
+#include "klee/util/ArrayCache.h"
+#include "llvm/ADT/StringExtras.h"
 #include <fstream>
 #define dbp 0
+
+
 
 /* Variables based on sensivity */
 std::set<std::string> * highLoc = new std::set<std::string>();
@@ -148,9 +152,71 @@ void dumpKidsRec(klee::ref<Expr>& cexpr) {
 	}
 }
 
+
+
+const Array *renameArray(MemoryManager *memory, const Array *array, std::set<std::string> * varset, unsigned int id) {
+   if (varset->find(array->name) != varset->end()) {
+      const Array *nar = memory->getArrayCache()->CreateArray(array->name + "_r_" + llvm::utostr(id), array->getSize());
+      return nar;
+   }
+   else 
+       return memory->getArrayCache()->CreateArray(array->name, array->getSize());
+}
+
+
+
+
+
+ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id) {
+    switch (cexpr->getKind()) {    
+      case Expr::Constant: {
+        klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(cexpr);
+        return klee::ConstantExpr::create(CE->getZExtValue(), CE->getWidth());
+      }
+      case Expr::Extract: {
+        ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
+        return ExtractExpr::create(cexpr->getKid(0), EE->offset, EE->width);
+      }
+      case Expr::Read: {
+          ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
+          const UpdateList *rul = new UpdateList(renameArray(memory, rexpr->updates.root, high ? highLoc : lowLoc, id), 
+                                                 rexpr->updates.head);
+          ref<Expr> nrexpr = ReadExpr::alloc(*rul, rexpr->index);     
+          llvm:errs() << "Readexpr: " << cexpr << " renamed as " << nrexpr << "\n";      
+          return nrexpr;
+      } 
+      case Expr::Concat: {
+          ref<Expr> rexpr1 = rename(memory, cexpr->getKid(0), high, id);
+          ref<Expr> rexpr2 = rename(memory, cexpr->getKid(1), high, id);
+          return ConcatExpr::create(rexpr1, rexpr2);
+      }
+      default:
+        std::vector<Expr::CreateArg> args;
+        int size = cexpr->getNumKids();
+        int i;
+        for(i=0; i<size; i++) {
+           ref<Expr> rexpr = rename(memory, cexpr->getKid(i), high, id);
+           args.push_back(Expr::CreateArg(rexpr));
+           llvm::errs() << "args[" << i << "] " << args[i].expr << "\n";
+        }    
+        if (cexpr->getKind() == Expr::SExt || cexpr->getKind() == Expr::ZExt) {
+           args.push_back(Expr::CreateArg(cexpr->getWidth()));
+           llvm::errs() << "args[" << i << "] " << args[i].width << "\n";
+        }
+        llvm::errs() << "cexpr: " << cexpr << " kind: " << cexpr->getKind() << "\n"; 
+        return Expr::createFromKind(cexpr->getKind(), args);
+   }
+}
+
+// uses a static index that gets incremented each time a rename operation is used
+ref<Expr> renameExpr(MemoryManager *memory, ref<Expr> cexpr, bool high) {
+  static unsigned id = 0;
+  return rename(memory, cexpr, high, id++);
+}
+
 /*
  * Assumption for getProjection and buildProjection is that
- * cexpr has atleast 1 highloc
+ * cexpr has atleast 1 highloc or 1 lowloc
  */
 ref<Expr> getProjection(ref<Expr>& cexpr, std::set<std::string> * varset) {
 	//std::set<std::string>* names = getNameofAddressConstraintSet(cexpr);

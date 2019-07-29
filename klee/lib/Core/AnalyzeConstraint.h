@@ -3,12 +3,15 @@
 
 #include <iostream>
 #include "klee/Expr.h"
+#include "Memory.h"
+#include "MemoryManager.h"
 
 #define dbp 0
 
 using namespace llvm;
 using namespace klee;
 
+ref<Expr> renameExpr(MemoryManager *memory, ref<Expr> cexpr, bool high);
 std::set<std::string>* getNameofAddressConstraintSet(klee::ref<Expr> cexpr);
 std::vector<std::string> * processline(std::string s, std::string delimiter);
 void dumpKids(klee::ref<Expr>& cexpr);

@@ -106,6 +106,7 @@ using namespace klee;
 std::set<std::string> reached;
 
 /* Side channel begin */
+extern unsigned int cacheLineBits;
 std::map<long, std::set<ref<Expr> > > highAddresses;
 std::map<long, std::set<ref<Expr> > > lowAddresses;
 klee::ref<Expr> branchCondition;
@@ -127,6 +128,7 @@ RD *root;
 RD *currentRD;
 bool fset = false;
 Function *ff;
+ArrayCache *acache = NULL;
 //int maxForkMulRes = 10;
 int maxForkMulRes = 2147483647;
 int primArraySize = 32;
@@ -2930,12 +2932,36 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       llvm::outs() << "geptr base: " << base << "\n";
       #endif
     }
-    #ifdef VB
-    llvm::outs() << "geptr final base: " << base << "\n";
-    #endif
+    //#ifdef VB
+    llvm::errs() << "geptr final base: " << base << "\n";
+    //#endif
     bindLocal(ki, state, base);
 
     /* side channel */
+    if (state.inEnclave && exprHasVar(base, highLoc)) {
+       // Check for the possibility of the address base mapping to different cache lines for different security sensitive values
+       // Let cache line size denoted by 2^L and memory address size denoted by N
+       // Since N-L bits are used to decide the cache line that gets accessed, we will check the following formula
+       // \exists high'. base >> L<> base[high'/high] >> L
+       ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
+       ref<Expr> rexpr = renameExpr(memory, base, true); 
+       llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
+       ref<Expr> clexpr2 = LShrExpr::alloc(rexpr, ConstantExpr::alloc(cacheLineBits, 64));
+       ref<Expr> cleqexpr = EqExpr::create(clexpr1, clexpr2);
+       ref<Expr> diffcachelines = NotExpr::create(cleqexpr);
+       bool result;
+       bool success = solver->mayBeTrue(state, diffcachelines, result);
+       assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
+       if (result) {
+          llvm::errs() << "CACHE BASED SIDE CHANNEL: \n";
+          ki->inst->print(llvm::errs());
+          llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
+       }
+    }
+    if (isAHighAddress(state,base)) 
+       high = true;  
+    if (isALowAddress(state,base)) 
+       low = true;   
     if (high) {
        addHighAddress(state,base);
        #ifdef VB 
