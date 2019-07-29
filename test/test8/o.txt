@@ -1,0 +1,4809 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test8/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=784
+Couldn't open file 
+high foo_0_arg_1
+low foo_0_arg_0
+lazy init arg foo_0_arg_0
+lazy init arg foo_0_arg_1
+Registering publicOutputReturningFName as foo
+reached foo
+state=0x2504000 memory operation (inside foo) 
+  store i32 %L, i32* %2, align 4
+ address: 37730224
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 0 foo_0_arg_0)
+state=0x2504000 memory operation (inside foo) 
+  store i32 %H, i32* %3, align 4
+ address: 37730240
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 0 foo_0_arg_1)
+state=0x2504000 memory operation (inside foo) 
+  %4 = load i32, i32* %3, align 4
+ address: 37730240
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %4 = load i32, i32* %3, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_1)
+state=0x2504000 memory operation (inside foo) 
+  %6 = load i32, i32* %3, align 4
+ address: 37730240
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %6 = load i32, i32* %3, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_1)
+state=0x2504000 memory operation (inside foo) 
+  %8 = load i32, i32* %2, align 4
+ address: 37730224
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_0)
+Is i32* (count=0) to be lazy init?
+  %8 = load i32, i32* %2, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_0)
+state=0x2504000 memory operation (inside foo) 
+  %12 = load i32, i32* %3, align 4
+ address: 37730240
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %12 = load i32, i32* %3, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_1)
+state=0x2504500 memory operation (inside foo) 
+  store i32 0, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 0
+state=0x2504a00 memory operation (inside foo) 
+  %38 = load i32, i32* getelementptr inbounds ([128 x i32], [128 x i32]* @table, i64 0, i64 127), align 4
+ address: 38022652
+executeMemoryOperation isWrite? 0
+ load result: 0
+state=0x2504a00 memory operation (inside foo) 
+  store i32 %38, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value 0
+state=0x2504f00 memory operation (inside foo) 
+  %17 = load i32, i32* %2, align 4
+ address: 37730224
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_0)
+Is i32* (count=0) to be lazy init?
+  %17 = load i32, i32* %2, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_0)
+state=0x2504f00 memory operation (inside foo) 
+  %18 = load i32, i32* %3, align 4
+ address: 37730240
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 0 foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %18 = load i32, i32* %3, align 4
+ load result: (ReadLSB w32 0 foo_0_arg_1)
+state=0x2504a00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+ load result: 0
+CRITICAL: Security sensitive index in GetElementPtr:
+  %14 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %13(SExt w64 (ReadLSB w32 0 foo_0_arg_1))
+geptr final base: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1))))
+args[0] 38022144
+args[0] 4
+Readexpr: (Read w8 3 foo_0_arg_1) renamed as (Read w8 3 foo_0_arg_1_r_0)
+Readexpr: (Read w8 2 foo_0_arg_1) renamed as (Read w8 2 foo_0_arg_1_r_0)
+Readexpr: (Read w8 1 foo_0_arg_1) renamed as (Read w8 1 foo_0_arg_1_r_0)
+Readexpr: (Read w8 0 foo_0_arg_1) renamed as (Read w8 0 foo_0_arg_1_r_0)
+args[0] (ReadLSB w32 0 foo_0_arg_1_r_0)
+args[1] 64
+cexpr: (SExt w64 (ReadLSB w32 0 foo_0_arg_1)) kind: SExt
+args[1] (SExt w64 (ReadLSB w32 0 foo_0_arg_1_r_0))
+cexpr: (Mul w64 4
+          (SExt w64 (ReadLSB w32 0 foo_0_arg_1))) kind: Mul
+args[1] (Mul w64 4
+          (SExt w64 (ReadLSB w32 0 foo_0_arg_1_r_0)))
+cexpr: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) kind: Add
+Renaming of (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))):
+(Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1_r_0))))
+CACHE BASED SIDE CHANNEL: 
+  %14 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %13address: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) cache line size: 6.400000e+01
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 0
+state=0x2504000 memory operation (inside foo) 
+  %15 = load i32, i32* %14, align 4
+ address: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1))))
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)
+Is i32* (count=0) to be lazy init?
+  %15 = load i32, i32* %14, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)
+CRITICAL: Security sensitive index in GetElementPtr:
+  %21 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %20(SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                    (ReadLSB w32 0 foo_0_arg_1)))
+geptr final base: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1)))))
+args[0] 38022144
+args[0] 4
+Readexpr: (Read w8 3 foo_0_arg_0) renamed as (Read w8 3 foo_0_arg_0)
+Readexpr: (Read w8 2 foo_0_arg_0) renamed as (Read w8 2 foo_0_arg_0)
+Readexpr: (Read w8 1 foo_0_arg_0) renamed as (Read w8 1 foo_0_arg_0)
+Readexpr: (Read w8 0 foo_0_arg_0) renamed as (Read w8 0 foo_0_arg_0)
+args[0] (ReadLSB w32 0 foo_0_arg_0)
+Readexpr: (Read w8 3 foo_0_arg_1) renamed as (Read w8 3 foo_0_arg_1_r_1)
+Readexpr: (Read w8 2 foo_0_arg_1) renamed as (Read w8 2 foo_0_arg_1_r_1)
+Readexpr: (Read w8 1 foo_0_arg_1) renamed as (Read w8 1 foo_0_arg_1_r_1)
+Readexpr: (Read w8 0 foo_0_arg_1) renamed as (Read w8 0 foo_0_arg_1_r_1)
+args[1] (ReadLSB w32 0 foo_0_arg_1_r_1)
+cexpr: (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+          (ReadLSB w32 0 foo_0_arg_1)) kind: Add
+args[0] (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+          (ReadLSB w32 0 foo_0_arg_1_r_1))
+args[1] 64
+cexpr: (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                    (ReadLSB w32 0 foo_0_arg_1))) kind: SExt
+args[1] (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                    (ReadLSB w32 0 foo_0_arg_1_r_1)))
+cexpr: (Mul w64 4
+          (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                             (ReadLSB w32 0 foo_0_arg_1)))) kind: Mul
+args[1] (Mul w64 4
+          (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                             (ReadLSB w32 0 foo_0_arg_1_r_1))))
+cexpr: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1))))) kind: Add
+Renaming of (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1))))):
+(Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1_r_1)))))
+CACHE BASED SIDE CHANNEL: 
+  %21 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %20address: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1))))) cache line size: 6.400000e+01
+state=0x2504f00 memory operation (inside foo) 
+  %22 = load i32, i32* %21, align 4
+ address: (Add w64 38022144
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1)))))
+executeMemoryOperation isWrite? 0
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+on an error path in executeMem, going to read!
+KLEE: ERROR: (location information missing) memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+state=0x2504a00 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 205856
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr2)
+state=0x2504000 memory operation (inside foo) 
+  store i32 %15, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)
+state=0x2506300 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 207328
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr6)
+state=0x25d7400 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 292136
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr12)
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 0
+state=0x25d6a00 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 292096
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) foo_0_arg_0)
+state=0x25d7900 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 292152
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr13)
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 0
+state=0x2507700 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 291936
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr10)
+state=0x2504000 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)
+state=0x2504f00 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                            (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)
+state=0x25d6f00 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 292120
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr11)
+geptr final base: 38022144
+state=0x25d6000 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 292040
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) foo_0_arg_1)
+state=0x2505400 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 205888
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr3)
+state=0x25d6500 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 292048
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) return_value)
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022144
+executeMemoryOperation isWrite? 1
+storing value 0
+state=0x2505e00 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 205952
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr5)
+state=0x2504f00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                            (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                         (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                            (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)
+state=0x25d6500 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292048
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) return_value)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292048
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) return_value)
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 0
+state=0x2504a00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205856
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr2)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205856
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr2)
+state=0x2505900 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 205920
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr4)
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 1
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 1
+state=0x2505400 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205888
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr3)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205888
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr3)
+state=0x2506300 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 207328
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr6)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 207328
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr6)
+state=0x2506d00 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 291904
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) U0:[3=N1:(Read w8 3 foo_0_arg_1),
+                                                                                                          2=N2:(Read w8 2 foo_0_arg_1),
+                                                                                                          1=N3:(Read w8 1 foo_0_arg_1),
+                                                                                                          0=N4:(Read w8 0 foo_0_arg_1)] @ const_arr8)
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 1
+state=0x2506800 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 291888
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr7)
+state=0x2505900 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205920
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr4)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205920
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr4)
+state=0x25d6f00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292120
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr11)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292120
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr11)
+state=0x2506d00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291904
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) U0:[3=N1:(Read w8 3 foo_0_arg_1),
+                                                                                                          2=N2:(Read w8 2 foo_0_arg_1),
+                                                                                                          1=N3:(Read w8 1 foo_0_arg_1),
+                                                                                                          0=N4:(Read w8 0 foo_0_arg_1)] @ const_arr8)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291904
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) U0:[3=N1:(Read w8 3 foo_0_arg_1),
+                                                                                                          2=N2:(Read w8 2 foo_0_arg_1),
+                                                                                                          1=N3:(Read w8 1 foo_0_arg_1),
+                                                                                                          0=N4:(Read w8 0 foo_0_arg_1)] @ const_arr8)
+state=0x2507200 memory operation (inside foo) 
+  store i32 %22, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value (ReadLSB w32 N0:(Extract w32 0 (Add w64 291920
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) U0:[3=N1:(Read w8 3 foo_0_arg_0),
+                                                                                                          2=N2:(Read w8 2 foo_0_arg_0),
+                                                                                                          1=N3:(Read w8 1 foo_0_arg_0),
+                                                                                                          0=N4:(Read w8 0 foo_0_arg_0)] @ const_arr9)
+state=0x25d6000 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292040
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) foo_0_arg_1)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292040
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) foo_0_arg_1)
+state=0x25d6a00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292096
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) foo_0_arg_0)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292096
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) foo_0_arg_0)
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 1
+geptr final base: 38022148
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022148
+executeMemoryOperation isWrite? 1
+storing value 2
+state=0x2507700 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291936
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr10)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291936
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr10)
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 1
+state=0x2505e00 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205952
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr5)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 205952
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr5)
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 2
+state=0x2507200 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291920
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) U0:[3=N1:(Read w8 3 foo_0_arg_0),
+                                                                                                          2=N2:(Read w8 2 foo_0_arg_0),
+                                                                                                          1=N3:(Read w8 1 foo_0_arg_0),
+                                                                                                          0=N4:(Read w8 0 foo_0_arg_0)] @ const_arr9)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291920
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) U0:[3=N1:(Read w8 3 foo_0_arg_0),
+                                                                                                          2=N2:(Read w8 2 foo_0_arg_0),
+                                                                                                          1=N3:(Read w8 1 foo_0_arg_0),
+                                                                                                          0=N4:(Read w8 0 foo_0_arg_0)] @ const_arr9)
+state=0x25d7900 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292152
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr13)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292152
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr13)
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 2
+state=0x2506800 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291888
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr7)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 291888
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr7)
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 2
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 2
+state=0x25d7400 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+load orig result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292136
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr12)
+Is i32* (count=0) to be lazy init?
+  %40 = load i32, i32* %1, align 4
+ load result: (ReadLSB w32 N0:(Extract w32 0 (Add w64 292136
+                                         (Mul w64 4
+                                                  (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                                                     (ReadLSB w32 0 foo_0_arg_1)))))) const_arr12)
+geptr final base: 38022152
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022152
+executeMemoryOperation isWrite? 1
+storing value 4
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 2
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 3
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 3
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 3
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 3
+geptr final base: 38022156
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022156
+executeMemoryOperation isWrite? 1
+storing value 6
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 3
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 4
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 4
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 4
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 4
+geptr final base: 38022160
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022160
+executeMemoryOperation isWrite? 1
+storing value 8
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 4
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 5
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 5
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 5
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 5
+geptr final base: 38022164
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022164
+executeMemoryOperation isWrite? 1
+storing value 10
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 5
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 6
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 6
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 6
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 6
+geptr final base: 38022168
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022168
+executeMemoryOperation isWrite? 1
+storing value 12
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 6
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 7
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 7
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 7
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 7
+geptr final base: 38022172
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022172
+executeMemoryOperation isWrite? 1
+storing value 14
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 7
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 8
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 8
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 8
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 8
+geptr final base: 38022176
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022176
+executeMemoryOperation isWrite? 1
+storing value 16
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 8
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 9
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 9
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 9
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 9
+geptr final base: 38022180
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022180
+executeMemoryOperation isWrite? 1
+storing value 18
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 9
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 10
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 10
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 10
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 10
+geptr final base: 38022184
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022184
+executeMemoryOperation isWrite? 1
+storing value 20
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 10
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 11
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 11
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 11
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 11
+geptr final base: 38022188
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022188
+executeMemoryOperation isWrite? 1
+storing value 22
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 11
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 12
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 12
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 12
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 12
+geptr final base: 38022192
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022192
+executeMemoryOperation isWrite? 1
+storing value 24
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 12
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 13
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 13
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 13
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 13
+geptr final base: 38022196
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022196
+executeMemoryOperation isWrite? 1
+storing value 26
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 13
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 14
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 14
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 14
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 14
+geptr final base: 38022200
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022200
+executeMemoryOperation isWrite? 1
+storing value 28
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 14
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 15
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 15
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 15
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 15
+geptr final base: 38022204
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022204
+executeMemoryOperation isWrite? 1
+storing value 30
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 15
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 16
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 16
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 16
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 16
+geptr final base: 38022208
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022208
+executeMemoryOperation isWrite? 1
+storing value 32
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 16
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 17
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 17
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 17
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 17
+geptr final base: 38022212
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022212
+executeMemoryOperation isWrite? 1
+storing value 34
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 17
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 18
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 18
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 18
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 18
+geptr final base: 38022216
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022216
+executeMemoryOperation isWrite? 1
+storing value 36
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 18
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 19
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 19
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 19
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 19
+geptr final base: 38022220
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022220
+executeMemoryOperation isWrite? 1
+storing value 38
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 19
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 20
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 20
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 20
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 20
+geptr final base: 38022224
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022224
+executeMemoryOperation isWrite? 1
+storing value 40
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 20
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 21
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 21
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 21
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 21
+geptr final base: 38022228
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022228
+executeMemoryOperation isWrite? 1
+storing value 42
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 21
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 22
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 22
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 22
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 22
+geptr final base: 38022232
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022232
+executeMemoryOperation isWrite? 1
+storing value 44
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 22
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 23
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 23
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 23
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 23
+geptr final base: 38022236
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022236
+executeMemoryOperation isWrite? 1
+storing value 46
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 23
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 24
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 24
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 24
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 24
+geptr final base: 38022240
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022240
+executeMemoryOperation isWrite? 1
+storing value 48
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 24
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 25
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 25
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 25
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 25
+geptr final base: 38022244
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022244
+executeMemoryOperation isWrite? 1
+storing value 50
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 25
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 26
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 26
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 26
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 26
+geptr final base: 38022248
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022248
+executeMemoryOperation isWrite? 1
+storing value 52
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 26
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 27
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 27
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 27
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 27
+geptr final base: 38022252
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022252
+executeMemoryOperation isWrite? 1
+storing value 54
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 27
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 28
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 28
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 28
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 28
+geptr final base: 38022256
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022256
+executeMemoryOperation isWrite? 1
+storing value 56
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 28
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 29
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 29
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 29
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 29
+geptr final base: 38022260
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022260
+executeMemoryOperation isWrite? 1
+storing value 58
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 29
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 30
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 30
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 30
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 30
+geptr final base: 38022264
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022264
+executeMemoryOperation isWrite? 1
+storing value 60
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 30
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 31
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 31
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 31
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 31
+geptr final base: 38022268
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022268
+executeMemoryOperation isWrite? 1
+storing value 62
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 31
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 32
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 32
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 32
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 32
+geptr final base: 38022272
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022272
+executeMemoryOperation isWrite? 1
+storing value 64
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 32
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 33
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 33
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 33
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 33
+geptr final base: 38022276
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022276
+executeMemoryOperation isWrite? 1
+storing value 66
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 33
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 34
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 34
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 34
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 34
+geptr final base: 38022280
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022280
+executeMemoryOperation isWrite? 1
+storing value 68
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 34
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 35
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 35
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 35
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 35
+geptr final base: 38022284
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022284
+executeMemoryOperation isWrite? 1
+storing value 70
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 35
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 36
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 36
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 36
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 36
+geptr final base: 38022288
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022288
+executeMemoryOperation isWrite? 1
+storing value 72
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 36
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 37
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 37
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 37
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 37
+geptr final base: 38022292
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022292
+executeMemoryOperation isWrite? 1
+storing value 74
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 37
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 38
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 38
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 38
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 38
+geptr final base: 38022296
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022296
+executeMemoryOperation isWrite? 1
+storing value 76
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 38
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 39
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 39
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 39
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 39
+geptr final base: 38022300
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022300
+executeMemoryOperation isWrite? 1
+storing value 78
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 39
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 40
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 40
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 40
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 40
+geptr final base: 38022304
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022304
+executeMemoryOperation isWrite? 1
+storing value 80
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 40
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 41
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 41
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 41
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 41
+geptr final base: 38022308
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022308
+executeMemoryOperation isWrite? 1
+storing value 82
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 41
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 42
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 42
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 42
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 42
+geptr final base: 38022312
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022312
+executeMemoryOperation isWrite? 1
+storing value 84
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 42
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 43
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 43
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 43
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 43
+geptr final base: 38022316
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022316
+executeMemoryOperation isWrite? 1
+storing value 86
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 43
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 44
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 44
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 44
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 44
+geptr final base: 38022320
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022320
+executeMemoryOperation isWrite? 1
+storing value 88
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 44
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 45
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 45
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 45
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 45
+geptr final base: 38022324
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022324
+executeMemoryOperation isWrite? 1
+storing value 90
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 45
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 46
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 46
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 46
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 46
+geptr final base: 38022328
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022328
+executeMemoryOperation isWrite? 1
+storing value 92
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 46
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 47
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 47
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 47
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 47
+geptr final base: 38022332
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022332
+executeMemoryOperation isWrite? 1
+storing value 94
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 47
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 48
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 48
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 48
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 48
+geptr final base: 38022336
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022336
+executeMemoryOperation isWrite? 1
+storing value 96
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 48
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 49
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 49
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 49
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 49
+geptr final base: 38022340
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022340
+executeMemoryOperation isWrite? 1
+storing value 98
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 49
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 50
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 50
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 50
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 50
+geptr final base: 38022344
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022344
+executeMemoryOperation isWrite? 1
+storing value 100
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 50
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 51
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 51
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 51
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 51
+geptr final base: 38022348
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022348
+executeMemoryOperation isWrite? 1
+storing value 102
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 51
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 52
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 52
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 52
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 52
+geptr final base: 38022352
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022352
+executeMemoryOperation isWrite? 1
+storing value 104
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 52
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 53
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 53
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 53
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 53
+geptr final base: 38022356
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022356
+executeMemoryOperation isWrite? 1
+storing value 106
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 53
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 54
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 54
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 54
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 54
+geptr final base: 38022360
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022360
+executeMemoryOperation isWrite? 1
+storing value 108
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 54
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 55
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 55
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 55
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 55
+geptr final base: 38022364
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022364
+executeMemoryOperation isWrite? 1
+storing value 110
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 55
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 56
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 56
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 56
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 56
+geptr final base: 38022368
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022368
+executeMemoryOperation isWrite? 1
+storing value 112
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 56
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 57
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 57
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 57
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 57
+geptr final base: 38022372
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022372
+executeMemoryOperation isWrite? 1
+storing value 114
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 57
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 58
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 58
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 58
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 58
+geptr final base: 38022376
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022376
+executeMemoryOperation isWrite? 1
+storing value 116
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 58
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 59
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 59
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 59
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 59
+geptr final base: 38022380
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022380
+executeMemoryOperation isWrite? 1
+storing value 118
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 59
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 60
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 60
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 60
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 60
+geptr final base: 38022384
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022384
+executeMemoryOperation isWrite? 1
+storing value 120
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 60
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 61
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 61
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 61
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 61
+geptr final base: 38022388
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022388
+executeMemoryOperation isWrite? 1
+storing value 122
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 61
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 62
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 62
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 62
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 62
+geptr final base: 38022392
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022392
+executeMemoryOperation isWrite? 1
+storing value 124
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 62
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 63
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 63
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 63
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 63
+geptr final base: 38022396
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022396
+executeMemoryOperation isWrite? 1
+storing value 126
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 63
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 64
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 64
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 64
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 64
+geptr final base: 38022400
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022400
+executeMemoryOperation isWrite? 1
+storing value 128
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 64
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 65
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 65
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 65
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 65
+geptr final base: 38022404
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022404
+executeMemoryOperation isWrite? 1
+storing value 130
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 65
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 66
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 66
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 66
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 66
+geptr final base: 38022408
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022408
+executeMemoryOperation isWrite? 1
+storing value 132
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 66
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 67
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 67
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 67
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 67
+geptr final base: 38022412
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022412
+executeMemoryOperation isWrite? 1
+storing value 134
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 67
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 68
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 68
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 68
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 68
+geptr final base: 38022416
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022416
+executeMemoryOperation isWrite? 1
+storing value 136
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 68
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 69
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 69
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 69
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 69
+geptr final base: 38022420
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022420
+executeMemoryOperation isWrite? 1
+storing value 138
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 69
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 70
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 70
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 70
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 70
+geptr final base: 38022424
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022424
+executeMemoryOperation isWrite? 1
+storing value 140
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 70
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 71
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 71
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 71
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 71
+geptr final base: 38022428
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022428
+executeMemoryOperation isWrite? 1
+storing value 142
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 71
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 72
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 72
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 72
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 72
+geptr final base: 38022432
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022432
+executeMemoryOperation isWrite? 1
+storing value 144
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 72
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 73
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 73
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 73
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 73
+geptr final base: 38022436
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022436
+executeMemoryOperation isWrite? 1
+storing value 146
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 73
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 74
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 74
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 74
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 74
+geptr final base: 38022440
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022440
+executeMemoryOperation isWrite? 1
+storing value 148
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 74
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 75
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 75
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 75
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 75
+geptr final base: 38022444
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022444
+executeMemoryOperation isWrite? 1
+storing value 150
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 75
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 76
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 76
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 76
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 76
+geptr final base: 38022448
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022448
+executeMemoryOperation isWrite? 1
+storing value 152
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 76
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 77
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 77
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 77
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 77
+geptr final base: 38022452
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022452
+executeMemoryOperation isWrite? 1
+storing value 154
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 77
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 78
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 78
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 78
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 78
+geptr final base: 38022456
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022456
+executeMemoryOperation isWrite? 1
+storing value 156
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 78
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 79
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 79
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 79
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 79
+geptr final base: 38022460
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022460
+executeMemoryOperation isWrite? 1
+storing value 158
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 79
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 80
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 80
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 80
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 80
+geptr final base: 38022464
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022464
+executeMemoryOperation isWrite? 1
+storing value 160
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 80
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 81
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 81
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 81
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 81
+geptr final base: 38022468
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022468
+executeMemoryOperation isWrite? 1
+storing value 162
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 81
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 82
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 82
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 82
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 82
+geptr final base: 38022472
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022472
+executeMemoryOperation isWrite? 1
+storing value 164
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 82
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 83
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 83
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 83
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 83
+geptr final base: 38022476
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022476
+executeMemoryOperation isWrite? 1
+storing value 166
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 83
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 84
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 84
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 84
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 84
+geptr final base: 38022480
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022480
+executeMemoryOperation isWrite? 1
+storing value 168
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 84
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 85
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 85
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 85
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 85
+geptr final base: 38022484
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022484
+executeMemoryOperation isWrite? 1
+storing value 170
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 85
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 86
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 86
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 86
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 86
+geptr final base: 38022488
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022488
+executeMemoryOperation isWrite? 1
+storing value 172
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 86
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 87
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 87
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 87
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 87
+geptr final base: 38022492
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022492
+executeMemoryOperation isWrite? 1
+storing value 174
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 87
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 88
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 88
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 88
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 88
+geptr final base: 38022496
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022496
+executeMemoryOperation isWrite? 1
+storing value 176
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 88
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 89
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 89
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 89
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 89
+geptr final base: 38022500
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022500
+executeMemoryOperation isWrite? 1
+storing value 178
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 89
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 90
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 90
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 90
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 90
+geptr final base: 38022504
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022504
+executeMemoryOperation isWrite? 1
+storing value 180
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 90
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 91
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 91
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 91
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 91
+geptr final base: 38022508
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022508
+executeMemoryOperation isWrite? 1
+storing value 182
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 91
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 92
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 92
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 92
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 92
+geptr final base: 38022512
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022512
+executeMemoryOperation isWrite? 1
+storing value 184
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 92
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 93
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 93
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 93
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 93
+geptr final base: 38022516
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022516
+executeMemoryOperation isWrite? 1
+storing value 186
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 93
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 94
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 94
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 94
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 94
+geptr final base: 38022520
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022520
+executeMemoryOperation isWrite? 1
+storing value 188
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 94
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 95
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 95
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 95
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 95
+geptr final base: 38022524
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022524
+executeMemoryOperation isWrite? 1
+storing value 190
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 95
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 96
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 96
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 96
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 96
+geptr final base: 38022528
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022528
+executeMemoryOperation isWrite? 1
+storing value 192
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 96
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 97
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 97
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 97
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 97
+geptr final base: 38022532
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022532
+executeMemoryOperation isWrite? 1
+storing value 194
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 97
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 98
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 98
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 98
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 98
+geptr final base: 38022536
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022536
+executeMemoryOperation isWrite? 1
+storing value 196
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 98
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 99
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 99
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 99
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 99
+geptr final base: 38022540
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022540
+executeMemoryOperation isWrite? 1
+storing value 198
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 99
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 100
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 100
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 100
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 100
+geptr final base: 38022544
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022544
+executeMemoryOperation isWrite? 1
+storing value 200
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 100
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 101
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 101
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 101
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 101
+geptr final base: 38022548
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022548
+executeMemoryOperation isWrite? 1
+storing value 202
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 101
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 102
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 102
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 102
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 102
+geptr final base: 38022552
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022552
+executeMemoryOperation isWrite? 1
+storing value 204
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 102
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 103
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 103
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 103
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 103
+geptr final base: 38022556
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022556
+executeMemoryOperation isWrite? 1
+storing value 206
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 103
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 104
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 104
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 104
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 104
+geptr final base: 38022560
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022560
+executeMemoryOperation isWrite? 1
+storing value 208
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 104
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 105
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 105
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 105
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 105
+geptr final base: 38022564
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022564
+executeMemoryOperation isWrite? 1
+storing value 210
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 105
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 106
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 106
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 106
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 106
+geptr final base: 38022568
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022568
+executeMemoryOperation isWrite? 1
+storing value 212
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 106
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 107
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 107
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 107
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 107
+geptr final base: 38022572
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022572
+executeMemoryOperation isWrite? 1
+storing value 214
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 107
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 108
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 108
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 108
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 108
+geptr final base: 38022576
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022576
+executeMemoryOperation isWrite? 1
+storing value 216
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 108
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 109
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 109
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 109
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 109
+geptr final base: 38022580
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022580
+executeMemoryOperation isWrite? 1
+storing value 218
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 109
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 110
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 110
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 110
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 110
+geptr final base: 38022584
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022584
+executeMemoryOperation isWrite? 1
+storing value 220
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 110
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 111
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 111
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 111
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 111
+geptr final base: 38022588
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022588
+executeMemoryOperation isWrite? 1
+storing value 222
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 111
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 112
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 112
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 112
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 112
+geptr final base: 38022592
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022592
+executeMemoryOperation isWrite? 1
+storing value 224
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 112
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 113
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 113
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 113
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 113
+geptr final base: 38022596
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022596
+executeMemoryOperation isWrite? 1
+storing value 226
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 113
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 114
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 114
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 114
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 114
+geptr final base: 38022600
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022600
+executeMemoryOperation isWrite? 1
+storing value 228
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 114
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 115
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 115
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 115
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 115
+geptr final base: 38022604
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022604
+executeMemoryOperation isWrite? 1
+storing value 230
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 115
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 116
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 116
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 116
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 116
+geptr final base: 38022608
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022608
+executeMemoryOperation isWrite? 1
+storing value 232
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 116
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 117
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 117
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 117
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 117
+geptr final base: 38022612
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022612
+executeMemoryOperation isWrite? 1
+storing value 234
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 117
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 118
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 118
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 118
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 118
+geptr final base: 38022616
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022616
+executeMemoryOperation isWrite? 1
+storing value 236
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 118
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 119
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 119
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 119
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 119
+geptr final base: 38022620
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022620
+executeMemoryOperation isWrite? 1
+storing value 238
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 119
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 120
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 120
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 120
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 120
+geptr final base: 38022624
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022624
+executeMemoryOperation isWrite? 1
+storing value 240
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 120
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 121
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 121
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 121
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 121
+geptr final base: 38022628
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022628
+executeMemoryOperation isWrite? 1
+storing value 242
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 121
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 122
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 122
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 122
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 122
+geptr final base: 38022632
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022632
+executeMemoryOperation isWrite? 1
+storing value 244
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 122
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 123
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 123
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 123
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 123
+geptr final base: 38022636
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022636
+executeMemoryOperation isWrite? 1
+storing value 246
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 123
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 124
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 124
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 124
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 124
+geptr final base: 38022640
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022640
+executeMemoryOperation isWrite? 1
+storing value 248
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 124
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 125
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 125
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 125
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 125
+geptr final base: 38022644
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022644
+executeMemoryOperation isWrite? 1
+storing value 250
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 125
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 126
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 126
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 126
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 126
+geptr final base: 38022648
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022648
+executeMemoryOperation isWrite? 1
+storing value 252
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 126
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 127
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 127
+state=0x2504500 memory operation (inside foo) 
+  %30 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 127
+state=0x2504500 memory operation (inside foo) 
+  %32 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 127
+geptr final base: 38022652
+state=0x2504500 memory operation (inside foo) 
+  store i32 %31, i32* %34, align 4
+ address: 38022652
+executeMemoryOperation isWrite? 1
+storing value 254
+state=0x2504500 memory operation (inside foo) 
+  %35 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 127
+state=0x2504500 memory operation (inside foo) 
+  store i32 %36, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 1
+storing value 128
+state=0x2504500 memory operation (inside foo) 
+  %27 = load i32, i32* %i, align 4
+ address: 37730256
+executeMemoryOperation isWrite? 0
+ load result: 128
+state=0x2504500 memory operation (inside foo) 
+  %38 = load i32, i32* getelementptr inbounds ([128 x i32], [128 x i32]* @table, i64 0, i64 127), align 4
+ address: 38022652
+executeMemoryOperation isWrite? 0
+ load result: 254
+state=0x2504500 memory operation (inside foo) 
+  store i32 %38, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 1
+storing value 254
+state=0x2504500 memory operation (inside foo) 
+  %40 = load i32, i32* %1, align 4
+ address: 37730208
+executeMemoryOperation isWrite? 0
+ load result: 254
+Size of rdmap : 7
+
+===============
+Found Violation at : 
+diff : 1666
+Instruction:
+  %1 = alloca i32, align 4
+KLEE: : (location information missing) 
+
+[ (And (Sle 0
+           N0:(ReadLSB w32 0 foo_0_arg_1))
+      (Slt N0 128))
+(And (Slt 10
+           (ReadLSB w32 0 foo_0_arg_0))
+      (Eq (ReadLSB w32 0 return_value)
+          (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                                  (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)))
+ ]   ---->  [ 22 , 22 ]
+
+[ (Eq false
+     (And (Sle 0
+               N0:(ReadLSB w32 0 foo_0_arg_1))
+          (Slt N0 128)))
+(And (Slt 0
+           (ReadLSB w32 0 foo_0_arg_0))
+      (Eq 254
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 1688 , 1688 ]
+
+Successors : 
+KLEE: : (location information missing) 
+  %24 = icmp sgt i32 %8, 0
+
+foo
+KLEE: : (location information missing) 
+  %10 = icmp sgt i32 %8, 10
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 1619
+Instruction:
+  %1 = alloca i32, align 4
+KLEE: : (location information missing) 
+
+[ (And (Sle 0
+           N0:(ReadLSB w32 0 foo_0_arg_1))
+      (Slt N0 128))
+(And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (Eq false
+                                                                                     (Slt 10
+                                                                                          N0:(ReadLSB w32 0 foo_0_arg_0)))
+                                                                                 (Eq N1:(ReadLSB w32 0 return_value)
+                                                                                     (ReadLSB w32 N2:(Extract w32 0 N3:(Mul w64 4
+                                                                                                                                (SExt w64 (Add w32 N0
+                                                                                                                                                   (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)))
+                                                                            (Eq N1
+                                                                                (ReadLSB w32 N4:(Extract w32 0 (Add w64 205856 N3)) const_arr2)))
+                                                                       (Eq N1
+                                                                           (ReadLSB w32 N5:(Extract w32 0 (Add w64 292048 N3)) return_value)))
+                                                                  (Eq N1
+                                                                      (ReadLSB w32 N6:(Extract w32 0 (Add w64 205888 N3)) const_arr3)))
+                                                             (Eq N1
+                                                                 (ReadLSB w32 N7:(Extract w32 0 (Add w64 205920 N3)) const_arr4)))
+                                                        (Eq N1
+                                                            (ReadLSB w32 N8:(Extract w32 0 (Add w64 207328 N3)) const_arr6)))
+                                                   (Eq N1
+                                                       (ReadLSB w32 N9:(Extract w32 0 (Add w64 292096 N3)) foo_0_arg_0)))
+                                              (Eq N1
+                                                  (ReadLSB w32 N10:(Extract w32 0 (Add w64 292120 N3)) const_arr11)))
+                                         (Eq N1
+                                             (ReadLSB w32 N11:(Extract w32 0 (Add w64 292040 N3)) foo_0_arg_1)))
+                                    (Eq N1
+                                        (ReadLSB w32 N12:(Extract w32 0 (Add w64 291904 N3)) U0:[3=N13:(Read w8 3 foo_0_arg_1),
+                                                                                                 2=N14:(Read w8 2 foo_0_arg_1),
+                                                                                                 1=N15:(Read w8 1 foo_0_arg_1),
+                                                                                                 0=N16:(Read w8 0 foo_0_arg_1)] @ const_arr8)))
+                               (Eq N1
+                                   (ReadLSB w32 N17:(Extract w32 0 (Add w64 291936 N3)) const_arr10)))
+                          (Eq N1
+                              (ReadLSB w32 N18:(Extract w32 0 (Add w64 205952 N3)) const_arr5)))
+                     (Eq N1
+                         (ReadLSB w32 N19:(Extract w32 0 (Add w64 291888 N3)) const_arr7)))
+                (Eq N1
+                    (ReadLSB w32 N20:(Extract w32 0 (Add w64 292152 N3)) const_arr13)))
+           (Eq N1
+               (ReadLSB w32 N21:(Extract w32 0 (Add w64 291920 N3)) U1:[3=N22:(Read w8 3 foo_0_arg_0),
+                                                                        2=N23:(Read w8 2 foo_0_arg_0),
+                                                                        1=N24:(Read w8 1 foo_0_arg_0),
+                                                                        0=N25:(Read w8 0 foo_0_arg_0)] @ const_arr9)))
+      (Eq N1
+          (ReadLSB w32 N26:(Extract w32 0 (Add w64 292136 N3)) const_arr12)))
+ ]   ---->  [ 69 , 69 ]
+
+[ (Eq false
+     (And (Sle 0
+               N0:(ReadLSB w32 0 foo_0_arg_1))
+          (Slt N0 128)))
+(And (Slt 0
+           (ReadLSB w32 0 foo_0_arg_0))
+      (Eq 254
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 1688 , 1688 ]
+
+Successors : 
+KLEE: : (location information missing) 
+  %24 = icmp sgt i32 %8, 0
+
+foo
+KLEE: : (location information missing) 
+  %10 = icmp sgt i32 %8, 10
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 50
+Instruction:
+  %1 = alloca i32, align 4
+KLEE: : (location information missing) 
+
+[ (And (Sle 0
+           N0:(ReadLSB w32 0 foo_0_arg_1))
+      (Slt N0 128))
+(And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (Eq false
+                                                                                     (Slt 10
+                                                                                          N0:(ReadLSB w32 0 foo_0_arg_0)))
+                                                                                 (Eq N1:(ReadLSB w32 0 return_value)
+                                                                                     (ReadLSB w32 N2:(Extract w32 0 N3:(Mul w64 4
+                                                                                                                                (SExt w64 (Add w32 N0
+                                                                                                                                                   (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)))
+                                                                            (Eq N1
+                                                                                (ReadLSB w32 N4:(Extract w32 0 (Add w64 205856 N3)) const_arr2)))
+                                                                       (Eq N1
+                                                                           (ReadLSB w32 N5:(Extract w32 0 (Add w64 292048 N3)) return_value)))
+                                                                  (Eq N1
+                                                                      (ReadLSB w32 N6:(Extract w32 0 (Add w64 205888 N3)) const_arr3)))
+                                                             (Eq N1
+                                                                 (ReadLSB w32 N7:(Extract w32 0 (Add w64 205920 N3)) const_arr4)))
+                                                        (Eq N1
+                                                            (ReadLSB w32 N8:(Extract w32 0 (Add w64 207328 N3)) const_arr6)))
+                                                   (Eq N1
+                                                       (ReadLSB w32 N9:(Extract w32 0 (Add w64 292096 N3)) foo_0_arg_0)))
+                                              (Eq N1
+                                                  (ReadLSB w32 N10:(Extract w32 0 (Add w64 292120 N3)) const_arr11)))
+                                         (Eq N1
+                                             (ReadLSB w32 N11:(Extract w32 0 (Add w64 292040 N3)) foo_0_arg_1)))
+                                    (Eq N1
+                                        (ReadLSB w32 N12:(Extract w32 0 (Add w64 291904 N3)) U0:[3=N13:(Read w8 3 foo_0_arg_1),
+                                                                                                 2=N14:(Read w8 2 foo_0_arg_1),
+                                                                                                 1=N15:(Read w8 1 foo_0_arg_1),
+                                                                                                 0=N16:(Read w8 0 foo_0_arg_1)] @ const_arr8)))
+                               (Eq N1
+                                   (ReadLSB w32 N17:(Extract w32 0 (Add w64 291936 N3)) const_arr10)))
+                          (Eq N1
+                              (ReadLSB w32 N18:(Extract w32 0 (Add w64 205952 N3)) const_arr5)))
+                     (Eq N1
+                         (ReadLSB w32 N19:(Extract w32 0 (Add w64 291888 N3)) const_arr7)))
+                (Eq N1
+                    (ReadLSB w32 N20:(Extract w32 0 (Add w64 292152 N3)) const_arr13)))
+           (Eq N1
+               (ReadLSB w32 N21:(Extract w32 0 (Add w64 291920 N3)) U1:[3=N22:(Read w8 3 foo_0_arg_0),
+                                                                        2=N23:(Read w8 2 foo_0_arg_0),
+                                                                        1=N24:(Read w8 1 foo_0_arg_0),
+                                                                        0=N25:(Read w8 0 foo_0_arg_0)] @ const_arr9)))
+      (Eq N1
+          (ReadLSB w32 N26:(Extract w32 0 (Add w64 292136 N3)) const_arr12)))
+ ]   ---->  [ 69 , 69 ]
+
+[ (Eq false
+     (And (Sle 0
+               N0:(ReadLSB w32 0 foo_0_arg_1))
+          (Slt N0 128)))
+(And (Eq false
+          (Slt 0
+               (ReadLSB w32 0 foo_0_arg_0)))
+      (Eq 0
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 19 , 19 ]
+
+Successors : 
+KLEE: : (location information missing) 
+  %24 = icmp sgt i32 %8, 0
+
+foo
+KLEE: : (location information missing) 
+  %10 = icmp sgt i32 %8, 10
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+KLEE: : (location information missing) 
+	=====================
+
+>>>> Found violations at  : 1 locations.
+all high vars: 
+foo_0_arg_1
+all low vars: 
+foo_0_arg_0
+return_value
+
+KLEE: done: minInst = 20
+KLEE: done: maxInst = 1689
+KLEE: done: HAncestors = 1
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 1
+KLEE: done: LVars= 2
+KLEE: done: total instructions = 1774
+KLEE: done: completed paths = 20
+KLEE: done: generated tests = 20
+Lazy initialization is ON 
+lazy single spec file? 
