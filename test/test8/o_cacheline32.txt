@@ -1,0 +1,393 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test8/klee-out-4"
+KLEE: Using STP solver backend
+Uncov init=784
+Couldn't open file 
+high foo_0_arg_1
+low foo_0_arg_0
+lazy init arg foo_0_arg_0
+lazy init arg foo_0_arg_1
+Registering publicOutputReturningFName as foo
+reached foo
+CRITICAL: Security sensitive index in GetElementPtr:
+  %14 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %13(SExt w64 (ReadLSB w32 0 foo_0_arg_1))
+geptr final base: (Add w64 38620160
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1))))
+CACHE BASED SIDE CHANNEL: 
+  %14 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %13address: (Add w64 38620160
+          (Mul w64 4
+                   (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) cache line size: 3.200000e+01
+CRITICAL: Security sensitive index in GetElementPtr:
+  %21 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %20(SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                    (ReadLSB w32 0 foo_0_arg_1)))
+geptr final base: (Add w64 38620160
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1)))))
+CACHE BASED SIDE CHANNEL: 
+  %21 = getelementptr inbounds [128 x i32], [128 x i32]* @table, i64 0, i64 %20address: (Add w64 38620160
+          (Mul w64 4
+                   (SExt w64 (Add w32 (ReadLSB w32 0 foo_0_arg_0)
+                                      (ReadLSB w32 0 foo_0_arg_1))))) cache line size: 3.200000e+01
+KLEE: ERROR: (location information missing) memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+geptr final base: 38620160
+geptr final base: 38620164
+geptr final base: 38620168
+geptr final base: 38620172
+geptr final base: 38620176
+geptr final base: 38620180
+geptr final base: 38620184
+geptr final base: 38620188
+geptr final base: 38620192
+geptr final base: 38620196
+geptr final base: 38620200
+geptr final base: 38620204
+geptr final base: 38620208
+geptr final base: 38620212
+geptr final base: 38620216
+geptr final base: 38620220
+geptr final base: 38620224
+geptr final base: 38620228
+geptr final base: 38620232
+geptr final base: 38620236
+geptr final base: 38620240
+geptr final base: 38620244
+geptr final base: 38620248
+geptr final base: 38620252
+geptr final base: 38620256
+geptr final base: 38620260
+geptr final base: 38620264
+geptr final base: 38620268
+geptr final base: 38620272
+geptr final base: 38620276
+geptr final base: 38620280
+geptr final base: 38620284
+geptr final base: 38620288
+geptr final base: 38620292
+geptr final base: 38620296
+geptr final base: 38620300
+geptr final base: 38620304
+geptr final base: 38620308
+geptr final base: 38620312
+geptr final base: 38620316
+geptr final base: 38620320
+geptr final base: 38620324
+geptr final base: 38620328
+geptr final base: 38620332
+geptr final base: 38620336
+geptr final base: 38620340
+geptr final base: 38620344
+geptr final base: 38620348
+geptr final base: 38620352
+geptr final base: 38620356
+geptr final base: 38620360
+geptr final base: 38620364
+geptr final base: 38620368
+geptr final base: 38620372
+geptr final base: 38620376
+geptr final base: 38620380
+geptr final base: 38620384
+geptr final base: 38620388
+geptr final base: 38620392
+geptr final base: 38620396
+geptr final base: 38620400
+geptr final base: 38620404
+geptr final base: 38620408
+geptr final base: 38620412
+geptr final base: 38620416
+geptr final base: 38620420
+geptr final base: 38620424
+geptr final base: 38620428
+geptr final base: 38620432
+geptr final base: 38620436
+geptr final base: 38620440
+geptr final base: 38620444
+geptr final base: 38620448
+geptr final base: 38620452
+geptr final base: 38620456
+geptr final base: 38620460
+geptr final base: 38620464
+geptr final base: 38620468
+geptr final base: 38620472
+geptr final base: 38620476
+geptr final base: 38620480
+geptr final base: 38620484
+geptr final base: 38620488
+geptr final base: 38620492
+geptr final base: 38620496
+geptr final base: 38620500
+geptr final base: 38620504
+geptr final base: 38620508
+geptr final base: 38620512
+geptr final base: 38620516
+geptr final base: 38620520
+geptr final base: 38620524
+geptr final base: 38620528
+geptr final base: 38620532
+geptr final base: 38620536
+geptr final base: 38620540
+geptr final base: 38620544
+geptr final base: 38620548
+geptr final base: 38620552
+geptr final base: 38620556
+geptr final base: 38620560
+geptr final base: 38620564
+geptr final base: 38620568
+geptr final base: 38620572
+geptr final base: 38620576
+geptr final base: 38620580
+geptr final base: 38620584
+geptr final base: 38620588
+geptr final base: 38620592
+geptr final base: 38620596
+geptr final base: 38620600
+geptr final base: 38620604
+geptr final base: 38620608
+geptr final base: 38620612
+geptr final base: 38620616
+geptr final base: 38620620
+geptr final base: 38620624
+geptr final base: 38620628
+geptr final base: 38620632
+geptr final base: 38620636
+geptr final base: 38620640
+geptr final base: 38620644
+geptr final base: 38620648
+geptr final base: 38620652
+geptr final base: 38620656
+geptr final base: 38620660
+geptr final base: 38620664
+geptr final base: 38620668
+Size of rdmap : 7
+
+===============
+Found Violation at : 
+diff : 1666
+Instruction:
+  %1 = alloca i32, align 4
+KLEE: : (location information missing) 
+
+[ (And (Sle 0
+           N0:(ReadLSB w32 0 foo_0_arg_1))
+      (Slt N0 128))
+(And (Slt 10
+           (ReadLSB w32 0 foo_0_arg_0))
+      (Eq (ReadLSB w32 0 return_value)
+          (ReadLSB w32 N0:(Extract w32 0 (Mul w64 4
+                                                  (SExt w64 (ReadLSB w32 0 foo_0_arg_1)))) const_arr1)))
+ ]   ---->  [ 22 , 22 ]
+
+[ (Eq false
+     (And (Sle 0
+               N0:(ReadLSB w32 0 foo_0_arg_1))
+          (Slt N0 128)))
+(And (Slt 0
+           (ReadLSB w32 0 foo_0_arg_0))
+      (Eq 254
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 1688 , 1688 ]
+
+Successors : 
+KLEE: : (location information missing) 
+  %24 = icmp sgt i32 %8, 0
+
+foo
+KLEE: : (location information missing) 
+  %10 = icmp sgt i32 %8, 10
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 1619
+Instruction:
+  %1 = alloca i32, align 4
+KLEE: : (location information missing) 
+
+[ (And (Sle 0
+           N0:(ReadLSB w32 0 foo_0_arg_1))
+      (Slt N0 128))
+(And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (Eq false
+                                                                                     (Slt 10
+                                                                                          N0:(ReadLSB w32 0 foo_0_arg_0)))
+                                                                                 (Eq N1:(ReadLSB w32 0 return_value)
+                                                                                     (ReadLSB w32 N2:(Extract w32 0 N3:(Mul w64 4
+                                                                                                                                (SExt w64 (Add w32 N0
+                                                                                                                                                   (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)))
+                                                                            (Eq N1
+                                                                                (ReadLSB w32 N4:(Extract w32 0 (Add w64 205856 N3)) const_arr2)))
+                                                                       (Eq N1
+                                                                           (ReadLSB w32 N5:(Extract w32 0 (Add w64 292048 N3)) return_value)))
+                                                                  (Eq N1
+                                                                      (ReadLSB w32 N6:(Extract w32 0 (Add w64 205888 N3)) const_arr3)))
+                                                             (Eq N1
+                                                                 (ReadLSB w32 N7:(Extract w32 0 (Add w64 205920 N3)) const_arr4)))
+                                                        (Eq N1
+                                                            (ReadLSB w32 N8:(Extract w32 0 (Add w64 207328 N3)) const_arr6)))
+                                                   (Eq N1
+                                                       (ReadLSB w32 N9:(Extract w32 0 (Add w64 292096 N3)) foo_0_arg_0)))
+                                              (Eq N1
+                                                  (ReadLSB w32 N10:(Extract w32 0 (Add w64 292120 N3)) const_arr11)))
+                                         (Eq N1
+                                             (ReadLSB w32 N11:(Extract w32 0 (Add w64 292040 N3)) foo_0_arg_1)))
+                                    (Eq N1
+                                        (ReadLSB w32 N12:(Extract w32 0 (Add w64 291904 N3)) U0:[3=N13:(Read w8 3 foo_0_arg_1),
+                                                                                                 2=N14:(Read w8 2 foo_0_arg_1),
+                                                                                                 1=N15:(Read w8 1 foo_0_arg_1),
+                                                                                                 0=N16:(Read w8 0 foo_0_arg_1)] @ const_arr8)))
+                               (Eq N1
+                                   (ReadLSB w32 N17:(Extract w32 0 (Add w64 291936 N3)) const_arr10)))
+                          (Eq N1
+                              (ReadLSB w32 N18:(Extract w32 0 (Add w64 205952 N3)) const_arr5)))
+                     (Eq N1
+                         (ReadLSB w32 N19:(Extract w32 0 (Add w64 291888 N3)) const_arr7)))
+                (Eq N1
+                    (ReadLSB w32 N20:(Extract w32 0 (Add w64 292152 N3)) const_arr13)))
+           (Eq N1
+               (ReadLSB w32 N21:(Extract w32 0 (Add w64 291920 N3)) U1:[3=N22:(Read w8 3 foo_0_arg_0),
+                                                                        2=N23:(Read w8 2 foo_0_arg_0),
+                                                                        1=N24:(Read w8 1 foo_0_arg_0),
+                                                                        0=N25:(Read w8 0 foo_0_arg_0)] @ const_arr9)))
+      (Eq N1
+          (ReadLSB w32 N26:(Extract w32 0 (Add w64 292136 N3)) const_arr12)))
+ ]   ---->  [ 69 , 69 ]
+
+[ (Eq false
+     (And (Sle 0
+               N0:(ReadLSB w32 0 foo_0_arg_1))
+          (Slt N0 128)))
+(And (Slt 0
+           (ReadLSB w32 0 foo_0_arg_0))
+      (Eq 254
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 1688 , 1688 ]
+
+Successors : 
+KLEE: : (location information missing) 
+  %24 = icmp sgt i32 %8, 0
+
+foo
+KLEE: : (location information missing) 
+  %10 = icmp sgt i32 %8, 10
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 50
+Instruction:
+  %1 = alloca i32, align 4
+KLEE: : (location information missing) 
+
+[ (And (Sle 0
+           N0:(ReadLSB w32 0 foo_0_arg_1))
+      (Slt N0 128))
+(And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (And (Eq false
+                                                                                     (Slt 10
+                                                                                          N0:(ReadLSB w32 0 foo_0_arg_0)))
+                                                                                 (Eq N1:(ReadLSB w32 0 return_value)
+                                                                                     (ReadLSB w32 N2:(Extract w32 0 N3:(Mul w64 4
+                                                                                                                                (SExt w64 (Add w32 N0
+                                                                                                                                                   (ReadLSB w32 0 foo_0_arg_1))))) const_arr1)))
+                                                                            (Eq N1
+                                                                                (ReadLSB w32 N4:(Extract w32 0 (Add w64 205856 N3)) const_arr2)))
+                                                                       (Eq N1
+                                                                           (ReadLSB w32 N5:(Extract w32 0 (Add w64 292048 N3)) return_value)))
+                                                                  (Eq N1
+                                                                      (ReadLSB w32 N6:(Extract w32 0 (Add w64 205888 N3)) const_arr3)))
+                                                             (Eq N1
+                                                                 (ReadLSB w32 N7:(Extract w32 0 (Add w64 205920 N3)) const_arr4)))
+                                                        (Eq N1
+                                                            (ReadLSB w32 N8:(Extract w32 0 (Add w64 207328 N3)) const_arr6)))
+                                                   (Eq N1
+                                                       (ReadLSB w32 N9:(Extract w32 0 (Add w64 292096 N3)) foo_0_arg_0)))
+                                              (Eq N1
+                                                  (ReadLSB w32 N10:(Extract w32 0 (Add w64 292120 N3)) const_arr11)))
+                                         (Eq N1
+                                             (ReadLSB w32 N11:(Extract w32 0 (Add w64 292040 N3)) foo_0_arg_1)))
+                                    (Eq N1
+                                        (ReadLSB w32 N12:(Extract w32 0 (Add w64 291904 N3)) U0:[3=N13:(Read w8 3 foo_0_arg_1),
+                                                                                                 2=N14:(Read w8 2 foo_0_arg_1),
+                                                                                                 1=N15:(Read w8 1 foo_0_arg_1),
+                                                                                                 0=N16:(Read w8 0 foo_0_arg_1)] @ const_arr8)))
+                               (Eq N1
+                                   (ReadLSB w32 N17:(Extract w32 0 (Add w64 291936 N3)) const_arr10)))
+                          (Eq N1
+                              (ReadLSB w32 N18:(Extract w32 0 (Add w64 205952 N3)) const_arr5)))
+                     (Eq N1
+                         (ReadLSB w32 N19:(Extract w32 0 (Add w64 291888 N3)) const_arr7)))
+                (Eq N1
+                    (ReadLSB w32 N20:(Extract w32 0 (Add w64 292152 N3)) const_arr13)))
+           (Eq N1
+               (ReadLSB w32 N21:(Extract w32 0 (Add w64 291920 N3)) U1:[3=N22:(Read w8 3 foo_0_arg_0),
+                                                                        2=N23:(Read w8 2 foo_0_arg_0),
+                                                                        1=N24:(Read w8 1 foo_0_arg_0),
+                                                                        0=N25:(Read w8 0 foo_0_arg_0)] @ const_arr9)))
+      (Eq N1
+          (ReadLSB w32 N26:(Extract w32 0 (Add w64 292136 N3)) const_arr12)))
+ ]   ---->  [ 69 , 69 ]
+
+[ (Eq false
+     (And (Sle 0
+               N0:(ReadLSB w32 0 foo_0_arg_1))
+          (Slt N0 128)))
+(And (Eq false
+          (Slt 0
+               (ReadLSB w32 0 foo_0_arg_0)))
+      (Eq 0
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 19 , 19 ]
+
+Successors : 
+KLEE: : (location information missing) 
+  %24 = icmp sgt i32 %8, 0
+
+foo
+KLEE: : (location information missing) 
+  %10 = icmp sgt i32 %8, 10
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+KLEE: : (location information missing) 
+	=====================
+
+>>>> Found violations at  : 1 locations.
+all high vars: 
+foo_0_arg_1
+all low vars: 
+foo_0_arg_0
+return_value
+
+KLEE: done: #Timing Side Channel  Locs = 1
+KLEE: done: #Cache Side Channel  Locs = 1
+KLEE: done: minInst = 20
+KLEE: done: maxInst = 1689
+KLEE: done: HAncestors = 1
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 1
+KLEE: done: LVars= 2
+KLEE: done: total instructions = 1774
+KLEE: done: completed paths = 20
+KLEE: done: generated tests = 20
+Lazy initialization is ON 
+lazy single spec file? 
