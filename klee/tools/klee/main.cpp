@@ -102,6 +102,10 @@ extern std::set<std::string> * highLoc, *lowLoc;
 extern int maxForkMulRes;
 extern int primArraySize;
 unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
+// source code locations with timing side channels
+extern std::set<std::pair<std::string, int>> locs;
+// source code locations with cache side channels
+extern std::set<std::pair<std::string, int>> cachelocs;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -2039,6 +2043,8 @@ int main(int argc, char **argv, char **envp) {
 
   std::stringstream stats;
   stats << "\n";
+  stats << "KLEE: done: #Timing Side Channel  Locs = " << locs.size() << "\n";
+  stats << "KLEE: done: #Cache Side Channel  Locs = " << cachelocs.size() << "\n";
   stats << "KLEE: done: minInst = " << minInstCount << "\n";
   stats << "KLEE: done: maxInst = " << maxInstCount << "\n";
   stats << "KLEE: done: HAncestors = " << RD::numHAncestors << "\n";

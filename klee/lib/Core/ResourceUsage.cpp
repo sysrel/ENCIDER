@@ -20,6 +20,11 @@ typedef std::map<exhash, range> RU;
 typedef std::map<exhash, HCLC> HashExpr;
 typedef std::map<exhash, ref<Expr> > HashRet;
 
+// source code locations with timing side channels
+std::set<std::pair<std::string, int>> locs;
+// source code locations with cache side channels
+std::set<std::pair<std::string, int>> cachelocs;
+
 //Enclave functions
 std::vector<std::string> * untrusted = new std::vector<std::string>();
 std::vector<ExecutionState*> * haltedStates = new std::vector<ExecutionState*>();
@@ -41,7 +46,6 @@ void printInfo(const InstructionInfo &ii) {
 void printviolations(Executor* ex) {
 	std::vector<llvm::Instruction*>::iterator it = vil->begin();
 	//std::set<llvm::Instruction*> *sv = new std::set<llvm::Instruction*>();
-	std::set<std::pair<std::string, int>> *locs = new std::set<std::pair<std::string, int>>();
 	for(; it != vil->end(); ++it) {
 	//	unsigned int size = sv->size();
 	//	sv->insert(*it);
@@ -50,9 +54,9 @@ void printviolations(Executor* ex) {
 	//	}
 		const InstructionInfo &ii = ex->kmodule->infos->getInfo(*it);
 		std::pair<std::string, int> p = std::pair<std::string, int>(ii.file, ii.line);
-		unsigned int lz = locs->size();
-		locs->insert(p);
-		if(locs->size() == lz) {
+		unsigned int lz = locs.size();
+		locs.insert(p);
+		if(locs.size() == lz) {
 			continue;
 		}
 		llvm::errs() << "\n\t=====================\n";
@@ -63,7 +67,7 @@ void printviolations(Executor* ex) {
 		llvm::errs() << "\t=====================\n";
 	}
 	//llvm::errs() << "\n>>>> Found violations at " << " : " << sv->size() << " locations.\n";
-	llvm::errs() << "\n>>>> Found violations at " << " : " << locs->size() << " locations.\n";
+	llvm::errs() << "\n>>>> Found violations at " << " : " << locs.size() << " locations.\n";
 }
 
 // reads functions with security sensitive parameters that become inputs to the system under analysis 

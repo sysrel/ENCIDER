@@ -106,6 +106,7 @@ using namespace klee;
 std::set<std::string> reached;
 
 /* Side channel begin */
+extern std::set<std::pair<std::string, int>> cachelocs;
 extern unsigned int cacheLineBits;
 std::map<long, std::set<ref<Expr> > > highAddresses;
 std::map<long, std::set<ref<Expr> > > lowAddresses;
@@ -2932,9 +2933,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       llvm::outs() << "geptr base: " << base << "\n";
       #endif
     }
-    //#ifdef VB
+    #ifdef VB
     llvm::errs() << "geptr final base: " << base << "\n";
-    //#endif
+    #endif
     bindLocal(ki, state, base);
 
     /* side channel */
@@ -2943,6 +2944,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        // Let cache line size denoted by 2^L and memory address size denoted by N
        // Since N-L bits are used to decide the cache line that gets accessed, we will check the following formula
        // \exists high'. base >> L<> base[high'/high] >> L
+       llvm::errs() << "Checking for cache based side channel:\n";
        ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
        ref<Expr> rexpr = renameExpr(memory, base, true); 
        llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
@@ -2956,6 +2958,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           llvm::errs() << "CACHE BASED SIDE CHANNEL: \n";
           ki->inst->print(llvm::errs());
           llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
+          const InstructionInfo &ii = kmodule->infos->getInfo(ki->inst);
+          std::pair<std::string, int> p = std::pair<std::string, int>(ii.file, ii.line);
+          cachelocs.insert(p);
        }
     }
     if (isAHighAddress(state,base)) 
@@ -5128,14 +5133,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -5230,9 +5235,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            //#ifdef VB
+            #ifdef VB
             llvm::errs() << "load orig result: " << result << "\n";
-            //#endif
+            #endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -5244,10 +5249,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               //#ifdef VB 
+               #ifdef VB 
                llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               //#endif
+               #endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -5258,17 +5263,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 //#ifdef VB
+                 #ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
-                 //#endif
+                 #endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
-                  //#endif
+                  #endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -5278,17 +5283,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (abort) {
                      return true;
                   }
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "mem obj addr=" << laddr << " in state " << &state << "\n";
-                  //#endif
+                  #endif
                   mo->name = state.getUnique(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
-                     llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
+                     //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
                   } 
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
-                  //#endif
+                  #endif
                   forcedOffset = true;
                   executeMemoryOperation(state, true, address, laddr, 0);
                   forcedOffset = false;
@@ -5300,20 +5305,20 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                      addHighAddress(state, mo->getBaseExpr()); 
                      addHighAddress(state, laddr);
                      mo->ishigh = true;
-                     //#ifdef VB
+                     #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
-                     //#endif
+                     #endif
                   }
                   if (isALowAddress(state,address)) {
                      lowLoc->insert(mo->name);
                      addLowAddress(state, mo->getBaseExpr()); 
                      addLowAddress(state, laddr);
                      mo->islow = true;
-                     //#ifdef VB
+                     #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security insensitive\n";
-                     //#endif
+                     #endif
                   }
 
                   /* side channel */
@@ -5330,9 +5335,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
         bindLocal(target, state, result);
 
-       //#ifdef VB
+       #ifdef VB
        llvm::errs() << " load result: " << result << "\n";
-       //#endif
+       #endif
 
        if (lazyInit) {
         if (!forcedOffset) {
@@ -5400,7 +5405,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         }
       } else {
         ref<Expr> result;
-        llvm::errs() << "on an error path in executeMem, going to read!\n";
+        //llvm::errs() << "on an error path in executeMem, going to read!\n";
         if (forcedOffset)
            result = os->read(ConstantExpr::alloc(0, Expr::Int64), type);
         else

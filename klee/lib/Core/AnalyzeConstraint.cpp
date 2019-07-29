@@ -175,14 +175,15 @@ ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id)
       }
       case Expr::Extract: {
         ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
-        return ExtractExpr::create(cexpr->getKid(0), EE->offset, EE->width);
+        ref<Expr> eexpr = rename(memory, cexpr->getKid(0), high, id);
+        return ExtractExpr::create(eexpr, EE->offset, EE->width);
       }
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
           const UpdateList *rul = new UpdateList(renameArray(memory, rexpr->updates.root, high ? highLoc : lowLoc, id), 
                                                  rexpr->updates.head);
           ref<Expr> nrexpr = ReadExpr::alloc(*rul, rexpr->index);     
-          llvm:errs() << "Readexpr: " << cexpr << " renamed as " << nrexpr << "\n";      
+          //llvm:errs() << "Readexpr: " << cexpr << " renamed as " << nrexpr << "\n";      
           return nrexpr;
       } 
       case Expr::Concat: {
@@ -197,13 +198,13 @@ ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id)
         for(i=0; i<size; i++) {
            ref<Expr> rexpr = rename(memory, cexpr->getKid(i), high, id);
            args.push_back(Expr::CreateArg(rexpr));
-           llvm::errs() << "args[" << i << "] " << args[i].expr << "\n";
+           //llvm::errs() << "args[" << i << "] " << args[i].expr << "\n";
         }    
         if (cexpr->getKind() == Expr::SExt || cexpr->getKind() == Expr::ZExt) {
            args.push_back(Expr::CreateArg(cexpr->getWidth()));
-           llvm::errs() << "args[" << i << "] " << args[i].width << "\n";
+           //llvm::errs() << "args[" << i << "] " << args[i].width << "\n";
         }
-        llvm::errs() << "cexpr: " << cexpr << " kind: " << cexpr->getKind() << "\n"; 
+        //llvm::errs() << "cexpr: " << cexpr << " kind: " << cexpr->getKind() << "\n"; 
         return Expr::createFromKind(cexpr->getKind(), args);
    }
 }
