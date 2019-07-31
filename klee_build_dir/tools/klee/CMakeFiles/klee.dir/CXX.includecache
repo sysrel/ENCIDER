@@ -6,6 +6,14 @@
 
 #IncludeRegexTransform: 
 
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/CommandLine.h
+klee/Config/config.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Config/config.h
+llvm/ADT/ArrayRef.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/ADT/ArrayRef.h
+llvm/Support/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/Support/CommandLine.h
+
 /home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Config/Version.h
 klee/Config/config.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Config/klee/Config/config.h
@@ -186,6 +194,14 @@ stdint.h
 llvm/Support/CommandLine.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/llvm/Support/CommandLine.h
 
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/Solver.h
+klee/CommandLine.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/CommandLine.h
+klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Expr.h
+vector
+-
+
 /home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/SolverStats.h
 klee/Statistic.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/include/klee/klee/Statistic.h
@@ -279,6 +295,14 @@ iostream
 -
 klee/Expr.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/Expr.h
+Memory.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Memory.h
+MemoryManager.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/MemoryManager.h
+
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Context.h
+klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/Expr.h
 
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Executor.h
 klee/ExecutionState.h
@@ -307,6 +331,28 @@ map
 -
 set
 -
+
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Memory.h
+Context.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Context.h
+TimingSolver.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/TimingSolver.h
+klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/Expr.h
+llvm/ADT/StringExtras.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/llvm/ADT/StringExtras.h
+vector
+-
+string
+-
+
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/MemoryManager.h
+set
+-
+stdint.h
+-
+llvm/IR/Instruction.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/llvm/IR/Instruction.h
 
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/ObjectHolder.h
 
@@ -337,6 +383,14 @@ set
 -
 llvm/IR/DataLayout.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/llvm/IR/DataLayout.h
+
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/TimingSolver.h
+klee/Expr.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/Expr.h
+klee/Solver.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/Solver.h
+vector
+-
 
 /home/tuba/Documents/tools/pmguidedsymex/klee/tools/klee/main.cpp
 klee/Config/Version.h
@@ -702,6 +756,14 @@ initializer_list
 iterator
 -
 memory
+-
+
+/usr/lib/llvm-3.8/include/llvm/ADT/StringExtras.h
+llvm/ADT/StringRef.h
+/usr/lib/llvm-3.8/include/llvm/ADT/llvm/ADT/StringRef.h
+llvm/Support/DataTypes.h
+/usr/lib/llvm-3.8/include/llvm/ADT/llvm/Support/DataTypes.h
+iterator
 -
 
 /usr/lib/llvm-3.8/include/llvm/ADT/StringMap.h

@@ -419,6 +419,10 @@ AnalyzeConstraint.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/AnalyzeConstraint.h
 klee/util/ExprUtil.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/util/ExprUtil.h
+klee/util/ArrayCache.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/util/ArrayCache.h
+llvm/ADT/StringExtras.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/llvm/ADT/StringExtras.h
 fstream
 -
 
@@ -427,6 +431,10 @@ iostream
 -
 klee/Expr.h
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/klee/Expr.h
+Memory.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Memory.h
+MemoryManager.h
+/home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/MemoryManager.h
 
 /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/CallPathManager.cpp
 CallPathManager.h
