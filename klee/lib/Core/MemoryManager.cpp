@@ -39,6 +39,7 @@ extern bool isEmbeddedType(llvm::Type *t);
 extern Interpreter *theInterpreter;
 extern bool isAllocTypeLazyInit(llvm::Type *t, bool &single, int &count) ;
 extern std::map<std::string, std::vector<std::string> > inferenceClue;
+extern size_t maxVoidTypeCastSize;
 // to avoid assertion failure when size cannot be determined
 #define SIZE_FOR_UNTYPED 8
 /* SYSREL EXTENSION */
@@ -280,6 +281,12 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
         allocsize = SIZE_FOR_UNTYPED;
      else 
         allocsize = dl.getTypeAllocSize(allocType);
+     //if (allocType->isVoidTy())  {
+     // Void* are represented as i8* in LLVM IR..
+     if (allocType->isIntegerTy(8))  {
+        allocsize = maxVoidTypeCastSize;
+        llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
+     }
      #ifdef VB
      llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
      #endif
@@ -523,6 +530,12 @@ MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::In
      allocsize =  SIZE_FOR_UNTYPED;
  else 
      allocsize = dl.getTypeAllocSize(allocType); 
+ //if (allocType->isVoidTy()) {
+ // Void* are represented as i8* in LLVM IR..
+ if (allocType->isIntegerTy(8))  {
+    allocsize = maxVoidTypeCastSize;
+     llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
+ }
  #ifdef VB 
  llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
  #endif 

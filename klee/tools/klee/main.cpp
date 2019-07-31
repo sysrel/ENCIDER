@@ -106,6 +106,7 @@ unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
 extern std::set<std::pair<std::string, int>> locs;
 // source code locations with cache side channels
 extern std::set<std::pair<std::string, int>> cachelocs;
+std::set<std::string> voidTypeCasts;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -151,6 +152,18 @@ void readInferenceClue(const char *fname) {
    }
    else llvm::errs() << "Couldn't open file " << fname << "\n";
 }
+
+void readVoidTypeCasts(const char *fname) {
+    std::fstream rc(fname, std::fstream::in);
+    if (rc.is_open()) {
+      std::string line;
+      while(std::getline(rc,line)) {
+         voidTypeCasts.insert(ltrim(rtrim(line)));
+      }
+    }
+    else llvm::errs() << "Couldn't open file " << fname << "\n";
+}
+
 /* end SYSREL extension */
 
 namespace {
@@ -197,6 +210,9 @@ namespace {
 
   cl::opt<std::string>
   InferenceClue("infer-clue-spec", cl::desc("Inference Clue Spec File, embedded type and embedding type pairs\n"));
+
+  cl::opt<std::string>
+  VoidTypeCasts("void-type-casts", cl::desc("Void Type Cast Spec File\n"));
 
   cl::opt<std::string>
   SideChannelEntryPoint("side-channel-entry", cl::desc("function name from which time side channel analysis will be initiated \ 
@@ -1862,6 +1878,8 @@ int main(int argc, char **argv, char **envp) {
      if (InferenceClue != "")
         llvm::outs() << "Reading inference clue from " << InferenceClue.c_str() << "\n";
         readInferenceClue(InferenceClue.c_str());
+     if (VoidTypeCasts != "")
+        readVoidTypeCasts(VoidTypeCasts.c_str());
   }
 
   if (ProgModelSpec != "") {

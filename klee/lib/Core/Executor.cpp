@@ -102,7 +102,8 @@ using namespace llvm;
 using namespace klee;
 
 /* SYSREL extension */
-
+extern std::set<std::string> voidTypeCasts;
+size_t maxVoidTypeCastSize = 8;
 std::set<std::string> reached;
 
 /* Side channel begin */
@@ -227,6 +228,23 @@ std::string getTypeName(Type *t) {
    std::string typestr;
    getline(iss, typestr, ' ');
    return typestr;
+}
+
+void computeMaxVoidTypeCastSize() {
+  maxVoidTypeCastSize = 8;
+  DataLayout *targetData = kmoduleExt->targetData;
+  llvm::TypeFinder StructTypes;
+  StructTypes.run(*(kmoduleExt->module), true);
+  for(auto vct : voidTypeCasts) {
+     for (auto *STy : StructTypes) {
+        std::string tname = getTypeName(STy);
+        if (tname.find(vct) != std::string::npos) 
+           if (targetData->getTypeStoreSize(STy) > maxVoidTypeCastSize) {
+              llvm::errs() << "Storing size of " << tname << " for max void cast size: " << targetData->getTypeStoreSize(STy) << " \n";
+              maxVoidTypeCastSize = targetData->getTypeStoreSize(STy);   
+           } 
+     }
+  } 
 }
 
 void initializeLazyInit(ObjectState *obj, Type *t) {
@@ -5133,14 +5151,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
+  //#ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  #endif
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -5624,12 +5642,12 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance,
                               count, rType, laddr, mksym, abort);
               if (abort) return;
-              #ifdef VB
+              //#ifdef VB
               llvm::outs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
-              #endif
+              //#endif
               mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
               #ifdef VB
               llvm::errs() << "lazy init arg " << mo->name << "\n";
@@ -5781,6 +5799,10 @@ void Executor::runFunctionAsMain(Function *f,
 
   /* SYSREL EXTENSION */
   if (lazyInit) {
+     // to avoid memory out of bound errors due to lazy init of void pointers
+     // currently relies on the input model
+     // TODO: scan the code to find bitcasts and maximum possible target type size
+     computeMaxVoidTypeCastSize();     
      /// visit all struct types in this module
      llvm::TypeFinder StructTypes;
      StructTypes.run(*(kmodule->module), true);
