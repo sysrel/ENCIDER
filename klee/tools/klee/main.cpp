@@ -107,6 +107,18 @@ extern std::set<std::pair<std::string, int>> locs;
 // source code locations with cache side channels
 extern std::set<std::pair<std::string, int>> cachelocs;
 std::set<std::string> voidTypeCasts;
+//  Functions that receive input from the environment
+extern std::set<std::string> inputFuncs;
+// Maps function arguments to its high security regions
+extern std::map<std::string, std::set<int> > highFunctionArgs;
+// Maps function arguments to its low security regions
+extern std::map<std::string, std::set<int> > lowFunctionArgs;  
+// Maps types to its high security regions
+extern std::map<std::string, std::vector<region> > highTypeRegions;
+// Maps types to its low security regions
+extern std::map<std::string, std::vector<region> > lowTypeRegions;
+// Maps symbolic regions to its high security regions
+
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -219,10 +231,18 @@ namespace {
                                             \n \t (default is the symbolic execution entry point) \n"));
 
   cl::opt<std::string>
+  InputFuncs("input-funcs",  cl::desc("Functions that receive inputs from the environment\n"));
+
+  cl::opt<std::string>
+  SensitiveInputs("sensitive-inputs",  cl::desc("Functions arguments that are categorized as (high/low) security sensitive\n"));
+
+  cl::opt<std::string>
+  SensitiveTypeRegions("sensitive-type-region", cl::desc("Specifies regions (offset,size) of types categorized as (high/low) security sensitive\n"));
+
+  cl::opt<std::string>
   SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
                                              \n \t (use naive for using all leaf nodes (may not terminate)\n \
                                              \n \t (use decompose for focusing on relevant candidates only\n"));
-
   cl::opt<unsigned>
   CacheLineBits("cache-line-bits", cl::desc("cache line bits (log of cache line size) (default 6) \n"));
    
@@ -1114,6 +1134,95 @@ void externalsAndGlobalsCheck(const Module *m) {
 
 /* SYSREL static */ Interpreter *theInterpreter = 0;
 
+void readSensitiveTypeRegions(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) {
+       std::string marker, tname, offset, size;
+       std::istringstream iss(line);
+       std::getline(iss, marker,',');
+       marker = ltrim(rtrim(marker));
+       std::getline(iss,tname,',');
+       tname = ltrim(rtrim(tname));
+       std::getline(iss,offset,',');
+       offset = ltrim(rtrim(offset));
+       std::getline(iss, size,',');
+       size = ltrim(rtrim(size));
+       unsigned o = std::stoi(offset);
+       unsigned s = std::stoi(size);
+       std::vector<region> rs;
+       if (marker == "high") {
+          if (highTypeRegions.find(tname) != highTypeRegions.end())
+             rs = highTypeRegions[tname];
+          region r;
+          r.offset = o;
+          r.size = s;
+          rs.push_back(r);
+          highTypeRegions[tname] = rs;
+       }   
+       else if (marker == "low") {
+          if (lowTypeRegions.find(tname) != lowTypeRegions.end())
+             rs = lowTypeRegions[tname];
+          region r;
+          r.offset = o;
+          r.size = s;
+          rs.push_back(r);
+          lowTypeRegions[tname] = rs;
+       } 
+     }
+  }
+  cf.close();
+}
+
+void readSensitiveFunctionArgs(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) {
+         std::string marker, fname, arg;
+         std::istringstream iss(line);
+        std::getline(iss, marker,',');  
+         marker = ltrim(rtrim(marker));
+         std::getline(iss, fname,',');
+         fname = ltrim(rtrim(fname));
+         std::getline(iss, arg,',');
+         arg = ltrim(rtrim(arg));
+         unsigned int value = std::stoi(arg);
+         if (marker == "high") {
+            llvm::outs() << " high function " << fname << " arg " << value << "\n";
+            std::set<int> args;
+            if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+               args = highFunctionArgs[fname];
+            args.insert(value);       
+            highFunctionArgs[fname] = args;
+         } 
+         else if (marker == "low") {
+            llvm::outs() << " low function " << fname << " arg " << value << "\n";
+            std::set<int> args;
+            if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+               args = lowFunctionArgs[fname];
+            args.insert(value);       
+            lowFunctionArgs[fname] = args;
+         } 
+         else assert(false && "function argument sensitivity other than high/low");
+     }
+  }
+  cf.close();
+}
+
+void readInputFuncs(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) {
+         inputFuncs.insert(ltrim(rtrim(line)));
+         llvm::outs() << " input function: " << line << "\n";
+     }
+  }
+  cf.close();
+}
+
 /* SYSREL extension */
 void readPrefixes(const char *name) {
   std::fstream cf(name, std::fstream::in);
@@ -1887,6 +1996,15 @@ int main(int argc, char **argv, char **envp) {
      progModel = true;
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());
   }
+
+  if (InputFuncs != "")
+     readInputFuncs(InputFuncs.c_str());
+
+  if (SensitiveInputs != "")
+     readSensitiveFunctionArgs(SensitiveInputs.c_str());
+
+  if (SensitiveTypeRegions != "")
+     readSensitiveTypeRegions(SensitiveTypeRegions.c_str());
 
   if (CacheLineBits)
      cacheLineBits = CacheLineBits;

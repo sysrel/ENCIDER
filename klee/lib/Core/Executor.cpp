@@ -102,6 +102,7 @@ using namespace llvm;
 using namespace klee;
 
 /* SYSREL extension */
+
 extern std::set<std::string> voidTypeCasts;
 size_t maxVoidTypeCastSize = 8;
 std::set<std::string> reached;
@@ -109,12 +110,33 @@ std::set<std::string> reached;
 /* Side channel begin */
 extern std::set<std::pair<std::string, int>> cachelocs;
 extern unsigned int cacheLineBits;
-std::map<long, std::set<ref<Expr> > > highAddresses;
-std::map<long, std::set<ref<Expr> > > lowAddresses;
+//  Functions that receive input from the environment
+std::set<std::string> inputFuncs;
+// Maps function arguments to its high security regions
+std::map<std::string, std::set<int> > highFunctionArgs;
+// Maps function arguments to its low security regions
+std::map<std::string, std::set<int> > lowFunctionArgs;  
+// Maps types to its high security regions
+std::map<std::string, std::vector<region> > highTypeRegions;
+// Maps types to its low security regions
+std::map<std::string, std::vector<region> > lowTypeRegions;
+// Maps symbolic regions to its high security regions
+// unique symbolic names eliminate the need to do the mapping per state
+std::map<std::string, std::vector<region> > highSymRegions;
+// Maps symbolic regions to its low security regions
+// unique symbolic names eliminate the need to do the mapping per state
+std::map<std::string, std::vector<region> > lowSymRegions;
+// Maps addresses of ExecutionState's to addresses of high security sensitive regions
+// regions provide precise tracking of subregions
+std::map<long, std::map<ref<Expr>, std::vector<region> > > highMemoryRegions;
+// Maps addresses of ExecutionState's to addresses of low security sensitive regions
+// regions provide precise tracking of subregions
+std::map<long, std::map<ref<Expr>, std::vector<region> > > lowMemoryRegions;
 klee::ref<Expr> branchCondition;
 std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
 extern std::string entryFunctionName;
-extern std::map<std::string, std::set<int> > dynamicHighLoc, dynamicLowLoc;
+//extern std::map<std::string, std::set<int> > dynamicHighLoc, dynamicLowLoc;
+extern std::map<std::string, std::map<int, std::vector<region> > > dynamicHighRegion, dynamicLowRegion;
 std::string publicOutputVarName = "return_value";
 std::string publicOutputReturningFName;
 ref<Expr> publicOutputVar;
@@ -205,6 +227,153 @@ void timeSideChannelAnalysis(Executor *executor) {
  std::cerr << "\n\n\n\n>>>> Listing violations :  \n";
  printviolations(executor);
 }
+
+
+void setHighMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs) {
+   long saddr = (long)&state;
+   std::map<ref<Expr>, std::vector<region> > m;
+   if (highMemoryRegions.find(saddr) != highMemoryRegions.end())
+      m = highMemoryRegions[saddr];
+   if (m.find(a) != m.end())
+      assert(false && "address already has high security memory region set!\n");
+   m[a] = rs;
+   highMemoryRegions[saddr] = m; 
+}
+
+void setLowMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs) {
+   long saddr = (long)&state;
+   std::map<ref<Expr>, std::vector<region> > m;
+   if (lowMemoryRegions.find(saddr) != lowMemoryRegions.end())
+      m = lowMemoryRegions[saddr];
+   if (m.find(a) != m.end())
+      assert(false && "address already has low security memory region set!\n");
+   m[a] = rs;
+   lowMemoryRegions[saddr] = m; 
+}
+
+void addHighMemoryRegion(ExecutionState &state, ref<Expr> a, region r) {
+   long saddr = (long)&state;
+   std::map<ref<Expr>, std::vector<region> > m;
+   if (highMemoryRegions.find(saddr) != highMemoryRegions.end())
+      m = highMemoryRegions[saddr];
+   std::vector<region> rs;
+   if (m.find(a)!= m.end())
+      rs = m[a];
+   rs.push_back(r);
+   m[a] = rs;     
+   highMemoryRegions[saddr] = m;
+}
+
+void addLowMemoryRegion(ExecutionState &state, ref<Expr> a, region r) {
+   long saddr = (long)&state;
+   std::map<ref<Expr>, std::vector<region> > m;
+   if (lowMemoryRegions.find(saddr) != lowMemoryRegions.end())
+      m = lowMemoryRegions[saddr];
+   std::vector<region> rs;
+   if (m.find(a)!= m.end())
+      rs = m[a];
+   rs.push_back(r);
+   m[a] = rs;     
+   lowMemoryRegions[saddr] = m;
+}
+
+void setHighSymRegion(std::string name, std::vector<region> rs) {
+  if (highSymRegions.find(name) != highSymRegions.end())
+     assert(false && "duplicate entry for highsymregions");
+  highSymRegions[name] = rs;
+}
+
+void setLowSymRegion(std::string name, std::vector<region> rs) {
+  if (lowSymRegions.find(name) != lowSymRegions.end())
+     assert(false && "duplicate entry for lowsymregions");
+  lowSymRegions[name] = rs;
+}
+
+void initHighLowRegions(ExecutionState &state) {
+   long saddr = (long)&state;
+   std::map<ref<Expr>, std::vector<region> > empty;
+   highMemoryRegions[saddr] = empty;
+   lowMemoryRegions[saddr] = empty;
+}
+
+// Check intersection of [min1, max1] and [min2, max2]
+bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2) {
+  if ((min1 > max2) || (min2 > max1))
+     return false;
+  return true; 
+}
+
+bool isInRegion(std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
+  if (klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(offset)) {
+     uint64_t value = CE->getZExtValue();     
+     for(unsigned int i=0; i < rs.size(); i++) {
+        if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1,value, value + type-1))
+           return true; 
+     }
+  }
+  else assert(false && "Not expecting a symbolic offset "); 
+  return false;
+}
+
+bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high) {
+  if (high) {
+     if (highSymRegions.find(symname) == highSymRegions.end()) 
+        return false;
+     std::vector<region> rs = highSymRegions[symname];
+     return isInRegion(rs, offset, type);
+  }
+  else {
+     if (lowSymRegions.find(symname) == lowSymRegions.end()) 
+        return false;
+     std::vector<region> rs = lowSymRegions[symname];
+     return isInRegion(rs, offset, type);
+  }
+}
+
+bool isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
+  long sa = (long)&state;
+  if (highMemoryRegions.find(sa) == highMemoryRegions.end()) {
+     assert(false && "State does not have high regions!!!");
+  }
+  std::map<ref<Expr>, std::vector<region> > m = highMemoryRegions[sa];
+  if (m.find(baseAddress) == m.end())
+     return false;
+  else {
+     std::vector<region> rs = m[baseAddress];
+     return isInRegion(rs, offset, type);
+  }
+}
+
+bool isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
+  long sa = (long)&state;
+  if (lowMemoryRegions.find(sa) == lowMemoryRegions.end()) {
+     assert(false && "State does not have low regions!!!");
+  }
+  std::map<ref<Expr>, std::vector<region> > m = lowMemoryRegions[sa];
+  if (m.find(baseAddress) == m.end())
+     return false;
+  else {
+     std::vector<region> rs = m[baseAddress];
+     return isInRegion(rs, offset, type);
+  }
+}
+
+void cloneHighMemoryRegions(const ExecutionState &from, ExecutionState &to) {
+   long faddr = (long)&from;
+   long taddr = (long)&to;
+   if (highMemoryRegions.find(faddr) == highMemoryRegions.end())
+      assert(0 && "highRegion set not initialized for state!");
+   highMemoryRegions[taddr] = highMemoryRegions[faddr];
+}
+
+void cloneLowMemoryRegions(const ExecutionState &from, ExecutionState &to) {
+   long faddr = (long)&from;
+   long taddr = (long)&to;
+   if (lowMemoryRegions.find(faddr) == lowMemoryRegions.end())
+      assert(0 && "lowAddress set not initialized for state!");
+   lowMemoryRegions[taddr] = lowMemoryRegions[faddr];
+}
+
 
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
@@ -685,12 +854,14 @@ const char *Executor::TerminateReasonNames[] = {
 
 /* SYSREL extension */
 
+/*
 void initHighLowAddress(ExecutionState &state) {
    long saddr = (long)&state;
    std::set<ref<Expr> > empty;
    highAddresses[saddr] = empty;
    lowAddresses[saddr] = empty;
 }
+
 
 bool isAHighAddress(ExecutionState &state, ref<Expr> addr) {
    long saddr = (long)&state;
@@ -742,6 +913,7 @@ void cloneLowAddresses(const ExecutionState &from, ExecutionState &to) {
    lowAddresses[taddr] = lowAddresses[faddr];
 }
 
+*/
 bool isAsyncInitiate(std::string name) {
   return name.find(ASYNC_STR) == 0;
 }
@@ -837,7 +1009,7 @@ Executor::Executor(LLVMContext &ctx, const InterpreterOptions &opts,
 }
 
 const Function *Executor::getFunctionFromAddress(ref<Expr> addr) {
-   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(addr)) {
+   if (klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(addr)) {
       if (globalAddressesRev.find(CE) != globalAddressesRev.end()) {
          const Function *f = dyn_cast<Function>(globalAddressesRev.find(CE)->second);
          return f;
@@ -2891,12 +3063,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     KGEPInstruction *kgepi = static_cast<KGEPInstruction*>(ki);
     ref<Expr> base = eval(ki, 0, state).value;
     /* side channel */
-    bool high = false;
-    bool low = false;
-    if (isAHighAddress(state,base))
-       high = true;  
-    if (isALowAddress(state,base)) 
-       low = true;    
+    //bool high = false;
+    //bool low = false;
+    //if (isAHighAddress(state,base))
+    //   high = true;  
+    //if (isALowAddress(state,base)) 
+    //   low = true;    
     /* side channel */
     #ifdef VB 
     //llvm::outs() << "GetElementPtr info:\n";
@@ -2916,7 +3088,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
       /* SYSREL extension */ 
       /* side channel begin */
-      if (state.inEnclave && exprHasVar(index, highLoc)) {
+      if (state.inEnclave && exprHasSymRegion(index, true)) {
           llvm::errs() << "CRITICAL: Security sensitive index in GetElementPtr:\n";
           ki->inst->print(llvm::errs());
           llvm::errs() << index << "\n"; 
@@ -2936,7 +3108,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     if (kgepi->offset) {
       /* SYSREL extension */ 
       /* side channel begin */
-      if (state.inEnclave && exprHasVar(Expr::createPointer(kgepi->offset), highLoc)) {
+      if (state.inEnclave && exprHasSymRegion(Expr::createPointer(kgepi->offset), true)) {
           llvm::errs() << "CRITICAL: Security sensitive offset in GetElementPtr:\n";
           ki->inst->print(llvm::errs());
           llvm::errs() << kgepi->offset << "\n";
@@ -2957,7 +3129,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     bindLocal(ki, state, base);
 
     /* side channel */
-    if (state.inEnclave && exprHasVar(base, highLoc)) {
+    if (state.inEnclave && exprHasSymRegion(base, true)) {
        // Check for the possibility of the address base mapping to different cache lines for different security sensitive values
        // Let cache line size denoted by 2^L and memory address size denoted by N
        // Since N-L bits are used to decide the cache line that gets accessed, we will check the following formula
@@ -2981,11 +3153,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           cachelocs.insert(p);
        }
     }
-    if (isAHighAddress(state,base)) 
-       high = true;  
-    if (isALowAddress(state,base)) 
-       low = true;   
-    if (high) {
+    /*if (high) {
        addHighAddress(state,base);
        #ifdef VB 
        llvm::errs() << "recording address " << base << " as transitive security sensitive \n";
@@ -2996,7 +3164,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        #ifdef VB 
        llvm::errs() << "recording address " << base << " as transitive security insensitive \n";
        #endif
-    }
+    }*/
     /* side channel */
     break;
   }
@@ -3845,8 +4013,8 @@ void Executor::run(ExecutionState &initialState) {
 	            std::cerr << "\n>>>> Branch Condition : \n";
 		    r1->dump();
              #endif
-             bool hasHloc = exprHasVar(r1, highLoc);
-             bool hasLloc = exprHasVar(r1, lowLoc);
+             bool hasHloc = exprHasSymRegion(r1, true);
+             bool hasLloc = exprHasSymRegion(r1, false);
              RD* srd = newNode(s);
 	     s->rdid = srd->stateid;
 	     rdmapinsert(s->rdid, srd);
@@ -3857,7 +4025,7 @@ void Executor::run(ExecutionState &initialState) {
              srd->LC = currentRD->LC;
              srd->ru = currentRD->ru; 
 	     if (hasHloc && !hasLloc) {
-	     	ref<Expr> proj = getProjection(r1, highLoc);
+	     	ref<Expr> proj = getProjectionOnRegion(r1, true);
                 // check if the projection is consistent with the path condition
                 bool result;
                 bool success = solver->mayBeTrue(*s, proj, result);
@@ -3901,7 +4069,7 @@ void Executor::run(ExecutionState &initialState) {
                    RD::numHLMixedConstraints++;
 
                 if (hasLloc) {
-   	           ref<Expr> proj = getProjection(r1, lowLoc);
+   	           ref<Expr> proj = getProjectionOnRegion(r1, false);
                    // check if the projection is consistent with the path condition
                    bool result;
                    bool success = solver->mayBeTrue(*s, proj, result);
@@ -4626,15 +4794,14 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   Function *function,
                                   std::vector< ref<Expr> > &arguments) {
 
-    if (dynamicHighLoc.find(function->getName()) == dynamicHighLoc.end() && 
-         dynamicLowLoc.find(function->getName()) == dynamicLowLoc.end()) {
+    if (inputFuncs.find(function->getName()) == inputFuncs.end()) { 
        return false; 
     }
     std::set<int> argsH, argsL; 
-    if (dynamicHighLoc.find(function->getName()) != dynamicHighLoc.end())
-       argsH = dynamicHighLoc[function->getName()];
-    if (dynamicLowLoc.find(function->getName()) != dynamicLowLoc.end())
-       argsL = dynamicLowLoc[function->getName()];
+    if (highFunctionArgs.find(function->getName()) != highFunctionArgs.end())
+       argsH = highFunctionArgs[function->getName()];
+    if (lowFunctionArgs.find(function->getName()) != lowFunctionArgs.end())
+       argsL = lowFunctionArgs[function->getName()];
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
        if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end()) { 
@@ -4642,6 +4809,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
           Type *at = agi->getType();
           if (at->isPointerTy()) {
              Type *bt = at->getPointerElementType();
+             std::string btname = getTypeName(bt);
                  std::string type_str;
                  llvm::raw_string_ostream rso(type_str);
                  at->print(rso);
@@ -4678,10 +4846,34 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                        if (argsL.find(ai) != argsL.end())
                           uniqueName = name + "_low_" + std::to_string(ai) + "_" + llvm::utostr(++id);
                    }
-                   if (argsH.find(ai) != argsH.end())
-                      highLoc->insert(uniqueName); 
-                   if (argsL.find(ai) != argsL.end())
-                      lowLoc->insert(uniqueName); 
+                   if (argsH.find(ai) != argsH.end()) {
+                      std::vector<region> rs; 
+                      if (highTypeRegions.find(btname) != highTypeRegions.end()) {
+                         rs = highTypeRegions[btname];
+                      }
+                      else { // if not specified assume the whole region is high security sensitive
+                         region r;
+                         r.offset = 0;
+                         r.size = sm->size;
+                         rs.push_back(r); 
+                      }
+                      setHighMemoryRegion(state, sm->getBaseExpr(), rs);
+                      setHighSymRegion(uniqueName, rs);                    
+                   }
+                   if (argsL.find(ai) != argsL.end()) {
+                      std::vector<region> rs;
+                      if (lowTypeRegions.find(btname) != lowTypeRegions.end()) {
+                         rs = lowTypeRegions[btname];
+                      }
+                      else { // if not specified assume the whole region is  low security sensitive
+                         region r;
+                         r.offset = 0;
+                         r.size = sm->size;
+                         rs.push_back(r);
+                      }
+                      setLowMemoryRegion(state, sm->getBaseExpr(), rs);
+                      setLowSymRegion(uniqueName, rs); 
+                   }
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
                    ObjectState *sos = bindObjectInState(state, sm, true, array);
@@ -5151,14 +5343,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -5187,6 +5379,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
   if (success) {
     const MemoryObject *mo = op.first;
+    ref<Expr> baseAddress = mo->getBaseExpr();
 
     if (MaxSymArraySize && mo->size>=MaxSymArraySize) {
       address = toConstant(state, address, "max-sym-array-size");
@@ -5318,20 +5511,38 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   result = laddr;
                   /* side channel */
                   // check if initializing a pointer field of a high security memory object
-                  if (isAHighAddress(state, address)) {
-                     highLoc->insert(mo->name);
-                     addHighAddress(state, mo->getBaseExpr()); 
-                     addHighAddress(state, laddr);
+                  if (isInHighMemoryRegion(state, baseAddress, offset, type)) {
+                     std::vector<region> rs; 
+                     if (highTypeRegions.find(rso2str) != highTypeRegions.end()) {
+                        rs = highTypeRegions[rso2str];
+                     }
+                     else { // if not specified assume the whole region is high security sensitive
+                        region r;
+                        r.offset = 0;
+                        r.size = mo->size;
+                        rs.push_back(r);
+                     }
+                     setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+                     setHighSymRegion(mo->name, rs);
                      mo->ishigh = true;
                      #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
                      #endif
                   }
-                  if (isALowAddress(state,address)) {
-                     lowLoc->insert(mo->name);
-                     addLowAddress(state, mo->getBaseExpr()); 
-                     addLowAddress(state, laddr);
+                  if (isInLowMemoryRegion(state, baseAddress, offset, type)) {
+                     std::vector<region> rs; 
+                     if (lowTypeRegions.find(rso2str) != lowTypeRegions.end()) {
+                        rs = lowTypeRegions[rso2str];
+                     }
+                     else { // if not specified assume the whole region is  low security sensitive
+                        region r;
+                        r.offset = 0;
+                        r.size = mo->size;
+                        rs.push_back(r);
+                     }
+                     setLowMemoryRegion(state, mo->getBaseExpr(), rs);
+                     setLowSymRegion(mo->name, rs);
                      mo->islow = true;
                      #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
@@ -5593,10 +5804,17 @@ void Executor::clearFunctionPointers(const MemoryObject *mo, ObjectState *os, Ty
 }
 
 void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool &abort, bool nosym) {
-   std::string uniquefname = state.getUnique(entryFunc->getName().str());
+   std::string fname = entryFunc->getName();
+   std::set<int> argH, argL;
+   if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+      argH = highFunctionArgs[fname];
+   if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+      argL = lowFunctionArgs[fname];   
+   std::string uniquefname = state.getUnique(fname);
    KFunction *kf = kmodule->functionMap[entryFunc];
    unsigned int ind = 0;
-   for(llvm::Function::arg_iterator ai = entryFunc->arg_begin(); ai != entryFunc->arg_end(); ai++) {
+   unsigned int argi = 0;
+   for(llvm::Function::arg_iterator ai = entryFunc->arg_begin(); ai != entryFunc->arg_end(); ai++, argi++) {
      Type *at = ai->getType();
      std::string type_str;
      llvm::raw_string_ostream rso(type_str);
@@ -5642,27 +5860,50 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance,
                               count, rType, laddr, mksym, abort);
               if (abort) return;
-              //#ifdef VB
+              #ifdef VB
               llvm::outs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
-              //#endif
+              #endif
               mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
               #ifdef VB
               llvm::errs() << "lazy init arg " << mo->name << "\n";
               #endif 
+              std::string atname = getTypeName(at);
               // check if it is a security sensitive arg, if so mark the memory object ishigh
-              if (highLoc->find(mo->name) != highLoc->end()) {
+              if (argH.find(argi) != argH.end()) {
+                 std::vector<region> rs; 
+                 if (highTypeRegions.find(atname) != highTypeRegions.end()) {
+                    rs = highTypeRegions[atname];
+                 }
+                 else { // if not specified assume the whole region is high security sensitive
+                    region r;
+                    r.offset = 0;
+                    r.size = mo->size;
+                    rs.push_back(r); 
+                 }
                  mo->ishigh = true;
-                 addHighAddress(state, mo->getBaseExpr());
+                 setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+                 setHighSymRegion(mo->name, rs);
                  #ifdef VB
                  llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive\n";
                  #endif 
               }
-              if (lowLoc->find(mo->name) != lowLoc->end()) {
+              if (argL.find(argi) != argL.end()) {
+                 std::vector<region> rs;
+                 if (lowTypeRegions.find(atname) != lowTypeRegions.end()) {
+                    rs = lowTypeRegions[atname];
+                 }
+                 else { // if not specified assume the whole region is  low security sensitive
+                    region r;
+                    r.offset = 0;
+                    r.size = mo->size;
+                    rs.push_back(r);
+                 }
                  mo->islow = true;
-                 addLowAddress(state, mo->getBaseExpr());
+                 setLowMemoryRegion(state, mo->getBaseExpr(), rs);
+                 setLowSymRegion(mo->name, rs);
                  #ifdef VB
                  llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as insecurity insensitive\n";
                  #endif 
@@ -5705,6 +5946,45 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         #ifdef VB
         llvm::outs() << "binding nonpointer arg " << ind << " of type " << rso.str() << " to value " << result << "\n";
         #endif
+        std::string atname = getTypeName(at);
+        // check if it is a security sensitive arg, if so mark the memory object ishigh
+        if (argH.find(argi) != argH.end()) {
+           std::vector<region> rs; 
+           if (highTypeRegions.find(atname) != highTypeRegions.end()) {
+              rs = highTypeRegions[atname];
+           }
+           else { // if not specified assume the whole region is high security sensitive
+              region r;
+              r.offset = 0;
+              r.size = mo->size;
+              rs.push_back(r); 
+           }
+           mo->ishigh = true;
+           setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+           setHighSymRegion(mo->name, rs);
+           #ifdef VB
+            llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive \n";
+           #endif 
+        }
+        if (argL.find(argi) != argL.end()) {
+           std::vector<region> rs;
+           if (lowTypeRegions.find(atname) != lowTypeRegions.end()) {
+              rs = lowTypeRegions[atname];
+           }
+           else { // if not specified assume the whole region is  low security sensitive
+              region r;
+              r.offset = 0;
+              r.size = mo->size;
+              rs.push_back(r);
+           }
+           mo->islow = true;
+           setLowMemoryRegion(state, mo->getBaseExpr(), rs);
+           setLowSymRegion(mo->name, rs);
+           #ifdef VB
+            llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as not security sensitive\n"; 
+           #endif 
+        }        
+
      }
      ind++;
    }
@@ -5896,7 +6176,8 @@ void Executor::runFunctionAsMain(Function *f,
   initializeGlobals(*state);
   /* SYSREL extension */
   // side channel
-  initHighLowAddress(*state);
+  //initHighLowAddress(*state);
+  initHighLowRegions(*state);
   /* SYSREL extension */
 
   processTree = new PTree(state);

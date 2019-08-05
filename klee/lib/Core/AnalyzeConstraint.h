@@ -11,6 +11,14 @@
 using namespace llvm;
 using namespace klee;
 
+struct region {
+  unsigned int offset;
+  unsigned int size;
+};
+typedef struct region region;
+
+ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high) ;
+bool exprHasSymRegion(ref<Expr> cexpr, bool high);
 ref<Expr> renameExpr(MemoryManager *memory, ref<Expr> cexpr, bool high);
 std::set<std::string>* getNameofAddressConstraintSet(klee::ref<Expr> cexpr);
 std::vector<std::string> * processline(std::string s, std::string delimiter);

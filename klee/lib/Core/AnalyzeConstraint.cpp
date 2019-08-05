@@ -6,7 +6,7 @@
 #include <fstream>
 #define dbp 0
 
-
+bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high);
 
 /* Variables based on sensivity */
 std::set<std::string> * highLoc = new std::set<std::string>();
@@ -164,8 +164,90 @@ const Array *renameArray(MemoryManager *memory, const Array *array, std::set<std
 }
 
 
+bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
+    switch (cexpr->getKind()) {
+       case Expr::Read: {
+          ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);
+          if (isInSymRegion(rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high))
+             return true;
+          break;
+       }
+       default: {
+          bool result = false;
+          for(unsigned int i = 0; i<cexpr->getNumKids(); i++)
+             if (exprHasSymRegion(cexpr->getKid(i), high))
+                return true;
+          return false;
+       }
+    }
+}
 
 
+ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
+    switch (cexpr->getKind()) {    
+      case Expr::Constant: {
+        klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(cexpr);
+        return klee::ConstantExpr::create(CE->getZExtValue(), CE->getWidth());
+      }
+      case Expr::Extract: {
+        ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
+        return ExtractExpr::create(getProjectionOnRegion(cexpr->getKid(0), high, true), EE->offset, EE->width);
+      }
+      case Expr::Read: {
+          ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
+          ref<Expr> nrexpr = ReadExpr::alloc(rexpr->updates, rexpr->index);     
+          //llvm:errs() << "Readexpr: " << cexpr << " copied to " << nrexpr << "\n";      
+          return nrexpr;
+      } 
+      case Expr::Concat: {
+          ref<Expr> rexpr1 = getProjectionOnRegion(cexpr->getKid(0), high, true);
+          ref<Expr> rexpr2 = getProjectionOnRegion(cexpr->getKid(1), high, true);
+          return ConcatExpr::create(rexpr1, rexpr2);
+      }
+      case Expr::And:
+      case Expr::Or:
+      case Expr::Xor: {
+          if (!maybebitwise) {
+             bool k0 = exprHasSymRegion(cexpr->getKid(0), high);
+             bool k1 = exprHasSymRegion(cexpr->getKid(1), high);
+             if (k0 && k1) {
+                return AndExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
+                                       getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise));
+             }
+             else if (k0) {
+                return getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise);
+             }
+             else if (k1) {
+                return getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise);
+             }
+             else assert(false);
+          }
+          // otherwise fall through the default case
+      }
+      default:
+        if (!((cexpr->getKind() == Expr::Not) || (cexpr->getKind() == Expr::Eq) ||  
+             (cexpr->getKind() == Expr::Ne)))
+           maybebitwise = true;         
+        std::vector<Expr::CreateArg> args;
+        int size = cexpr->getNumKids();
+        int i;
+        for(i=0; i<size; i++) {
+           ref<Expr> rexpr = getProjectionOnRegion(cexpr->getKid(i), high, maybebitwise);
+           args.push_back(Expr::CreateArg(rexpr));
+           //llvm::errs() << "args[" << i << "] " << args[i].expr << "\n";
+        }    
+        if (cexpr->getKind() == Expr::SExt || cexpr->getKind() == Expr::ZExt) {
+           args.push_back(Expr::CreateArg(cexpr->getWidth()));
+           //llvm::errs() << "args[" << i << "] " << args[i].width << "\n";
+        }
+        //llvm::errs() << "cexpr: " << cexpr << " kind: " << cexpr->getKind() << "\n"; 
+        return Expr::createFromKind(cexpr->getKind(), args);
+   }
+}
+
+ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high) {
+  return getProjectionOnRegion(cexpr, high, false);
+}
 
 ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id) {
     switch (cexpr->getKind()) {    
@@ -236,7 +318,7 @@ ref<Expr> buildProjection(ref<Expr>& cexpr, bool high) {
   //cexpr->dump();
   //std::cerr << "Size : " << size << " Kind : " << cexpr->getKind() << "\n";
   switch (cexpr->getKind()) {
-    case Expr::Not: return NotExpr::create(cexpr);
+    case Expr::Not: return NotExpr::create(buildProjection(cexpr,high));
     case Expr::ZExt: {
         return ZExtExpr::create(buildProjection(kid[0],high), cexpr->getWidth());
     }

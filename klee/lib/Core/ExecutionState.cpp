@@ -62,8 +62,8 @@ extern std::map<std::string, int> lazyInitNumInstances;
 
 extern bool isLazyInit(Type *t, bool &single, int &count);
 extern bool isAllocTypeLazyInit(Type *t, bool &single, int &count);
-extern void cloneHighAddresses(const ExecutionState &from, ExecutionState &to);
-extern void cloneLowAddresses(const ExecutionState &from, ExecutionState &to);
+extern void cloneHighMemoryRegions(const ExecutionState &from, ExecutionState &to);
+extern void cloneLowMemoryRegions(const ExecutionState &from, ExecutionState &to);
 /* SYSREL */
 
 /***/
@@ -248,8 +248,10 @@ ExecutionState *ExecutionState::branch() {
 
   /* SYSREL extension */
   // side channel
-  cloneHighAddresses(*this, *falseState);
-  cloneLowAddresses(*this, *falseState);
+  //cloneHighAddresses(*this, *falseState);
+  //cloneLowAddresses(*this, *falseState);
+  cloneHighMemoryRegions(*this, *falseState);
+  cloneLowMemoryRegions(*this, *falseState);
   /* SYSREL extension */
 
   return falseState;

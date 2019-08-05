@@ -285,7 +285,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
      // Void* are represented as i8* in LLVM IR..
      if (allocType->isIntegerTy(8))  {
         allocsize = maxVoidTypeCastSize;
-        llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
+        //llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
      }
      #ifdef VB
      llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
@@ -534,7 +534,7 @@ MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::In
  // Void* are represented as i8* in LLVM IR..
  if (allocType->isIntegerTy(8))  {
     allocsize = maxVoidTypeCastSize;
-     llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
+    //llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
  }
  #ifdef VB 
  llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
