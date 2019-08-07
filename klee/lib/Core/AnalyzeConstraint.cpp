@@ -7,6 +7,7 @@
 #define dbp 0
 
 bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high);
+bool isASymRegion(std::string symname, bool high);
 
 /* Variables based on sensivity */
 std::set<std::string> * highLoc = new std::set<std::string>();
@@ -154,8 +155,8 @@ void dumpKidsRec(klee::ref<Expr>& cexpr) {
 
 
 
-const Array *renameArray(MemoryManager *memory, const Array *array, std::set<std::string> * varset, unsigned int id) {
-   if (varset->find(array->name) != varset->end()) {
+const Array *renameArray(MemoryManager *memory, const Array *array, bool high, unsigned int id) {
+   if (isASymRegion(array->name, high)) {
       const Array *nar = memory->getArrayCache()->CreateArray(array->name + "_r_" + llvm::utostr(id), array->getSize());
       return nar;
    }
@@ -266,7 +267,7 @@ ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id)
       }
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
-          const UpdateList *rul = new UpdateList(renameArray(memory, rexpr->updates.root, high ? highLoc : lowLoc, id), 
+          const UpdateList *rul = new UpdateList(renameArray(memory, rexpr->updates.root, high, id), 
                                                  rexpr->updates.head);
           ref<Expr> nrexpr = ReadExpr::alloc(*rul, rexpr->index);     
           //llvm:errs() << "Readexpr: " << cexpr << " renamed as " << nrexpr << "\n";      

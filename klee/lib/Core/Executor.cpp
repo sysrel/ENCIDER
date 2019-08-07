@@ -318,6 +318,13 @@ bool isInRegion(std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
   return false;
 }
 
+bool isASymRegion(std::string symname, bool high) {
+   if (high)
+      return (highSymRegions.find(symname) != highSymRegions.end()); 
+   else 
+      return (lowSymRegions.find(symname) != lowSymRegions.end()); 
+}
+
 bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high) {
   llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
   if (high) {
