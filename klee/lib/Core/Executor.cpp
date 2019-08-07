@@ -6083,8 +6083,6 @@ void Executor::runFunctionAsMain(Function *f,
 
   /* SYSREL EXTENSION */
   entryFunc = f;
-  // side channel - Reading unstrusted function list
-  readSCAInput();
   /* SYSREL EXTENSION */
 
   std::vector<ref<Expr> > arguments;

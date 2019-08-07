@@ -126,6 +126,8 @@ extern std::map<std::string, std::vector<region> > highSymRegions;
 // Maps symbolic regions to its low security regions
 // unique symbolic names eliminate the need to do the mapping per state
 extern std::map<std::string, std::vector<region> > lowSymRegions;
+// Stores the functions that when executed can be observed by the timing side channel attackers, e.g., ocalls
+extern std::vector<std::string> * untrusted;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -245,6 +247,9 @@ namespace {
 
   cl::opt<std::string>
   SensitiveTypeRegions("sensitive-type-region", cl::desc("Specifies regions (offset,size) of types categorized as (high/low) security sensitive\n"));
+
+  cl::opt<std::string>
+  TimingObservationPoints("timing-obs-point", cl::desc("Specifies the functions that mark the points where attackers can take timing measurements, e.g., ocalls for SGX\n"));
 
   cl::opt<std::string>
   SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
@@ -1141,6 +1146,17 @@ void externalsAndGlobalsCheck(const Module *m) {
 
 /* SYSREL static */ Interpreter *theInterpreter = 0;
 
+void readTimingObservationPoints(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) {
+        untrusted->push_back(ltrim(rtrim(line)));
+     }
+  }
+  cf.close();
+}
+
 void readSensitiveTypeRegions(const char *name) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
@@ -2011,6 +2027,9 @@ int main(int argc, char **argv, char **envp) {
      progModel = true;
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());
   }
+
+  if (TimingObservationPoints != "")
+     readTimingObservationPoints(TimingObservationPoints.c_str());
 
   if (InputFuncs != "")
      readInputFuncs(InputFuncs.c_str());
