@@ -3,112 +3,226 @@ KLEE: Using STP solver backend
 Uncov init=830
 Couldn't open file 
 KLEE: WARNING: undefined reference to function: printf
-high foo_0_arg_1
-low foo_0_arg_0
-lazy type: %struct.data_t extracted
-lazy type: %struct.data_t extracted
-lazy type: %struct.data_t extracted
-lazy type: %struct.data_t extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
-lazy primitive type: i8 extracted
+recording address of foo_0_arg_0 39075408 as low security insensitive
+recording address of foo_0_arg_1 39075728 as high security sensitive
+High symbolic regions:
+foo_0_arg_1
+Low symbolic regions:
+foo_0_arg_0
 Registering publicOutputReturningFName as foo
-
->>>> Branch Condition : 
-(Slt 0
+reached foo
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=0 size=8 is (high?) 0
+ high projection on (Slt 0
+      (ReadLSB w32 0 foo_0_arg_1)) : (Slt 0
       (ReadLSB w32 0 foo_0_arg_1))
-Projection on high
-
->>>> Projection : (Slt 0
-      (ReadLSB w32 0 foo_0_arg_1))
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=0 size=8 is (high?) 0
+ high projection on (Eq false
+     (Slt 0
+          (ReadLSB w32 0 foo_0_arg_1))) : (Eq false
      (Slt 0
           (ReadLSB w32 0 foo_0_arg_1)))
-Projection on high
-
->>>> Projection : (Eq false
-     (Slt 0
-          (ReadLSB w32 0 foo_0_arg_1)))
-
->>>> Branch Condition : 
-(Slt (ReadLSB w32 0 foo_0_arg_0)
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Slt (ReadLSB w32 0 foo_0_arg_0)
+      1) : (Slt (ReadLSB w32 0 foo_0_arg_0)
       1)
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Slt (ReadLSB w32 0 foo_0_arg_0)
+          1)) : (Eq false
      (Slt (ReadLSB w32 0 foo_0_arg_0)
           1))
-
->>>> Branch Condition : 
-(Slt (ReadLSB w32 0 foo_0_arg_0)
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Slt (ReadLSB w32 0 foo_0_arg_0)
+      0) : (Slt (ReadLSB w32 0 foo_0_arg_0)
       0)
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Slt (ReadLSB w32 0 foo_0_arg_0)
+          0)) : (Eq false
      (Slt (ReadLSB w32 0 foo_0_arg_0)
           0))
-
->>>> Branch Condition : 
-(Slt (ReadLSB w32 0 foo_0_arg_0)
+reached loop
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Slt (ReadLSB w32 0 foo_0_arg_0)
+      5) : (Slt (ReadLSB w32 0 foo_0_arg_0)
       5)
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Slt (ReadLSB w32 0 foo_0_arg_0)
+          5)) : (Eq false
      (Slt (ReadLSB w32 0 foo_0_arg_0)
           5))
-
->>>> Branch Condition : 
-(Slt 4294967286
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=0 size=8 is (high?) 0
+ high projection on (Slt 4294967286
+      (ReadLSB w32 0 foo_0_arg_1)) : (Slt 4294967286
       (ReadLSB w32 0 foo_0_arg_1))
-Projection on high
-
->>>> Projection : (Slt 4294967286
-      (ReadLSB w32 0 foo_0_arg_1))
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_1)
+Checking if symbolic region foo_0_arg_1 offset=0 size=8 is (high?) 0
+ high projection on (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 foo_0_arg_1))) : (Eq false
      (Slt 4294967286
           (ReadLSB w32 0 foo_0_arg_1)))
-Projection on high
-
->>>> Projection : (Eq false
-     (Slt 4294967286
-          (ReadLSB w32 0 foo_0_arg_1)))
-
->>>> Branch Condition : 
-(Eq 4294967295
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq 4294967295
+     (ReadLSB w32 0 foo_0_arg_0)) : (Eq 4294967295
      (ReadLSB w32 0 foo_0_arg_0))
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 foo_0_arg_0))) : (Eq false
      (Eq 4294967295
          (ReadLSB w32 0 foo_0_arg_0)))
-
->>>> Branch Condition : 
-(Eq 4294967295
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq 4294967295
+     (ReadLSB w32 0 foo_0_arg_0)) : (Eq 4294967295
      (ReadLSB w32 0 foo_0_arg_0))
-
->>>> Branch Condition : 
-(Eq false
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 foo_0_arg_0)
+Checking if symbolic region foo_0_arg_0 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 foo_0_arg_0))) : (Eq false
      (Eq 4294967295
          (ReadLSB w32 0 foo_0_arg_0)))
-KLEE: WARNING ONCE: calling external: printf(54761424, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test5/test5.c:35
+KLEE: WARNING ONCE: calling external: printf(37746672, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test5/test5.c:35
 16
 64
 32
@@ -619,16 +733,24 @@ Predecessor :
 	=====================
 
 >>>> Found violations at  : 2 locations.
-all high vars: 
+all high sym regions: 
 foo_0_arg_1
+all low sym regions: 
+foo_0_arg_0
+return_value
 
+KLEE: done: #Timing Side Channel  Locs = 2
+KLEE: done: #Cache Side Channel  Locs = 0
 KLEE: done: minInst = 77
 KLEE: done: maxInst = 161
 KLEE: done: HAncestors = 2
 KLEE: done: HLMixedConstraints = 0
-KLEE: done: HVars= 1
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
 KLEE: done: total instructions = 840
 KLEE: done: completed paths = 8
 KLEE: done: generated tests = 8
 Lazy initialization is ON 
 lazy single spec file? 
+ low function foo arg 0
+ high function foo arg 1

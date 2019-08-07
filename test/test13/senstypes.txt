@@ -1,0 +1,2 @@
+low,%struct.mytest,32,32
+high,%struct.mytest,0,32

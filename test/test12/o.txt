@@ -1,0 +1,20 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test12/klee-out-1"
+KLEE: Using STP solver backend
+Uncov init=821
+Couldn't open file 
+KLEE: WARNING: undefined reference to function: printf
+klee: /home/tuba/Documents/tools/pmguidedsymex/klee/lib/Core/Executor.cpp:5971: void klee::Executor::initArgsAsSymbolic(klee::ExecutionState&, llvm::Function*, bool&, bool): Assertion `false && "Mixed sensitivity arg without type based sensitive regions!\n"' failed.
+0  klee            0x0000000001369518 llvm::sys::PrintStackTrace(llvm::raw_ostream&) + 56
+1  klee            0x00000000013677a6 llvm::sys::RunSignalHandlers() + 54
+2  klee            0x0000000001367909
+3  libpthread.so.0 0x00001481eacbb390
+4  libc.so.6       0x00001481ea074428 gsignal + 56
+5  libc.so.6       0x00001481ea07602a abort + 362
+6  libc.so.6       0x00001481ea06cbd7
+7  libc.so.6       0x00001481ea06cc82
+8  klee            0x000000000063e759 klee::Executor::initArgsAsSymbolic(klee::ExecutionState&, llvm::Function*, bool&, bool) + 8569
+9  klee            0x0000000000650b1d klee::Executor::runFunctionAsMain(llvm::Function*, int, char**, char**) + 2749
+10 klee            0x00000000005eab33 main + 12691
+11 libc.so.6       0x00001481ea05f830 __libc_start_main + 240
+12 klee            0x000000000060d929 _start + 41
+./run.sh: line 1: 60657 Aborted                 (core dumped) /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/bin/klee -entry-point=$2 -lazy-init=true -prog-model-spec=pm.txt -sensitive-inputs=sensargs.txt $1

@@ -1,0 +1,756 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test9/klee-out-2"
+KLEE: Using STP solver backend
+Uncov init=812
+Couldn't open file 
+KLEE: WARNING: undefined reference to function: bar
+KLEE: WARNING: undefined reference to function: printf
+High symbolic regions:
+Low symbolic regions:
+Registering publicOutputReturningFName as foo
+KLEE: WARNING ONCE: calling external: bar(59815968, 59816032) at /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:24
+reached foo
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=0 size=8 is (high?) 0
+ high projection on (Slt 0
+      (ReadLSB w32 0 bar_high_1_1)) : (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=0 size=8 is (high?) 0
+ high projection on (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_high_1_1))) : (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_high_1_1)))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Slt (ReadLSB w32 0 bar_low_0_1)
+      0) : (Slt (ReadLSB w32 0 bar_low_0_1)
+      0)
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Slt (ReadLSB w32 0 bar_low_0_1)
+          0)) : (Eq false
+     (Slt (ReadLSB w32 0 bar_low_0_1)
+          0))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Slt (ReadLSB w32 0 bar_low_0_1)
+      1) : (Slt (ReadLSB w32 0 bar_low_0_1)
+      1)
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Slt (ReadLSB w32 0 bar_low_0_1)
+          1)) : (Eq false
+     (Slt (ReadLSB w32 0 bar_low_0_1)
+          1))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Slt (ReadLSB w32 0 bar_low_0_1)
+      5) : (Slt (ReadLSB w32 0 bar_low_0_1)
+      5)
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Slt (ReadLSB w32 0 bar_low_0_1)
+          5)) : (Eq false
+     (Slt (ReadLSB w32 0 bar_low_0_1)
+          5))
+reached loop
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=0 size=8 is (high?) 0
+ high projection on (Slt 4294967286
+      (ReadLSB w32 0 bar_high_1_1)) : (Slt 4294967286
+      (ReadLSB w32 0 bar_high_1_1))
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 1
+[0,31] vs [24,31]
+Checking sensitivity of read expression (Read w8 3 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=3 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 2 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=2 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 1 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=1 size=8 is (high?) 0
+Checking sensitivity of read expression (Read w8 0 bar_high_1_1)
+Checking if symbolic region bar_high_1_1 offset=0 size=8 is (high?) 0
+ high projection on (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 bar_high_1_1))) : (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 bar_high_1_1)))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq 4294967295
+     (ReadLSB w32 0 bar_low_0_1)) : (Eq 4294967295
+     (ReadLSB w32 0 bar_low_0_1))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 bar_low_0_1))) : (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 bar_low_0_1)))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq 4294967295
+     (ReadLSB w32 0 bar_low_0_1)) : (Eq 4294967295
+     (ReadLSB w32 0 bar_low_0_1))
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 2 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=2 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 1 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=1 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 0 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=0 size=8 is (high?) 1
+Checking sensitivity of read expression (Read w8 3 bar_low_0_1)
+Checking if symbolic region bar_low_0_1 offset=3 size=8 is (high?) 0
+[0,31] vs [24,31]
+ low projection on (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 bar_low_0_1))) : (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 bar_low_0_1)))
+KLEE: WARNING ONCE: calling external: printf(59815848, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:27
+16
+32
+64
+2048
+128
+256
+512
+1024
+Size of rdmap : 15
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %22 = load i32, i32* %H, align 4, !dbg !154
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:40
+
+[ (Slt 4294967286
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Eq 4294967295
+          (ReadLSB w32 0 bar_low_0_1))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 109 , 109 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 bar_high_1_1)))
+(And (Eq 4294967295
+          (ReadLSB w32 0 bar_low_0_1))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 133 , 133 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:51
+  br i1 %25, label %34, label %37, !dbg !174
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:41
+  br i1 %25, label %27, label %30, !dbg !163
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %22 = load i32, i32* %H, align 4, !dbg !154
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:40
+
+[ (Slt 4294967286
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Eq false
+          (Eq 4294967295
+              (ReadLSB w32 0 bar_low_0_1)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 121 , 121 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 bar_high_1_1)))
+(And (Eq false
+          (Eq 4294967295
+              (ReadLSB w32 0 bar_low_0_1)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 145 , 145 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:51
+  br i1 %25, label %34, label %37, !dbg !174
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:41
+  br i1 %25, label %27, label %30, !dbg !163
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+===============
+
+===============
+Found Violation at : 
+diff : 42
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 109 , 109 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Slt (ReadLSB w32 0 bar_low_0_1)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 67 , 67 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 109 , 109 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 133 , 133 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 54
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 121 , 121 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Slt (ReadLSB w32 0 bar_low_0_1)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 67 , 67 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 121 , 121 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 145 , 145 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 84
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Slt (ReadLSB w32 0 bar_low_0_1)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 67 , 67 ]
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_high_1_1)))
+(And (Eq false
+          (Slt (ReadLSB w32 0 bar_low_0_1)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 151 , 151 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 66
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Slt (ReadLSB w32 0 bar_low_0_1)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 67 , 67 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 133 , 133 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 78
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (Slt (ReadLSB w32 0 bar_low_0_1)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 67 , 67 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_high_1_1)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 145 , 145 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 57
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (And (Eq false
+               (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+                    1))
+           (Eq false (Slt N0 5)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 94 , 94 ]
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_high_1_1)))
+(And (Eq false
+          (Slt (ReadLSB w32 0 bar_low_0_1)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 151 , 151 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 69
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_high_1_1))
+(And (And (Eq false
+               (Slt N0:(ReadLSB w32 0 bar_low_0_1)
+                    1))
+           (Slt N0 5))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 82 , 82 ]
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_high_1_1)))
+(And (Eq false
+          (Slt (ReadLSB w32 0 bar_low_0_1)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 151 , 151 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:39
+  %20 = icmp slt i32 %4, 0, !dbg !150
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:25
+  %6 = icmp slt i32 %4, 1, !dbg !129
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:40
+	=====================
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c:23
+	=====================
+
+>>>> Found violations at  : 2 locations.
+all high sym regions: 
+bar_high_1_1
+all low sym regions: 
+bar_low_0_1
+return_value
+
+KLEE: done: #Timing Side Channel  Locs = 2
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 68
+KLEE: done: maxInst = 152
+KLEE: done: HAncestors = 2
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 822
+KLEE: done: completed paths = 8
+KLEE: done: generated tests = 8
+Lazy initialization is ON 
+lazy single spec file? 
+Parsed Prog Model Spec 
+ input function: bar
+ low function bar arg 0
+ high function bar arg 1

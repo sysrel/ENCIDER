@@ -1,0 +1,1 @@
+mixed,bar,0
