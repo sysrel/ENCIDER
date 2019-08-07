@@ -168,16 +168,20 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
     switch (cexpr->getKind()) {
        case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);
+          llvm::errs() << "Checking sensitivity of read expression " <<  (*rexpr) << "\n";
           if (isInSymRegion(rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high))
              return true;
-          break;
+          return false;
        }
        default: {
           bool result = false;
+          bool found = false; 
           for(unsigned int i = 0; i<cexpr->getNumKids(); i++)
-             if (exprHasSymRegion(cexpr->getKid(i), high))
-                return true;
-          return false;
+             if (exprHasSymRegion(cexpr->getKid(i), high)) {
+                found = true;
+                break;
+             }
+          return found;
        }
     }
 }

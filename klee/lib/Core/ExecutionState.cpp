@@ -1316,14 +1316,14 @@ int ExecutionState::getPMNumActions() {
 }
 
 
-ref<Expr> ExecutionState::addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &arrayCache, bool &valid) {
+ref<Expr> ExecutionState::addSymbolicReturnAsPublicOutput(std::string entry, std::string name, MemoryManager *memory, ArrayCache &arrayCache, MemoryObject* &mo, bool &valid) {
    Function *f = moduleHandle->getFunction(entry);
    Type *t = f->getReturnType();
    valid = !t->isVoidTy();
    if (!valid) return NULL;
    const llvm::DataLayout & dl = f->getParent()->getDataLayout();
    size_t allocationAlignment = 8;
-   MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(t), false, /*true*/false, NULL, allocationAlignment);
+   mo =  memory->allocate(dl.getTypeAllocSize(t), false, /*true*/false, NULL, allocationAlignment);
    mo->name = name;
    const Array *array = arrayCache.CreateArray(mo->name, mo->size);
    ObjectState *sos = ((Executor*)theInterpreter)->bindObjectInState(*this, mo, true, array);

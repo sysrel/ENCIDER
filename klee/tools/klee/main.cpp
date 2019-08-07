@@ -113,12 +113,19 @@ extern std::set<std::string> inputFuncs;
 extern std::map<std::string, std::set<int> > highFunctionArgs;
 // Maps function arguments to its low security regions
 extern std::map<std::string, std::set<int> > lowFunctionArgs;  
+// Maps function arguments to its mixed security regions
+extern std::map<std::string, std::set<int> > mixedFunctionArgs;  
 // Maps types to its high security regions
 extern std::map<std::string, std::vector<region> > highTypeRegions;
 // Maps types to its low security regions
 extern std::map<std::string, std::vector<region> > lowTypeRegions;
 // Maps symbolic regions to its high security regions
-
+// Maps symbolic regions to its high security regions
+// unique symbolic names eliminate the need to do the mapping per state
+extern std::map<std::string, std::vector<region> > highSymRegions;
+// Maps symbolic regions to its low security regions
+// unique symbolic names eliminate the need to do the mapping per state
+extern std::map<std::string, std::vector<region> > lowSymRegions;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -1204,6 +1211,14 @@ void readSensitiveFunctionArgs(const char *name) {
                args = lowFunctionArgs[fname];
             args.insert(value);       
             lowFunctionArgs[fname] = args;
+         }
+         else if (marker == "mixed") {
+            llvm::outs() << " mixed function " << fname << " arg " << value << "\n";
+            std::set<int> args;
+            if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
+               args = mixedFunctionArgs[fname];
+            args.insert(value);       
+            mixedFunctionArgs[fname] = args;            
          } 
          else assert(false && "function argument sensitivity other than high/low");
      }
@@ -2155,12 +2170,12 @@ int main(int argc, char **argv, char **envp) {
     *theStatisticManager->getStatisticByName("Forks");
 
 
-  llvm::errs() << "all high vars: \n";
-  for(auto h : *highLoc)
-      llvm::errs() << h << "\n";
-  llvm::errs() << "all low vars: \n";
-  for(auto lw : *lowLoc)
-      llvm::errs() << lw << "\n"; 
+  llvm::errs() << "all high sym regions: \n";
+  for(auto h : highSymRegions)
+      llvm::errs() << h.first << "\n";
+  llvm::errs() << "all low sym regions: \n";
+  for(auto lw : lowSymRegions)
+      llvm::errs() << lw.first << "\n"; 
 
   handler->getInfoStream()
     << "KLEE: done: explored paths = " << 1 + forks << "\n";
