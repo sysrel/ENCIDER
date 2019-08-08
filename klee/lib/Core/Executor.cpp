@@ -108,6 +108,8 @@ size_t maxVoidTypeCastSize = 8;
 std::set<std::string> reached;
 
 /* Side channel begin */
+// Type hints for void function args
+std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 extern std::set<std::pair<std::string, int>> cachelocs;
 extern unsigned int cacheLineBits;
 //  Functions that receive input from the environment
@@ -4843,21 +4845,25 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
     if (inputFuncs.find(function->getName()) == inputFuncs.end()) { 
        return false; 
     }
+    std::string fname = function->getName();
     std::set<int> argsH, argsL, argsM; 
-    if (highFunctionArgs.find(function->getName()) != highFunctionArgs.end())
-       argsH = highFunctionArgs[function->getName()];
-    if (lowFunctionArgs.find(function->getName()) != lowFunctionArgs.end())
-       argsL = lowFunctionArgs[function->getName()];
-    if (mixedFunctionArgs.find(function->getName()) != mixedFunctionArgs.end())
-       argsM = mixedFunctionArgs[function->getName()];      
+    if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+       argsH = highFunctionArgs[fname];
+    if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+       argsL = lowFunctionArgs[fname];
+    if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
+       argsM = mixedFunctionArgs[fname];      
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
        if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
           // a local var
           Type *at = agi->getType();
           if (at->isPointerTy()) {
-             Type *bt = at->getPointerElementType();
-             std::string btname = getTypeName(bt);
+                Type *bt = at->getPointerElementType();
+                std::string btname = getTypeName(bt);
+                if (funcArgTypeHints.find(fname) != funcArgTypeHints.end())
+                   if (funcArgTypeHints[fname].find(ai) != funcArgTypeHints[fname].end())
+                       btname = funcArgTypeHints[fname][ai];
                  std::string type_str;
                  llvm::raw_string_ostream rso(type_str);
                  at->print(rso);
@@ -5941,6 +5947,10 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::errs() << "lazy init arg " << mo->name << "\n";
               #endif 
               std::string atname = getTypeName(at);
+              // Use the input arg type hint, if any!
+              if (funcArgTypeHints.find(fname) != funcArgTypeHints.end())
+                 if (funcArgTypeHints[fname].find(argi) != funcArgTypeHints[fname].end())
+                    atname = funcArgTypeHints[fname][argi];
               // check if it is a security sensitive arg, if so mark the memory object ishigh
               if (argH.find(argi) != argH.end()) {
                  std::vector<region> rs; 

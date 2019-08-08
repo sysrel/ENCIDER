@@ -107,6 +107,8 @@ extern std::set<std::pair<std::string, int>> locs;
 // source code locations with cache side channels
 extern std::set<std::pair<std::string, int>> cachelocs;
 std::set<std::string> voidTypeCasts;
+// Type hints
+extern std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 //  Functions that receive input from the environment
 extern std::set<std::string> inputFuncs;
 // Maps function arguments to its high security regions
@@ -234,6 +236,9 @@ namespace {
 
   cl::opt<std::string>
   VoidTypeCasts("void-type-casts", cl::desc("Void Type Cast Spec File\n"));
+
+  cl::opt<std::string>
+  FuncArgTypeHints("func-arg-type-hints", cl::desc("Type hints for function arguments of void pointer types\n"));
 
   cl::opt<std::string>
   SideChannelEntryPoint("side-channel-entry", cl::desc("function name from which time side channel analysis will be initiated \ 
@@ -1198,6 +1203,36 @@ void readSensitiveTypeRegions(const char *name) {
   cf.close();
 }
 
+void readFuncArgTypeHints(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) {
+       std::string fname, arg, tname;
+       std::istringstream iss(line);
+       std::getline(iss, fname,',');
+       fname = ltrim(rtrim(fname));
+       std::getline(iss, arg,',');
+       arg = ltrim(rtrim(arg));
+       unsigned int value = std::stoi(arg);
+       std::getline(iss, tname,',');
+       tname = ltrim(rtrim(tname));
+       std::map<int, std::string> tmap;
+       if (funcArgTypeHints.find(fname) == funcArgTypeHints.end())
+          funcArgTypeHints[fname] = tmap;
+       else {
+          tmap = funcArgTypeHints[fname];
+          if (tmap.find(value) != tmap.end())
+             assert(false && "Cannot assign multiple type hints to the same argument!\n");
+          tmap[value] = tname;
+          funcArgTypeHints[fname] = tmap;  
+       } 
+     }
+  }
+  cf.close();
+}
+
+
 void readSensitiveFunctionArgs(const char *name) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
@@ -2030,6 +2065,9 @@ int main(int argc, char **argv, char **envp) {
 
   if (TimingObservationPoints != "")
      readTimingObservationPoints(TimingObservationPoints.c_str());
+
+  if (FuncArgTypeHints != "")
+     readFuncArgTypeHints(FuncArgTypeHints.c_str());
 
   if (InputFuncs != "")
      readInputFuncs(InputFuncs.c_str());
