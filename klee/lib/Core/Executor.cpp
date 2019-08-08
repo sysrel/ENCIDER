@@ -158,6 +158,7 @@ ArrayCache *acache = NULL;
 //int maxForkMulRes = 10;
 int maxForkMulRes = 2147483647;
 int primArraySize = 32;
+std::map<std::string, int> uniqueSym;
 /* Side channel end */
 
 //#define VBSC
@@ -231,6 +232,17 @@ void timeSideChannelAnalysis(Executor *executor) {
 }
 
 
+std::string getUniqueSymRegion(std::string name) {
+  unsigned id;
+  std::string result;
+  if (uniqueSym.find(name) == uniqueSym.end()) 
+     id = 0;
+  else id = uniqueSym[name];
+  result = name + "_" + llvm::utostr(id++);
+  uniqueSym[name] = id;
+  return result;   
+}
+
 void setHighMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs) {
    long saddr = (long)&state;
    std::map<ref<Expr>, std::vector<region> > m;
@@ -280,14 +292,18 @@ void addLowMemoryRegion(ExecutionState &state, ref<Expr> a, region r) {
 }
 
 void setHighSymRegion(std::string name, std::vector<region> rs) {
-  if (highSymRegions.find(name) != highSymRegions.end())
+  if (highSymRegions.find(name) != highSymRegions.end()) {
+     llvm::errs() << "setting high sym region for " << name << "failed!\n";
      assert(false && "duplicate entry for highsymregions");
+  }
   highSymRegions[name] = rs;
 }
 
 void setLowSymRegion(std::string name, std::vector<region> rs) {
-  if (lowSymRegions.find(name) != lowSymRegions.end())
+  if (lowSymRegions.find(name) != lowSymRegions.end()) {
+     llvm::errs() << "setting low sym region for " << name << "failed!\n";
      assert(false && "duplicate entry for lowsymregions");
+  }
   lowSymRegions[name] = rs;
 }
 
@@ -300,7 +316,6 @@ void initHighLowRegions(ExecutionState &state) {
 
 // Check intersection of [min1, max1] and [min2, max2]
 bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2) {
-  llvm::errs() << "[" << min1 << "," << max1 << "] vs [" << min2 << "," << max2 << "]\n"; 
   if ((min1 > max2) || (min2 > max1))
      return false;
   return true; 
@@ -326,7 +341,7 @@ bool isASymRegion(std::string symname, bool high) {
 }
 
 bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high) {
-  llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
+  //llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
   if (high) {
      if (highSymRegions.find(symname) == highSymRegions.end()) 
         return false;
@@ -4054,7 +4069,7 @@ void Executor::run(ExecutionState &initialState) {
              srd->ru = currentRD->ru; 
 	     if (hasHloc && !hasLloc) {
 	     	ref<Expr> proj = getProjectionOnRegion(r1, true);
-                llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
+                //llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
                 // check if the projection is consistent with the path condition
                 bool result;
                 bool success = solver->mayBeTrue(*s, proj, result);
@@ -4099,7 +4114,7 @@ void Executor::run(ExecutionState &initialState) {
 
                 if (hasLloc) {
    	           ref<Expr> proj = getProjectionOnRegion(r1, false);
-                   llvm::errs() << " low projection on " << r1 << " : " << proj << "\n";
+                   //llvm::errs() << " low projection on " << r1 << " : " << proj << "\n";
 
                    // check if the projection is consistent with the path condition
                    bool result;
@@ -4877,12 +4892,12 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                       uniqueName = name + "_high_" + std::to_string(ai) + "_" + llvm::utostr(++id);
                    if (argsL.find(ai) != argsL.end())
                       uniqueName = name + "_low_" + std::to_string(ai) + "_" + llvm::utostr(++id);
-                   while (!state.arrayNames.insert(uniqueName).second) {
+                   /*while (!state.arrayNames.insert(uniqueName).second) {
                        if (argsH.find(ai) != argsH.end())
                           uniqueName = name + "_high_" + std::to_string(ai) + "_" + llvm::utostr(++id);
                        if (argsL.find(ai) != argsL.end())
                           uniqueName = name + "_low_" + std::to_string(ai) + "_" + llvm::utostr(++id);
-                   }
+                   }*/
                    sm->name = uniqueName;
                    if (argsH.find(ai) != argsH.end()) {
                       std::vector<region> rs; 
@@ -5921,7 +5936,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::outs() << "to be made symbolic? " << mksym << "\n";
               #endif
-              mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
+              mo->name = getUniqueSymRegion(fname + std::string("_arg_") + std::to_string(ind));
               #ifdef VB
               llvm::errs() << "lazy init arg " << mo->name << "\n";
               #endif 
@@ -5999,18 +6014,10 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         Instruction *inst = &*(entryFunc->begin()->begin());
         const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
         MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
-        mo->name = uniquefname  + std::string("_arg_") + std::to_string(ind);
-        unsigned id = 0;
-        //std::string name = "shadow";
-        std::string name = uniquefname  + std::string("_arg_") + std::to_string(ind);
-        std::string uniqueName = name;
-        while (!state.arrayNames.insert(uniqueName).second) {
-              uniqueName = name + "_" + llvm::utostr(++id);
-        }
-        mo->name = uniqueName;
+        mo->name = getUniqueSymRegion(fname  + std::string("_arg_") + std::to_string(ind));
         llvm::errs() << "lazy init arg " << mo->name << "\n";
         // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
-        const Array *array = arrayCache.CreateArray(uniqueName, mo->size);
+        const Array *array = arrayCache.CreateArray(mo->name, mo->size);
         ObjectState *sos = bindObjectInState(state, mo, true, array);
         ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
         bindArgument(kf, ind, state, result);
@@ -6034,9 +6041,9 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
            mo->ishigh = true;
            setHighMemoryRegion(state, mo->getBaseExpr(), rs);
            setHighSymRegion(mo->name, rs);
-           #ifdef VB
+           //#ifdef VB
             llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive \n";
-           #endif 
+           //#endif 
         }
         else if (argL.find(argi) != argL.end()) {
            std::vector<region> rs;
@@ -6053,9 +6060,9 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
            mo->islow = true;
            setLowMemoryRegion(state, mo->getBaseExpr(), rs);
            setLowSymRegion(mo->name, rs);
-           #ifdef VB
+           //#ifdef VB
             llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as not security sensitive\n"; 
-           #endif 
+           //#endif 
         }        
         else if (argM.find(argi) != argM.end()) {
            if (lowTypeRegions.find(atname) == lowTypeRegions.end() && 

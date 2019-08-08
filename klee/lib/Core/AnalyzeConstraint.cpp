@@ -169,7 +169,7 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
     switch (cexpr->getKind()) {
        case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);
-          llvm::errs() << "Checking sensitivity of read expression " <<  (*rexpr) << "\n";
+          //llvm::errs() << "Checking sensitivity of read expression " <<  (*rexpr) << "\n";
           if (isInSymRegion(rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high))
              return true;
           return false;
