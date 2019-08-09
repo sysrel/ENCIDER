@@ -1,0 +1,544 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test15/klee-out-2"
+KLEE: Using STP solver backend
+Uncov init=825
+Couldn't open file 
+KLEE: WARNING: undefined reference to function: printf
+Storing size of %struct.mytest for max void cast size: 12 
+High symbolic regions:
+foo_arg_0_0
+Low symbolic regions:
+foo_arg_0_0
+Registering publicOutputReturningFName as foo
+reached foo
+reached loop
+KLEE: WARNING ONCE: calling external: printf(40548336, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:30
+16
+32
+64
+2048
+128
+256
+512
+1024
+Size of rdmap : 15
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %31 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !166
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+
+[ (Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Eq false
+          (Eq 4294967295
+              (ReadLSB w32 4 foo_arg_0_0)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 132 , 132 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Eq 4294967295
+              (ReadLSB w32 4 foo_arg_0_0)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 156 , 156 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:54
+  br i1 %38, label %47, label %50, !dbg !188
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:44
+  br i1 %38, label %40, label %43, !dbg !177
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %31 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !166
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+
+[ (Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Eq 4294967295
+          (ReadLSB w32 4 foo_arg_0_0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 120 , 120 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq 4294967295
+          (ReadLSB w32 4 foo_arg_0_0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 144 , 144 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:54
+  br i1 %38, label %47, label %50, !dbg !188
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:44
+  br i1 %38, label %40, label %43, !dbg !177
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+===============
+
+===============
+Found Violation at : 
+diff : 67
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Slt (ReadLSB w32 4 foo_arg_0_0)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (And (Eq false
+               (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+                    1))
+           (Slt N0 5))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 91 , 91 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 84
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Slt (ReadLSB w32 4 foo_arg_0_0)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 55
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Slt (ReadLSB w32 4 foo_arg_0_0)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (And (Eq false
+               (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+                    1))
+           (Eq false (Slt N0 5)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 103 , 103 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 82
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 156 , 156 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 156 , 156 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 132 , 132 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 70
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 144 , 144 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 144 , 144 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 120 , 120 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 58
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 132 , 132 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 46
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 120 , 120 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+	=====================
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+	=====================
+
+>>>> Found violations at  : 2 locations.
+all high sym regions: 
+foo_arg_0_0
+all low sym regions: 
+foo_arg_0_0
+return_value
+
+KLEE: done: #Timing Side Channel  Locs = 2
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 75
+KLEE: done: maxInst = 159
+KLEE: done: HAncestors = 2
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 835
+KLEE: done: completed paths = 8
+KLEE: done: generated tests = 8
+Lazy initialization is ON 
+lazy single spec file? 
+ mixed function foo arg 0
