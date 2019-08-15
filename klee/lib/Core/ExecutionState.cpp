@@ -686,6 +686,11 @@ bool ExecutionState::lcmCompletesWith(std::string fn) {
   else return true;
 }
 
+int ExecutionState::getCurrentSuccessReturnValue() {
+  if (hasLCM()) 
+    return lcmState->getCurrentSuccessValue();
+  return 0;
+}
 
 // set up the state according to the next step in the life cycle model
 // if move == true then fn is the one that has just returned and 
@@ -755,10 +760,19 @@ bool ExecutionState::lcmStepMovesWhenReturns(std::string fname) {
 Identifier::Identifier(std::string s) {
   name = s;
   type = identifier;
+  successretval = 0;
+}
+
+void Identifier::setSuccessReturnValue(int value) {
+  successretval = value;
+}
+
+int Identifier::getSuccessReturnValue() {
+  return successretval;
 }
 
 void Identifier::print() {
-  llvm::outs() << name << " ";
+  llvm::outs() << name << " [" << successretval << "]";
 }
 
 std::string Identifier::getValue() { return name; }
@@ -875,6 +889,14 @@ bool LifeCycleModelState::moveStep() {
 
 int LifeCycleModelState::getCurrentStep() {
   return state;
+}
+
+int LifeCycleModelState::getCurrentSuccessValue() {
+  Sequential *seq = lcm->getStep(state);
+  if (seq->getType() == identifier) {
+     return ((Identifier*)seq)->getSuccessReturnValue();
+  }
+  assert(false && "Not sure what to return for concurrent\n!");   
 }
 
 bool LifeCycleModelState::hasCompleted() {

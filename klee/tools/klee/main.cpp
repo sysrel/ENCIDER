@@ -102,6 +102,7 @@ extern std::set<std::string> * highLoc, *lowLoc;
 extern int maxForkMulRes;
 extern int primArraySize;
 unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
+extern std::map<std::string, std::map<unsigned int, std::vector<unsigned int> > > externalFuncsWithSensitiveFlow;
 // source code locations with timing side channels
 extern std::set<std::pair<std::string, int>> locs;
 // source code locations with cache side channels
@@ -143,6 +144,21 @@ CallbackAPIHandler *callbackAPIHandler = NULL;
 FreeAPIHandler *freeAPIHandler = NULL;
 SideEffectAPIHandler *sideEffectAPIHandler = NULL;
 */
+
+void writeSensitiveFlows(const char *fname) {
+  std::fstream rc(fname, std::fstream::out);
+  if (rc.is_open()) {
+     for(auto sf: externalFuncsWithSensitiveFlow) {
+       for(auto fm : sf.second) {
+          rc << sf.first;
+          for(auto arg : fm.second)
+             rc << "," << arg;
+          rc << "\n";
+       }
+     }  
+  }
+}
+
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
@@ -1217,9 +1233,11 @@ void readFuncArgTypeHints(const char *name) {
        unsigned int value = std::stoi(arg);
        std::getline(iss, tname,',');
        tname = ltrim(rtrim(tname));
-       std::map<int, std::string> tmap;
-       if (funcArgTypeHints.find(fname) == funcArgTypeHints.end())
+       std::map<int, std::string> tmap;       
+       if (funcArgTypeHints.find(fname) == funcArgTypeHints.end()) {
+          tmap[value] = tname;
           funcArgTypeHints[fname] = tmap;
+       }
        else {
           tmap = funcArgTypeHints[fname];
           if (tmap.find(value) != tmap.end())
@@ -1553,7 +1571,17 @@ Sequential *readLCMConfig(const char *name) {
             group.clear();
         }
         else if (token == ";") {
-            Identifier *id = new Identifier(identifier);
+            std::string fname, value;
+            int success_retvalue = 0;
+            if (identifier.find("[") != std::string::npos) {
+               std::istringstream iss(identifier);
+               getline(iss, fname, '[');  
+               getline(iss, value, ']');
+               success_retvalue = std::stoi(value);
+            }
+            else fname = identifier; 
+            Identifier *id = new Identifier(fname);
+            id->setSuccessReturnValue(success_retvalue);
             res->addStep(id);
             identifier = "";
         }
@@ -1564,7 +1592,17 @@ Sequential *readLCMConfig(const char *name) {
         } 
       }
       if (identifier != "") {
-         Identifier *id = new Identifier(identifier);
+         std::string fname, value;
+         int success_retvalue = 0;
+         if (identifier.find("[") != std::string::npos) {
+            std::istringstream iss(identifier);
+            getline(iss, fname, '[');  
+            getline(iss, value, ']');
+            success_retvalue = std::stoi(value);
+         }
+         else fname = identifier; 
+         Identifier *id = new Identifier(fname);
+         id->setSuccessReturnValue(success_retvalue);
          res->addStep(id);
          identifier = "";        
       }
@@ -2278,6 +2316,8 @@ int main(int argc, char **argv, char **envp) {
     llvm::errs().resetColor();
 
   handler->getInfoStream() << stats.str();
+
+  writeSensitiveFlows("sensitiveFlows.txt"); 
 
   delete handler;
 

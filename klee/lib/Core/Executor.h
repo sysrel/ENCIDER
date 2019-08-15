@@ -153,6 +153,9 @@ public:
 
   const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
 
+  void checkAndRecordSensitiveFlow(ExecutionState &state, llvm::Function *function, 
+                                                   std::vector<ref<Expr> > & args); 
+
   bool checkHighArgumentFlow(ExecutionState &state, 
                                   KInstruction *target,
                                   llvm::Function *function,

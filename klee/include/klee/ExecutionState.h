@@ -129,8 +129,11 @@ public:
 class Identifier : public Sequential {
 private:
   std::string name;
+  int successretval;
 public:
   Identifier(std::string s);
+  void setSuccessReturnValue(int);
+  int getSuccessReturnValue();
   virtual void print();
   virtual std::string getValue();
 };
@@ -162,6 +165,7 @@ public:
   LifeCycleModelState(LifeCycleModelState&);
   bool moveStep();
   int getCurrentStep();
+  int getCurrentSuccessValue();
   bool hasCompleted();
   bool isInitialized();
   void setInitialized();
@@ -242,6 +246,7 @@ public:
   bool lcmCompleted();
   void updateLCMState();
   bool lcmStepMovesWhenReturns(std::string);
+  int getCurrentSuccessReturnValue();
   static void setLifeCycleModel(Sequential *lcm);
   void setWaitingForThreadsToTerminate(bool);
   bool getWaitingForThreadsToTerminate(); 

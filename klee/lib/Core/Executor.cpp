@@ -109,6 +109,9 @@ std::set<std::string> reached;
 
 /* Side channel begin */
 // Type hints for void function args
+std::map<std::string, std::map<unsigned int, std::vector<unsigned int> > > externalFuncsWithSensitiveFlow;
+std::map<std::string, unsigned int> externalFuncs;
+std::map<std::string, std::set<unsigned int> > externalFuncsSig;
 std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 extern std::set<std::pair<std::string, int>> cachelocs;
 extern unsigned int cacheLineBits;
@@ -224,6 +227,8 @@ std::set<Type*> embeddedTypes;
 std::map<Type*, std::set<Type*> >  embeddingTypes;
 bool singleSuccessor = true;
 
+std::string getTypeName(Type *t);
+
 void timeSideChannelAnalysis(Executor *executor) {
  for(rroot : resourceTreeRootList) {
     propagate(rroot, "", executor);
@@ -233,6 +238,79 @@ void timeSideChannelAnalysis(Executor *executor) {
  printviolations(executor);
 }
 
+Type *getTypeFromName(llvm::Module *module, std::string tname) {
+   llvm::TypeFinder StructTypes;
+   StructTypes.run(*(module), true);
+   for (auto *STy : StructTypes) { 
+    llvm::errs() << getTypeName(STy) << " vs " << tname << "\n";
+    if (getTypeName(STy) == tname)
+       return STy;
+   }
+   return NULL;
+}
+
+void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *function, 
+                                                   std::vector<ref<Expr> > & args) {
+     std::string fname = function->getName().str(); 
+     std::vector<unsigned int> highIndices;
+     unsigned int sig = 0;
+     unsigned int a = 0;
+     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, a++) {
+        Type *at = agi->getType();
+        if (at->isPointerTy()) {
+           Type *bt = at->getPointerElementType();
+           if (funcArgTypeHints.find(fname) != funcArgTypeHints.end())
+              if (funcArgTypeHints[fname].find(a) != funcArgTypeHints[fname].end()) {
+                 std::string btname= funcArgTypeHints[fname][a];
+                 bt = getTypeFromName(kmodule->module, btname);
+              }
+           ObjectPair op;
+           bool asuccess; 
+           ref<Expr> base = args[a];
+           solver->setTimeout(coreSolverTimeout);
+           if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+              base = toConstant(state, base, "resolveOne failure");
+              asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+           }
+           solver->setTimeout(0);
+           if (asuccess) {
+              ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int32), getWidthForLLVMType(bt));
+              llvm::errs() << "checking arg " << a << " of " <<  fname << " : " << result << " for sensitive flow\n"; 
+              if (exprHasSymRegion(result, true)) {
+                 llvm::errs() << " high region flows into " << fname << "\n";
+                 highIndices.push_back(a);
+                 sig += pow(2,a);
+              }
+           }
+        }
+        else {
+           if (exprHasSymRegion(args[a], true)) {
+              llvm::errs() << " high region flows into " << fname << "\n";
+              highIndices.push_back(a);
+              sig += pow(2,a);
+           }
+        }
+     }
+     if (highIndices.size() > 0) {          
+        unsigned int index = 0;
+        std::set<unsigned int> sigs;
+        std::map<unsigned int, std::vector<unsigned int> > fmap; 
+        if (externalFuncsWithSensitiveFlow.find(fname) != externalFuncsWithSensitiveFlow.end()) {
+           sigs = externalFuncsSig[fname];
+           if (sigs.find(sig) == sigs.end()) { 
+              fmap = externalFuncsWithSensitiveFlow[fname];  
+              index = externalFuncs[fname];
+              externalFuncs[fname] = index + 1; 
+           }
+           else return;
+        }
+        else externalFuncs[fname] = 1;       
+        sigs.insert(sig);
+        externalFuncsSig[fname] = sigs;
+        fmap[index] = highIndices; 
+        externalFuncsWithSensitiveFlow[fname] = fmap;
+     }
+}
 
 std::string getUniqueSymRegion(std::string name) {
   unsigned id;
@@ -295,7 +373,14 @@ void addLowMemoryRegion(ExecutionState &state, ref<Expr> a, region r) {
 
 void setHighSymRegion(std::string name, std::vector<region> rs) {
   if (highSymRegions.find(name) != highSymRegions.end()) {
+     for(unsigned int i=0; i < rs.size(); i++) {
+        llvm::errs() << "[" << rs[i].offset << "," << rs[i].size << "]\n"; 
+     }
      llvm::errs() << "setting high sym region for " << name << "failed!\n";
+     std::vector<region> ers = highSymRegions[name];
+     for(unsigned int i=0; i < ers.size(); i++) {
+        llvm::errs() << "[" << ers[i].offset << "," << ers[i].size << "]\n"; 
+     }
      assert(false && "duplicate entry for highsymregions");
   }
   highSymRegions[name] = rs;
@@ -2205,6 +2290,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     // Control flow
   case Instruction::Ret: {
     ReturnInst *ri = cast<ReturnInst>(i);
+    Function *rf = ri->getParent()->getParent();
     KInstIterator kcaller = state.stack.back().caller;
     Instruction *caller = kcaller ? kcaller->inst : 0;
     bool isVoidReturn = (ri->getNumOperands() == 0);
@@ -2248,6 +2334,18 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
             #endif
             state.returnValueModel[ri->getParent()->getParent()->getName()] = re->getZExtValue(re->getWidth());
          }
+         else if (state.lcmStepMovesWhenReturns(rf->getName().str())) { //  consider possibility of a success case
+            bool res;
+            //ref<Expr> reszero = Expr::createIsZero(result);
+            ref<Expr> ressucc = EqExpr::create(result,ConstantExpr::alloc(state.getCurrentSuccessReturnValue(), result->getWidth()));
+            double timeout = coreSolverTimeout;
+            solver->setTimeout(timeout);
+            bool success = solver->mayBeTrue(state, ressucc, res);
+            solver->setTimeout(0);
+            if (success && res) {
+               state.returnValueModel[ri->getParent()->getParent()->getName()] = state.getCurrentSuccessReturnValue();
+            }
+         }
       }
       #ifdef VB
       llvm::outs() << "return value " << result << " for " << ri->getParent()->getParent()->getName() << "\n";
@@ -2259,7 +2357,6 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       assert(!caller && "caller set on initial stack frame");
       /* SYSREL extension */
 
-      Function *rf = ri->getParent()->getParent();
 
       #ifdef VB     
 
@@ -4570,7 +4667,7 @@ void Executor::callExternalFunction(ExecutionState &state,
    
 
     if (progModel) {
-
+      checkAndRecordSensitiveFlow(state,function, arguments);
       // check if PROSE version of the function exists, if so use that one
       std::string prosename = function->getName().str() + "_PROSE"; 
       Function *proseFn = moduleHandle->getFunction(prosename);
@@ -4609,7 +4706,7 @@ void Executor::callExternalFunction(ExecutionState &state,
              }
           }          
           /* side channel */
-          checkHighArgumentFlow(state, target, function, arguments);
+          //checkHighArgumentFlow(state, target, function, arguments);
           /* side channel */
           #ifdef VB
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
@@ -4625,7 +4722,15 @@ void Executor::callExternalFunction(ExecutionState &state,
              }
            }
           }
-       }
+          else { // if input function, we also want to symbolize return value
+             symbolizeReturnValue(state, target, function, abort);
+             if (abort) {
+                terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+                return;
+             }
+          }
+       } // even if a model is handled via modeling it may be designated as an input function!
+       else symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments);
        return;
        /*
        bool resHandled = false;
@@ -4845,6 +4950,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
     if (inputFuncs.find(function->getName()) == inputFuncs.end()) { 
        return false; 
     }
+    llvm::errs() << "Handling input function " << function->getName() << "\n"; 
     std::string fname = function->getName();
     std::set<int> argsH, argsL, argsM; 
     if (highFunctionArgs.find(fname) != highFunctionArgs.end())
@@ -4861,12 +4967,15 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
           if (at->isPointerTy()) {
                 Type *bt = at->getPointerElementType();
                 std::string btname = getTypeName(bt);
+                bool hintFound = false;
                 if (funcArgTypeHints.find(fname) != funcArgTypeHints.end())
-                   if (funcArgTypeHints[fname].find(ai) != funcArgTypeHints[fname].end())
+                   if (funcArgTypeHints[fname].find(ai) != funcArgTypeHints[fname].end()) {
+                       hintFound = true;
                        btname = funcArgTypeHints[fname][ai];
-                 std::string type_str;
-                 llvm::raw_string_ostream rso(type_str);
-                 at->print(rso);
+                   }
+                std::string type_str;
+                llvm::raw_string_ostream rso(type_str);
+                at->print(rso);
                 DataLayout *TD = kmodule->targetData;
                 // find the MemoryObject for this value
                 ObjectPair op;
@@ -4886,25 +4995,24 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                 if (asuccess) {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
-                   #ifdef VB
-                   llvm::errs() << "Symbolizing and marking argument " << ai << " of function as high" << function->getName() 
+                   //#ifdef VB
+                   llvm::errs() << "Symbolizing and marking argument " << ai << " of function " << function->getName() 
                                 << ", address=" << sm->getBaseExpr() << "\n";
                    llvm::errs() << "base addres=" << base << "\n";
-                   #endif
-                   unsigned id = 0;
+                   //#endif
                    std::string name = function->getName();
                    std::string uniqueName = name;
                    if (argsH.find(ai) != argsH.end())
-                      uniqueName = name + "_high_" + std::to_string(ai) + "_" + llvm::utostr(++id);
+                      uniqueName = name + "_high_" + std::to_string(ai);
                    if (argsL.find(ai) != argsL.end())
-                      uniqueName = name + "_low_" + std::to_string(ai) + "_" + llvm::utostr(++id);
+                      uniqueName = name + "_low_" + std::to_string(ai);
                    /*while (!state.arrayNames.insert(uniqueName).second) {
                        if (argsH.find(ai) != argsH.end())
                           uniqueName = name + "_high_" + std::to_string(ai) + "_" + llvm::utostr(++id);
                        if (argsL.find(ai) != argsL.end())
                           uniqueName = name + "_low_" + std::to_string(ai) + "_" + llvm::utostr(++id);
                    }*/
-                   sm->name = uniqueName;
+                   sm->name = getUniqueSymRegion(uniqueName);
                    if (argsH.find(ai) != argsH.end()) {
                       std::vector<region> rs; 
                       if (highTypeRegions.find(btname) != highTypeRegions.end()) {
@@ -4934,7 +5042,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                       setLowSymRegion(sm->name, rs); 
                    }
                    else if (argsM.find(ai) != argsM.end()) {
-                      if (lowTypeRegions.find(btname) == lowTypeRegions.end() && 
+                      if (!hintFound && lowTypeRegions.find(btname) == lowTypeRegions.end() && 
                             highTypeRegions.find(btname) == highTypeRegions.end())
                          assert(false && "Mixed sensitivity arg without type based sensitive regions!\n");
                       if (lowTypeRegions.find(btname) != lowTypeRegions.end()) {
@@ -4949,7 +5057,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                       }
                    }
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
-                   const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
+                   const Array *array = arrayCache.CreateArray(sm->name, sm->size);
                    ObjectState *sos = bindObjectInState(state, sm, true, array);
                    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
@@ -5091,7 +5199,7 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
     if (abort) {
        return NULL;
     }
-    mo->name = "%sym" + std::to_string(target->dest) + "_" + state.getUnique(function->getName().str());
+    mo->name = "%sym" + std::to_string(target->dest) + "_" + getUniqueSymRegion(function->getName().str());
     #ifdef VB
     llvm::outs() << "mo=" << mo << "\n";
     llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target address " << laddr << "\n";
@@ -5571,7 +5679,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   #ifdef VB
                   llvm::errs() << "mem obj addr=" << laddr << " in state " << &state << "\n";
                   #endif
-                  mo->name = state.getUnique(rso2str);
+                  mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
@@ -5886,7 +5994,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
       argL = lowFunctionArgs[fname];
    if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
       argM = mixedFunctionArgs[fname];   
-   std::string uniquefname = state.getUnique(fname);
+   std::string uniquefname = getUniqueSymRegion(fname);
    KFunction *kf = kmodule->functionMap[entryFunc];
    unsigned int ind = 0;
    unsigned int argi = 0;
@@ -5948,9 +6056,12 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               #endif 
               std::string atname = getTypeName(at);
               // Use the input arg type hint, if any!
+              bool hintFound = false;
               if (funcArgTypeHints.find(fname) != funcArgTypeHints.end())
-                 if (funcArgTypeHints[fname].find(argi) != funcArgTypeHints[fname].end())
+                 if (funcArgTypeHints[fname].find(argi) != funcArgTypeHints[fname].end()) {
+                    hintFound = true; 
                     atname = funcArgTypeHints[fname][argi];
+                 }
               // check if it is a security sensitive arg, if so mark the memory object ishigh
               if (argH.find(argi) != argH.end()) {
                  std::vector<region> rs; 
@@ -5991,7 +6102,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                  //#endif 
               }
               else if (argM.find(argi) != argM.end()) {
-                 if (lowTypeRegions.find(atname) == lowTypeRegions.end() && 
+                 if (!hintFound && lowTypeRegions.find(atname) == lowTypeRegions.end() && 
                        highTypeRegions.find(atname) == highTypeRegions.end())
                     assert(false && "Mixed sensitivity arg without type based sensitive regions!\n");
                  if (lowTypeRegions.find(atname) != lowTypeRegions.end()) {

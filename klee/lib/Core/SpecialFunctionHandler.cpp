@@ -2083,9 +2083,9 @@ bool APIHandler::handle(ExecutionState &state,
         llvm::outs() << "WARNING: api both branching and requesting not to symbolize the return value!\n";
 
      if (symbolizeRetValueOK) {
-        #ifdef VB
-        llvm::outs() << "symbolizing ret value in handler for function " << function->getName() << "\n";
-        #endif
+        //#ifdef VB
+        llvm::errs() << "symbolizing ret value in handler for function " << function->getName() << "\n";
+        //#endif
         ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function, abort);
         if (abort) return false;
      }
