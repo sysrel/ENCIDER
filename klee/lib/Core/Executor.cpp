@@ -114,7 +114,10 @@ std::map<std::string, unsigned int> externalFuncs;
 std::map<std::string, std::set<unsigned int> > externalFuncsSig;
 std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 extern std::set<std::pair<std::string, int>> cachelocs;
-extern unsigned int cacheLineBits;
+extern unsigned long cacheLineBits;
+extern bool cacheLineMode;
+extern bool cacheBitmaskMode;
+extern unsigned int cacheBitmask;
 //  Functions that receive input from the environment
 std::set<std::string> inputFuncs;
 // Maps function arguments to its high security regions
@@ -3269,19 +3272,30 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        // Since N-L bits are used to decide the cache line that gets accessed, we will check the following formula
        // \exists high'. base >> L<> base[high'/high] >> L
        llvm::errs() << "Checking for cache based side channel:\n";
-       ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
        ref<Expr> rexpr = renameExpr(memory, base, true); 
-       llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
-       ref<Expr> clexpr2 = LShrExpr::alloc(rexpr, ConstantExpr::alloc(cacheLineBits, 64));
-       ref<Expr> cleqexpr = EqExpr::create(clexpr1, clexpr2);
-       ref<Expr> diffcachelines = NotExpr::create(cleqexpr);
+       //llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
+       ref<Expr> diffcachelines;
+       if (cacheLineMode) {
+          llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
+          ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
+          ref<Expr> clexpr2 = LShrExpr::alloc(rexpr, ConstantExpr::alloc(cacheLineBits, 64));
+          ref<Expr> cleqexpr = EqExpr::create(clexpr1, clexpr2);
+          diffcachelines = NotExpr::create(cleqexpr);
+       }
+       else if (cacheBitmaskMode) {
+          ref<Expr>  aexpr1 = AndExpr::create(base, ConstantExpr::alloc(cacheBitmask, base->getWidth()));
+          ref<Expr>  aexpr2 = AndExpr::create(rexpr, ConstantExpr::alloc(cacheBitmask, base->getWidth()));
+          ref<Expr> cbmeqexpr = EqExpr::create(aexpr1, aexpr2);
+          diffcachelines = NotExpr::create(cbmeqexpr); 
+       }
+       else assert(false && "Need a model (cache line or bitmask) for checking cache side channels!\n");
        bool result;
        bool success = solver->mayBeTrue(state, diffcachelines, result);
        assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
        if (result) {
-          llvm::errs() << "CACHE BASED SIDE CHANNEL: \n";
+          std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
+          llvm::errs() << "CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
           ki->inst->print(llvm::errs());
-          llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
           const InstructionInfo &ii = kmodule->infos->getInfo(ki->inst);
           std::pair<std::string, int> p = std::pair<std::string, int>(ii.file, ii.line);
           cachelocs.insert(p);

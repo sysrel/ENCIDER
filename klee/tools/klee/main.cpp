@@ -100,7 +100,10 @@ std::map<std::string, std::vector<std::string> > inferenceClue;
 std::set<std::string> prefixRedact;
 extern std::set<std::string> * highLoc, *lowLoc;
 extern int maxForkMulRes;
-extern int primArraySize;
+int primArraySize;
+bool cacheLineMode;
+bool cacheBitmaskMode;
+unsigned long cacheBitmask = 0xFFFFFFF;
 unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
 extern std::map<std::string, std::map<unsigned int, std::vector<unsigned int> > > externalFuncsWithSensitiveFlow;
 // source code locations with timing side channels
@@ -278,10 +281,12 @@ namespace {
                                              \n \t (use decompose for focusing on relevant candidates only\n"));
   cl::opt<unsigned>
   CacheLineBits("cache-line-bits", cl::desc("cache line bits (log of cache line size) (default 6) \n"));
-   
+
+  cl::opt<unsigned>
+  CacheBitMask("cache-bit-mask", cl::desc("bit mask to check for secret dependent cache access\n"));    
  
-   cl::opt<std::string>
-   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
+  cl::opt<std::string>
+  PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
                                                     to map an undefined function to its model function\n"));
 
                                              
@@ -2116,8 +2121,24 @@ int main(int argc, char **argv, char **envp) {
   if (SensitiveTypeRegions != "")
      readSensitiveTypeRegions(SensitiveTypeRegions.c_str());
 
-  if (CacheLineBits)
+  if (CacheLineBits && CacheBitMask) {
+     llvm::errs() << "Choose either cache line mode (by setting cache line bits) or cache bitmask (by setting cache bitmask)!\n";
+     exit(1);
+  }
+      
+  if (CacheLineBits) {
+     cacheLineMode = true;
      cacheLineBits = CacheLineBits;
+  }
+
+  if (CacheBitMask) {
+     cacheBitmaskMode = true;
+     cacheBitmask = CacheBitMask;
+  }
+  else if (!cacheLineMode) {
+     llvm::errs() << "Using cache line mode (as default)!\n";
+     cacheLineMode = true;    
+  }
 
   if (PrefixRedact != "") {
      readPrefixes(PrefixRedact.c_str());
