@@ -252,6 +252,7 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
    return NULL;
 }
 
+
 void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *function, 
                                                    std::vector<ref<Expr> > & args) {
      std::string fname = function->getName().str(); 
@@ -499,6 +500,15 @@ void cloneLowMemoryRegions(const ExecutionState &from, ExecutionState &to) {
    lowMemoryRegions[taddr] = lowMemoryRegions[faddr];
 }
 
+void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::vector<ref<Expr> > & args, const MemoryObject *mo) {
+   std::string fname = f->getName(); 
+   std::vector<region> rs = getHighInfoFlowRegions(fname, args);
+   if (rs.size() > 0) {
+      setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+      setHighSymRegion(mo->name, rs);
+   }
+}
+
 
 // trim from left
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
@@ -546,7 +556,14 @@ void initializeLazyInit(ObjectState *obj, Type *t) {
   StructType *st = dyn_cast<StructType>(t);
   if (st) {
      std::string tname = getTypeName(t);
+     std::string type_str;
+     llvm::raw_string_ostream rso(type_str);
+     t->print(rso);
      int pos = tname.find("struct");
+     if (pos == std::string::npos) {
+        //llvm::errs() << "skipping lazy initializing fields of full type name =" << rso.str() << " due to non-standard type name!!!\n";
+        return;
+     }
      tname = tname.substr(pos);       
      //llvm::errs() << "checking initializers for type " << tname << "!\n";
      if (lazyInitInitializers.find(tname) != lazyInitInitializers.end()) {
@@ -2056,7 +2073,7 @@ void Executor::executeCall(ExecutionState &state,
        //llvm::errs() << "checking regular function call for high/low flows\n";
        //checkHighArgumentFlow(state, ki, f, arguments);
        // Handle certain functions in a special way, e.g., those that have inline assembly
-       if (lazyInit && APIHandler::handles(f->getName())) {
+       if (lazyInit && (APIHandler::handles(f->getName()) || isInfoFlowAPI(f->getName()))) {
           callExternalFunction(state, ki, f, arguments);
           return;
        }
@@ -4727,9 +4744,10 @@ void Executor::callExternalFunction(ExecutionState &state,
           #endif
           if (!symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments)) {
            bool term = false;
-           symbolizeArguments(state, target, function, arguments, term);
+           if (!isInfoFlowAPI(function->getName()))
+              symbolizeArguments(state, target, function, arguments, term);
            if (!term) {
-             symbolizeReturnValue(state, target, function, abort);
+             symbolizeReturnValue(state, arguments, target, function, abort);
              if (abort) {
                 terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
                 return;
@@ -4737,7 +4755,7 @@ void Executor::callExternalFunction(ExecutionState &state,
            }
           }
           else { // if input function, we also want to symbolize return value
-             symbolizeReturnValue(state, target, function, abort);
+             symbolizeReturnValue(state, arguments, target, function, abort);
              if (abort) {
                 terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
                 return;
@@ -5188,7 +5206,8 @@ void Executor::symbolizeArguments(ExecutionState &state,
 }
 
 
-const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
+const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state, 
+                                  std::vector<ref<Expr> > & args,
                                   KInstruction *target,
                                   Function *function, bool &abort) {
 
@@ -5228,6 +5247,8 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
        executeMemoryOperation(state, false, laddr, 0, target);
     else
        bindLocal(target, state, laddr);
+
+    checkAndUpdateInfoFlow(state, function, args, mo);
     return mo;
 }
 
@@ -5690,9 +5711,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (abort) {
                      return true;
                   }
-                  #ifdef VB
-                  llvm::errs() << "mem obj addr=" << laddr << " in state " << &state << "\n";
-                  #endif
+                  //#ifdef VB
+                  llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
+                  //#endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
@@ -6018,13 +6039,13 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
      llvm::raw_string_ostream rso(type_str);
      at->print(rso);
      if (at->isPointerTy()) {
-        #ifdef VB
-        llvm::outs() << "arg " << ind << " type " << rso.str() << "\n";
-        #endif
         at = at->getPointerElementType();
         bool singleInstance = false;
         int count = 0;
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
+        //#ifdef VB
+        llvm::errs() << "arg " << ind << " type " << getTypeName(at) << " count=" << count << "\n";
+        //#endif
         //if (lazyInitT) {
           /*
            // if single instance and already init use that one
@@ -6058,12 +6079,12 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               const MemoryObject *mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, at, at, singleInstance,
                               count, rType, laddr, mksym, abort);
               if (abort) return;
-              #ifdef VB
-              llvm::outs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
+              //#ifdef VB
+              llvm::errs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
-              llvm::outs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
-              llvm::outs() << "to be made symbolic? " << mksym << "\n";
-              #endif
+              llvm::errs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
+              llvm::errs() << "to be made symbolic? " << mksym << "\n";
+              //#endif
               mo->name = getUniqueSymRegion(fname + std::string("_arg_") + std::to_string(ind));
               #ifdef VB
               llvm::errs() << "lazy init arg " << mo->name << "\n";

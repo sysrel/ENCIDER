@@ -153,6 +153,8 @@ public:
 
   const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
 
+  void checkAndUpdateInfoFlow(ExecutionState &state, llvm::Function *f, std::vector<ref<Expr> > & args, const MemoryObject *mo) ;
+
   void checkAndRecordSensitiveFlow(ExecutionState &state, llvm::Function *function, 
                                                    std::vector<ref<Expr> > & args); 
 
@@ -178,6 +180,7 @@ public:
 
 
   const MemoryObject *symbolizeReturnValue(ExecutionState &state, 
+                                  std::vector<ref<Expr> > &args,
                                   KInstruction *target,
                                   llvm::Function *function, bool &abort);
 

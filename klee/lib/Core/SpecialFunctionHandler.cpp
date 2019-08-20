@@ -2086,7 +2086,7 @@ bool APIHandler::handle(ExecutionState &state,
         //#ifdef VB
         llvm::errs() << "symbolizing ret value in handler for function " << function->getName() << "\n";
         //#endif
-        ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function, abort);
+        ((Executor*)(theInterpreter))->symbolizeReturnValue(state, arguments, target, function, abort);
         if (abort) return false;
      }
      
@@ -2118,7 +2118,7 @@ bool APIHandler::handle(ExecutionState &state,
    //ExprPPrinter::printConstraints(llvm::outs(), state.constraints);
    Function *f = kmoduleExt->module->getFunction(fname);
    assert(f);
-   const MemoryObject *srt = ((Executor*)(theInterpreter))->symbolizeReturnValue(state, target, function, abort);
+   const MemoryObject *srt = ((Executor*)(theInterpreter))->symbolizeReturnValue(state, arguments, target, function, abort);
    if (abort) return false;
    bool asuccess;
    ObjectPair op;

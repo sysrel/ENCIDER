@@ -17,6 +17,19 @@ struct region {
 };
 typedef struct region region;
 
+struct infoflowsource_t {
+  unsigned int argno;
+  region ifregion;
+};
+typedef struct infoflowsource_t infoflowsource_t ; 
+
+
+namespace std {
+  bool operator<(const region r1, const region r2);
+  bool operator<(const infoflowsource_t i1, const infoflowsource_t i2);
+}
+
+std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Expr> > & args);
 ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high) ;
 bool exprHasSymRegion(ref<Expr> cexpr, bool high);
 ref<Expr> renameExpr(MemoryManager *memory, ref<Expr> cexpr, bool high);
@@ -26,6 +39,8 @@ void dumpKids(klee::ref<Expr>& cexpr);
 bool replace(std::string& str, const std::string& from, const std::string& to);
 void removeBrackets(std::string& str);
 ref<Expr> buildProjection(ref<Expr>& cexpr, bool high);
+
+bool isInfoFlowAPI(std::string);
 
 void readMemLoc();
 

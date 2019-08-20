@@ -100,11 +100,12 @@ std::map<std::string, std::vector<std::string> > inferenceClue;
 std::set<std::string> prefixRedact;
 extern std::set<std::string> * highLoc, *lowLoc;
 extern int maxForkMulRes;
-int primArraySize;
+extern int primArraySize;
 bool cacheLineMode;
 bool cacheBitmaskMode;
 unsigned long cacheBitmask = 0xFFFFFFF;
 unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
+extern std::map<std::string, std::map<region, std::set<infoflowsource_t> > > infoFlowRules;
 extern std::map<std::string, std::map<unsigned int, std::vector<unsigned int> > > externalFuncsWithSensitiveFlow;
 // source code locations with timing side channels
 extern std::set<std::pair<std::string, int>> locs;
@@ -148,6 +149,17 @@ FreeAPIHandler *freeAPIHandler = NULL;
 SideEffectAPIHandler *sideEffectAPIHandler = NULL;
 */
 
+void addInfoFlowRule(std::string fname, region fr,  std::set<infoflowsource_t> ifss) {
+ std::map<region, std::set<infoflowsource_t> > fm;
+ if (infoFlowRules.find(fname) != infoFlowRules.end())
+    fm = infoFlowRules[fname];
+ if (fm.find(fr) != fm.end())
+    assert(false && "info flow region already defined !\n"); 
+ fm[fr] = ifss;
+ infoFlowRules[fname] = fm; 
+}
+
+
 void writeSensitiveFlows(const char *fname) {
   std::fstream rc(fname, std::fstream::out);
   if (rc.is_open()) {
@@ -174,6 +186,60 @@ inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
     s.erase(s.find_last_not_of(t) + 1);
     return s;
+}
+
+
+void readInfoFlowModels(const char *fname) {
+  std::fstream rc(fname, std::fstream::in);
+   if (rc.is_open()) {
+      std::string line, fname, token;
+      while(std::getline(rc,line)) {
+        if (line.find("/") == std::string::npos) {
+           std::set<infoflowsource_t> ifss;
+           region fr;
+           std::istringstream iss(line);
+           getline(iss,  fname, ',');
+           fname = ltrim(rtrim(fname));
+           getline(iss,  token, ',');
+           token = ltrim(rtrim(token));
+           fr.offset = std::stoi(token);
+           getline(iss,  token, ',');
+           token = ltrim(rtrim(token)); 
+           fr.size = std::stoi(token);
+           getline(iss,  token, ',');
+           token = ltrim(rtrim(token));
+           if (token == "NONE") {
+              addInfoFlowRule(fname, fr, ifss);    
+           }
+           else {
+              getline(iss,  token, ',');
+              token = ltrim(rtrim(token));
+              if (token.find("UNION(") != std::string::npos) 
+                 token = token.substr(token.find("UNION(") + 5);
+              while (token != "") {
+                   if (token.find("arg") != std::string::npos) {
+                      infoflowsource_t ifs;
+                      ifs.argno = std::stoi(token.substr(token.find("arg") + 3));
+                      region r;
+                      getline(iss,  token, ',');
+                      token = ltrim(rtrim(token));
+                      r.offset = std::stoi(token);
+                      getline(iss,  token, ',');
+                      token = ltrim(rtrim(token));
+                      if (token.find(")") != std::string::npos)
+                         token = token.substr(0,token.length()-1); 
+                      r.size = std::stoi(token);
+                      ifs.ifregion = r;
+                      ifss.insert(ifs);
+                      getline(iss,  token, ',');
+                   }
+                   else assert(false && "was expecting an arg for information flow source!\n");
+              }
+              addInfoFlowRule(fname, fr, ifss); 
+           }
+        }
+     }
+  }
 }
 
 void readInferenceClue(const char *fname) {
@@ -284,6 +350,9 @@ namespace {
 
   cl::opt<unsigned>
   CacheBitMask("cache-bit-mask", cl::desc("bit mask to check for secret dependent cache access\n"));    
+
+  cl::opt<std::string>
+  InfoFlowModels("info-flow-models", cl::desc("Name of the file that specifies how argument regions may affect security sensitivity of the return value region\n"));
  
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
@@ -2138,6 +2207,10 @@ int main(int argc, char **argv, char **envp) {
   else if (!cacheLineMode) {
      llvm::errs() << "Using cache line mode (as default)!\n";
      cacheLineMode = true;    
+  }
+
+  if (InfoFlowModels != "") {
+     readInfoFlowModels(InfoFlowModels.c_str());
   }
 
   if (PrefixRedact != "") {

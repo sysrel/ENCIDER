@@ -288,7 +288,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
         //llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
      }
      #ifdef VB
-     llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
+     llvm::errs() << "allocation size: " << allocsize*count << "\n"; 
      #endif
      mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
      resaddr = mo->getBaseExpr();
