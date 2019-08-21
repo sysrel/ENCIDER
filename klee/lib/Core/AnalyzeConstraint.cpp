@@ -51,9 +51,60 @@ void moveOffset(std::vector<region> &rs, unsigned value) {
      rs[i].offset += value; 
 }
 
+
+bool intersect(region r1, region r2, region &res) {
+     unsigned int min1 = r1.offset;
+     unsigned int max1 = r1.offset+r1.size-1;
+     unsigned int min2 = r2.offset;
+     unsigned int max2 = r2.offset+r2.size-1;
+     unsigned int maxofmin = min1 > min2 ? min1 : min2;
+     unsigned int minofmax = max1 < max2 ? max1 : max2;
+     if (maxofmin > minofmax)
+        return false;        
+     res.offset = maxofmin;
+     res.size = minofmax - maxofmin + 1;
+     return true;
+}
+
+bool intersect(region r1,   std::vector<region> r2, std::vector<region> &rs) {
+     bool result = false;
+     for(unsigned int i = 0; i<r2.size(); i++) {
+        region r;
+        if (intersect(r1, r2[i], r)) {
+           rs.push_back(r); 
+           result = true;
+        }
+     }
+     return result;
+} 
+
+
+void shiftLeft(std::vector<region> r1, std::vector<region> &rs, unsigned value, unsigned width) {
+  if (value == 0) return;
+  region r;
+  r.offset = 0;
+  r.size = width - value * 8;
+  intersect(r, r1, rs);
+}
+
+void shiftRight(std::vector<region> r1, std::vector<region> &rs, unsigned value, unsigned width) {
+  if (value == 0) return;
+  region r;
+  r.offset = value * 8;
+  r.size = width - value * 8;
+  intersect(r, r1, rs);
+}
+
+
+bool canCoalesce(region r1, region r2) {
+     if (r1.offset + r1.size == r2.offset || r2.offset + r2.size == r1.offset)
+        return true;
+     return rangesIntersect(r1.offset,r1.offset+r1.size-1,r2.offset,r2.offset+r2.size-1);
+}
+
 bool coalasce(region r1, region r2, region &res) {
      bool result = false;
-     if (rangesIntersect(r1.offset,r1.offset+r1.size-1,r2.offset,r2.offset+r2.size-1)) {
+     if (canCoalesce(r1,r2)) {
         unsigned int newoffset = r1.offset < r2.offset ? r1.offset : r2.offset;
         unsigned int newsize = r1.offset+r1.size-1 > r2.offset+r2.size-1 ? (r1.offset+r1.size - newoffset) : (r2.offset+r2.size - newoffset);
         res.offset = newoffset;
@@ -87,36 +138,10 @@ void mergeAndCoalesce(std::vector<region> rs1, std::vector<region> rs2, std::vec
        temp2.clear(); 
     } 
     for(unsigned int i=0; i<temp.size(); i++)
-       rs3.push_back(temp2[i]);
+       rs3.push_back(temp[i]);
 }
 
-bool intersect(region r1, region r2, region &res) {
-     unsigned int min1 = r1.offset;
-     unsigned int max1 = r1.offset+r1.size-1;
-     unsigned int min2 = r2.offset;
-     unsigned int max2 = r2.offset+r2.size-1;
-     unsigned int maxofmin = min1 > min2 ? min1 : min2;
-     unsigned int minofmax = max1 < max2 ? max1 : max2;
-     if (maxofmin > minofmax)
-        return false;        
-     res.offset = maxofmin;
-     res.size = minofmax - maxofmin + 1;
-     return true;
-}
-
-bool intersect(region r1,   std::vector<region> r2, std::vector<region> &rs) {
-     bool result = false;
-     for(unsigned int i = 0; i<r2.size(); i++) {
-        region r;
-        if (intersect(r1, r2[i], r)) {
-           rs.push_back(r); 
-           result = true;
-        }
-     }
-     return result;
-} 
-
-std::vector<region> extractHighRegion(ref<Expr> expr, region range);
+std::vector<region> extractRegion(ref<Expr> expr, region range, bool high);
 
 
 
@@ -125,23 +150,37 @@ std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Ex
   if (infoFlowRules.find(fname) != infoFlowRules.end()) {
      std::map<region, std::set<infoflowsource_t> > fm = infoFlowRules[fname];
      for(auto fme : fm) {
+        //llvm::errs() << "target range: " << fme.first.offset << "," << fme.first.size << "\n";
         region ur; 
         ur.size = 0; 
         for(auto ifs : fme.second) {
-           if (exprHasSymRegion(args[ifs.argno], true)) {
+              //llvm::errs() << "processing " << args[ifs.argno] << "\n";
               std::vector<region> temp;
-              std::vector<region> r1 = extractHighRegion(args[ifs.argno],ifs.ifregion);
-              moveOffset(r1, fme.first.offset - ifs.ifregion.offset);
-              mergeAndCoalesce(r1,rs,temp);
-              rs = temp;
-              temp.clear();
-           }
+              std::vector<region> r1 = extractRegion(args[ifs.argno],ifs.ifregion,true);
+              if (r1.size() == 0) continue;
+              std::vector<region> r2;
+              //llvm::errs() << "before projecting to the source range\n";
+              //for(unsigned int ti = 0; ti<r1.size(); ti++)
+              //   llvm::errs() << r1[ti].offset << "," << r1[ti].size << "\n"; 
+              intersect(ifs.ifregion, r1, r2);
+              //llvm::errs() << "after projecting to the source range\n";  
+              //for(unsigned int ti = 0; ti<r2.size(); ti++)
+              //   llvm::errs() << r2[ti].offset << "," << r2[ti].size << "\n";
+              moveOffset(r2, fme.first.offset - ifs.ifregion.offset);
+              if (r2.size() > 0) {
+                 if (rs.size() > 0) {
+                    mergeAndCoalesce(r2,rs,temp);
+                    rs = temp;
+                    temp.clear();
+                 }
+                 else rs = r2;
+              }
         }
      }     
   }
   llvm::errs() << "Extracted the following from " << fname << ":\n";
   for(unsigned int i =0; i<rs.size(); i++) 
-     llvm::errs() << "\t[" << rs[i].offset << "," << rs[i].size << "]\n";
+     llvm::errs() << "\t(" << rs[i].offset << "," << rs[i].size << ")\n";
   return rs;
 }
 
@@ -290,6 +329,18 @@ const Array *renameArray(MemoryManager *memory, const Array *array, bool high, u
 
 
 bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
+  region r;
+  r.offset = 0; r.size = 64;
+  std::vector<region> r1 = extractRegion(cexpr,r,high);
+  if (r1.size() == 0) return false;
+  for(unsigned int i=0; i<r1.size(); i++)
+     if (r1[i].size > 0)
+        return true;
+  return false;
+}
+
+/*
+bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
     switch (cexpr->getKind()) {
        case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);
@@ -310,29 +361,35 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
        }
     }
 }
+*/
 
-
-std::vector<region> extractHighRegion(ref<Expr> cexpr, region range) {
+std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
    std::vector<region> rs;
+   //llvm::errs() << "extracting region from " << cexpr << "\n";
    switch (cexpr->getKind()) {
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
-          ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
-          if (!CE) { // approximating symbolic offset/index based on the possible range!
-             rs.push_back(range);
-             return rs;
+          if (isInSymRegion(rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high)) {
+             ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
+             if (!CE) { // approximating symbolic offset/index based on the possible range!
+                rs.push_back(range);
+               return rs;
+             }
+             else  {
+                region r;
+                r.offset = CE->getZExtValue() * rexpr->getWidth();
+                r.size = rexpr->getWidth();
+                //llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
+                rs.push_back(r);
+                return rs;
+             }
           }
-          else  {
-             region r;
-             r.offset = CE->getZExtValue();
-             r.size = rexpr->getWidth();
-             rs.push_back(r);
-             return rs;
-          }
+          else return rs;
       } 
       case Expr::Concat: {
-          std::vector<region> r1 = extractHighRegion(cexpr->getKid(0), range);
-          std::vector<region> r2 = extractHighRegion(cexpr->getKid(1), range);
+          //llvm::errs() << "concat: \n"; 
+          std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
+          std::vector<region> r2 = extractRegion(cexpr->getKid(1), range, high);
           if  (r1.size() == 0 && r2.size()) {
               return rs;
           }
@@ -342,13 +399,13 @@ std::vector<region> extractHighRegion(ref<Expr> cexpr, region range) {
           else if (r2.size() == 0) {
              return r1; 
           }           
-          moveOffset(r2, cexpr->getKid(0)->getWidth());
+          //moveOffset(r2, cexpr->getKid(0)->getWidth());
           mergeAndCoalesce(r1, r2, rs);           
           return rs;
       }
       case Expr::Extract: {
         ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
-        std::vector<region> r1 = extractHighRegion(cexpr->getKid(0), range);
+        std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
         region r2;
         r2.offset = EE->offset;
         r2.size = EE->width;
@@ -358,20 +415,58 @@ std::vector<region> extractHighRegion(ref<Expr> cexpr, region range) {
            return r3;
         return rs;
       }
+      case Expr::Shl: 
+      case Expr::LShr:
+      case Expr::AShr: { 
+        std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
+        if (r1.size() == 0) return rs;
+        ConstantExpr * CE = dyn_cast<ConstantExpr>(cexpr->getKid(1));
+        if (!CE) { // approximating symbolic offset/index based on the possible range!
+             rs.push_back(range);
+             return rs;
+        }
+        else  {
+           unsigned int value = CE->getZExtValue();
+           if (cexpr->getKind() == Expr::Shl)
+             shiftLeft(r1, rs, value/8, cexpr->getWidth());
+           else if (cexpr->getKind() == Expr::LShr || cexpr->getKind() == Expr::AShr)
+             shiftRight(r1, rs, value/8, cexpr->getWidth());
+           else assert(false);
+           return rs;
+        }        
+      }
       default: {
          if (cexpr->getKind() == Expr::SExt || cexpr->getKind() == Expr::ZExt)  {
-            return extractHighRegion(cexpr->getKid(0), range);
+            return extractRegion(cexpr->getKid(0), range, high);
          }        
-         else {
-            std::vector<region> rtemp1 = extractHighRegion(cexpr->getKid(0), range);
+         /*else if (!boolOp && (cexpr->getKind() == Expr::Slt || cexpr->getKind() == Expr::Sle || 
+                  cexpr->getKind() == Expr::Sgt || cexpr->getKind() == Expr::Sge || 
+                  cexpr->getKind() == Expr::Ult || cexpr->getKind() == Expr::Ule || 
+                  cexpr->getKind() == Expr::Ugt || cexpr->getKind() == Expr::Uge || 
+                  cexpr->getKind() == Expr::Eq || cexpr->getKind() == Expr::Ne || 
+                  (!bitwise && (cexpr->getKind() == Expr::And || 
+                               cexpr->getKind() == Expr::Or || cexpr->getKind() == Expr::Not))) {
+                 // just merge the regions
+                 
+         }*/
+         else if (cexpr->getNumKids() > 0) {
+            std::vector<region> rtemp1 = extractRegion(cexpr->getKid(0), range, high);
+            //llvm::errs() << "child 0 " << cexpr->getKid(0) << " results (high=" << high << "): \n"; 
+            //for(unsigned int i=0; i<rtemp1.size(); i++)
+            //   llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
             std::vector<region> rtemp3; 
             for(unsigned int i=1; i<cexpr->getNumKids(); i++) {
-               std::vector<region> rtemp2 = extractHighRegion(cexpr->getKid(i), range);
+               std::vector<region> rtemp2 = extractRegion(cexpr->getKid(i), range, high);
+               //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << " results (high=" << high << "): \n";
+               //for(unsigned int j=0; j<rtemp2.size(); j++)
+               //   llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
                mergeAndCoalesce(rtemp1, rtemp2, rtemp3);
                rtemp1 = rtemp3;
+               rtemp3.clear();
             }
-            return rtemp3;
+            return rtemp1;
          }
+         else return rs;
       }
    }
 

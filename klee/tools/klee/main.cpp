@@ -195,6 +195,7 @@ void readInfoFlowModels(const char *fname) {
       std::string line, fname, token;
       while(std::getline(rc,line)) {
         if (line.find("/") == std::string::npos) {
+           llvm::errs() << "processing line: " << line << "\n";
            std::set<infoflowsource_t> ifss;
            region fr;
            std::istringstream iss(line);
@@ -206,17 +207,21 @@ void readInfoFlowModels(const char *fname) {
            getline(iss,  token, ',');
            token = ltrim(rtrim(token)); 
            fr.size = std::stoi(token);
+           llvm::errs() << "target range: " << fr.offset << "," << fr.size << "\n";
            getline(iss,  token, ',');
            token = ltrim(rtrim(token));
            if (token == "NONE") {
               addInfoFlowRule(fname, fr, ifss);    
            }
            else {
-              getline(iss,  token, ',');
-              token = ltrim(rtrim(token));
-              if (token.find("UNION(") != std::string::npos) 
+              bool singleSource = true;
+              //llvm::errs() << "info flow source token " << token << "\n";
+              if (token.find("UNION(") != std::string::npos) {
                  token = token.substr(token.find("UNION(") + 5);
-              while (token != "") {
+                 singleSource = false;
+              }
+              bool done = false;
+              while (!done) {
                    if (token.find("arg") != std::string::npos) {
                       infoflowsource_t ifs;
                       ifs.argno = std::stoi(token.substr(token.find("arg") + 3));
@@ -226,12 +231,19 @@ void readInfoFlowModels(const char *fname) {
                       r.offset = std::stoi(token);
                       getline(iss,  token, ',');
                       token = ltrim(rtrim(token));
-                      if (token.find(")") != std::string::npos)
+                      if (token.find(")") != std::string::npos) {
                          token = token.substr(0,token.length()-1); 
+                         done = true;
+                      }
                       r.size = std::stoi(token);
+                      llvm::errs() << "source range: " << r.offset << "," << r.size << "\n";
                       ifs.ifregion = r;
                       ifss.insert(ifs);
-                      getline(iss,  token, ',');
+                      if (!singleSource) {
+                         getline(iss,  token, ',');
+                         //llvm::errs() << "next of arg group: " << token << "\n"; 
+                      }
+                      else break; 
                    }
                    else assert(false && "was expecting an arg for information flow source!\n");
               }
@@ -2360,11 +2372,19 @@ int main(int argc, char **argv, char **envp) {
 
 
   llvm::errs() << "all high sym regions: \n";
-  for(auto h : highSymRegions)
+  for(auto h : highSymRegions) {
       llvm::errs() << h.first << "\n";
+      for(auto r: h.second) {
+         llvm::errs() << "offset=" << r.offset << ", size=" << r.size << "\n"; 
+      }
+  }
   llvm::errs() << "all low sym regions: \n";
-  for(auto lw : lowSymRegions)
+  for(auto lw : lowSymRegions) {
       llvm::errs() << lw.first << "\n"; 
+           for(auto r: lw.second) {
+         llvm::errs() << "offset=" << r.offset << ", size=" << r.size << "\n"; 
+      }
+  }
 
   handler->getInfoStream()
     << "KLEE: done: explored paths = " << 1 + forks << "\n";
