@@ -1,0 +1,156 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test16/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=819
+Couldn't open file 
+Using cache line mode (as default)!
+processing line: _mm_fake1,0,32,arg0,0,32
+target range: 0,32
+source range: 0,32
+processing line: _mm_fake2,0,16,arg0,0,16
+target range: 0,16
+source range: 0,16
+processing line: _mm_fake2,16,16,arg1,0,16
+target range: 16,16
+source range: 0,16
+processing line: _mm_fake3,0,32,UNION(arg0,0,32,arg1,0,32)
+target range: 0,32
+source range: 0,32
+source range: 0,32
+processing line: _mm_fake4,0,32,UNION(arg0,0,16,arg1,0,16)
+target range: 0,32
+source range: 0,16
+source range: 0,16
+processing line: _mm_fake5,0,32,UNION(arg0,0,32,arg1,0,32)
+target range: 0,32
+source range: 0,32
+source range: 0,32
+KLEE: WARNING: undefined reference to function: _mm_fake1
+KLEE: WARNING: undefined reference to function: _mm_fake2
+KLEE: WARNING: undefined reference to function: _mm_fake3
+KLEE: WARNING: undefined reference to function: _mm_fake4
+KLEE: WARNING: undefined reference to function: _mm_fake5
+KLEE: WARNING: undefined reference to function: printf
+lazy init arg foo_arg_0_0
+ setting low security region offset= 0 size= 32
+recording address of foo_arg_0_0 42334320 as not security sensitive
+lazy init arg foo_arg_1_0
+ setting high security region offset= 0 size= 32
+recording address of foo_arg_1_0 42334376 as security sensitive 
+High symbolic regions:
+foo_arg_1_0
+Low symbolic regions:
+foo_arg_0_0
+Registering publicOutputReturningFName as foo
+reached foo
+KLEE: WARNING ONCE: calling external: _mm_fake1((ReadLSB w32 0 foo_arg_1_0)) at /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:26
+ high region flows into _mm_fake1
+Extracted the following from _mm_fake1:
+	(0,32)
+KLEE: WARNING ONCE: calling external: _mm_fake2((ReadLSB w32 0 foo_arg_1_0), (ReadLSB w32 0 foo_arg_0_0)) at /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:27
+ high region flows into _mm_fake2
+Extracted the following from _mm_fake2:
+	(0,16)
+KLEE: WARNING ONCE: calling external: _mm_fake3((ReadLSB w32 0 foo_arg_1_0), (ReadLSB w32 0 foo_arg_0_0)) at /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:28
+ high region flows into _mm_fake3
+Extracted the following from _mm_fake3:
+	(0,32)
+KLEE: WARNING ONCE: calling external: _mm_fake4((ReadLSB w32 0 foo_arg_0_0), (ReadLSB w32 0 foo_arg_1_0)) at /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:29
+ high region flows into _mm_fake4
+Extracted the following from _mm_fake4:
+	(0,16)
+KLEE: WARNING ONCE: calling external: _mm_fake5((ReadLSB w32 0 foo_arg_0_0), (ReadLSB w32 0 foo_arg_0_0)) at /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:30
+Extracted the following from _mm_fake5:
+reached loop
+KLEE: WARNING ONCE: calling external: printf(42334248, 32) at /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:39
+32
+16
+1024
+2048
+Size of rdmap : 7
+
+===============
+Found Violation at : 
+diff : 84
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:26
+
+[ (And (Eq false
+          (Slt 0
+               (ReadLSB w32 0 %sym13__mm_fake1_0)))
+      (Eq false
+          (Slt 0
+               (ReadLSB w32 0 %sym21__mm_fake3_0))))
+(Eq 1
+     (ReadLSB w32 0 return_value))
+ ]   ---->  [ 185 , 185 ]
+
+[ (And (Slt 0
+           (ReadLSB w32 0 %sym13__mm_fake1_0))
+      (Slt 0
+           (ReadLSB w32 0 %sym21__mm_fake3_0)))
+(Eq 1
+     (ReadLSB w32 0 return_value))
+ ]   ---->  [ 101 , 101 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:33
+  br i1 %27, label %29, label %32, !dbg !155
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:43
+  br i1 %27, label %36, label %39, !dbg !166
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test16/test16.c:26
+	=====================
+
+>>>> Found violations at  : 1 locations.
+all high sym regions: 
+%sym13__mm_fake1_0
+offset=0, size=32
+%sym17__mm_fake2_0
+offset=0, size=16
+%sym21__mm_fake3_0
+offset=0, size=32
+%sym25__mm_fake4_0
+offset=0, size=16
+foo_arg_1_0
+offset=0, size=32
+all low sym regions: 
+foo_arg_0_0
+offset=0, size=32
+return_value
+offset=0, size=32
+
+KLEE: done: #Timing Side Channel  Locs = 1
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 102
+KLEE: done: maxInst = 186
+KLEE: done: HAncestors = 1
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 445
+KLEE: done: completed paths = 4
+KLEE: done: generated tests = 4
+Lazy initialization is ON 
+lazy single spec file? 
+ low function foo arg 0
+ high function foo arg 1

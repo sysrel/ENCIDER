@@ -1,0 +1,6 @@
+_mm_fake1,0,32,arg0,0,32
+_mm_fake2,0,16,arg0,0,16
+_mm_fake2,16,16,arg1,0,16
+_mm_fake3,0,32,UNION(arg0,0,32,arg1,0,32)
+_mm_fake4,0,32,UNION(arg0,0,16,arg1,0,16)
+_mm_fake5,0,32,UNION(arg0,0,32,arg1,0,32)
