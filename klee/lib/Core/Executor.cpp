@@ -232,6 +232,12 @@ bool singleSuccessor = true;
 
 std::string getTypeName(Type *t);
 
+std::string removeDotSuffix(std::string name) {
+  if (name.find(".") != std::string::npos) 
+     return name.substr(0,name.find("."));
+  return name;
+}
+
 void timeSideChannelAnalysis(Executor *executor) {
  for(rroot : resourceTreeRootList) {
     propagate(rroot, "", executor);
@@ -501,7 +507,7 @@ void cloneLowMemoryRegions(const ExecutionState &from, ExecutionState &to) {
 }
 
 void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::vector<ref<Expr> > & args, const MemoryObject *mo) {
-   std::string fname = f->getName(); 
+   std::string fname = removeDotSuffix(f->getName()); 
    std::vector<region> rs = getHighInfoFlowRegions(fname, args);
    if (rs.size() > 0) {
       setHighMemoryRegion(state, mo->getBaseExpr(), rs);
@@ -2073,7 +2079,7 @@ void Executor::executeCall(ExecutionState &state,
        //llvm::errs() << "checking regular function call for high/low flows\n";
        //checkHighArgumentFlow(state, ki, f, arguments);
        // Handle certain functions in a special way, e.g., those that have inline assembly
-       if (lazyInit && (APIHandler::handles(f->getName()) || isInfoFlowAPI(f->getName()))) {
+       if (lazyInit && (APIHandler::handles(removeDotSuffix(f->getName())) || isInfoFlowAPI(removeDotSuffix(f->getName())))) {
           callExternalFunction(state, ki, f, arguments);
           return;
        }
@@ -4603,7 +4609,7 @@ void Executor::callExternalFunction(ExecutionState &state,
   memset(args, 0, 2 * sizeof(*args) * (arguments.size() + 1));
   unsigned wordIndex = 2;
   ObjectPair result;
- if (!APIHandler::handles(function->getName())) { // this check is a SYSREL extension to avoid issues with pointers to 128 bit 
+ if (!APIHandler::handles(function->getName()) && !isInfoFlowAPI(removeDotSuffix(function->getName()))) { // this check is a SYSREL extension to avoid issues with pointers to 128 bit 
   for (std::vector<ref<Expr> >::iterator ai = arguments.begin(),
        ae = arguments.end(); ai!=ae; ++ai) {
     if (AllowExternalSymCalls) { // don't bother checking uniqueness
@@ -4683,7 +4689,7 @@ void Executor::callExternalFunction(ExecutionState &state,
 
    /* SYSREL EXTENSION */
   bool success = false;
-  if (!APIHandler::handles(function->getName())) {
+  if (!APIHandler::handles(function->getName()) && !isInfoFlowAPI(removeDotSuffix(function->getName()))) {
      success = externalDispatcher->executeCall(function, target->inst, args);
 
   #ifdef VB
@@ -4744,7 +4750,7 @@ void Executor::callExternalFunction(ExecutionState &state,
           #endif
           if (!symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments)) {
            bool term = false;
-           if (!isInfoFlowAPI(function->getName()))
+           if (!isInfoFlowAPI(removeDotSuffix(function->getName())))
               symbolizeArguments(state, target, function, arguments, term);
            if (!term) {
              symbolizeReturnValue(state, arguments, target, function, abort);

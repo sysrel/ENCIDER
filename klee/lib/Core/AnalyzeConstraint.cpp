@@ -178,9 +178,9 @@ std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Ex
         }
      }     
   }
-  llvm::errs() << "Extracted the following from " << fname << ":\n";
-  for(unsigned int i =0; i<rs.size(); i++) 
-     llvm::errs() << "\t(" << rs[i].offset << "," << rs[i].size << ")\n";
+  //llvm::errs() << "Extracted the following from " << fname << ":\n";
+  //for(unsigned int i =0; i<rs.size(); i++) 
+  //   llvm::errs() << "\t(" << rs[i].offset << "," << rs[i].size << ")\n";
   return rs;
 }
 

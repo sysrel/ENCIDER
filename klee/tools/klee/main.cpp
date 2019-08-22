@@ -215,10 +215,14 @@ void readInfoFlowModels(const char *fname) {
            }
            else {
               bool singleSource = true;
+              bool dist = false;
               //llvm::errs() << "info flow source token " << token << "\n";
               if (token.find("UNION(") != std::string::npos) {
                  token = token.substr(token.find("UNION(") + 5);
                  singleSource = false;
+              }
+              else if (token.find("DIST(") != std::string::npos) {
+                 dist = true;
               }
               bool done = false;
               while (!done) {
@@ -243,11 +247,24 @@ void readInfoFlowModels(const char *fname) {
                          getline(iss,  token, ',');
                          //llvm::errs() << "next of arg group: " << token << "\n"; 
                       }
-                      else break; 
+                      else {
+                         if (dist) {
+                            unsigned int  granularity = ifs.ifregion.size; 
+                            for(unsigned int k=0; k<fr.size/granularity; k++) {
+                               region n;
+                               n.offset = fr.offset + k*granularity;
+                               n.size = ifs.ifregion.size;
+                               llvm::errs() << "distributing to target range: offset="  << n.offset << "," << " size=" << n.size << "\n";
+                               addInfoFlowRule(fname, n, ifss);
+                            }
+                         }
+                         break;
+                      } 
                    }
                    else assert(false && "was expecting an arg for information flow source!\n");
               }
-              addInfoFlowRule(fname, fr, ifss); 
+              if (!dist)
+                 addInfoFlowRule(fname, fr, ifss); 
            }
         }
      }
