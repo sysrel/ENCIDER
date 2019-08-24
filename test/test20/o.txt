@@ -1,0 +1,504 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test20/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=819
+Couldn't open file 
+Using cache line mode (as default)!
+KLEE: WARNING: undefined reference to function: printf
+High symbolic regions:
+Low symbolic regions:
+Registering publicOutputReturningFName as bar
+reached bar
+Handling functions with sensitive args foo
+ setting low security region offset= 0 size= 32
+ setting high security region offset= 0 size= 32
+reached foo
+reached loop
+KLEE: WARNING ONCE: calling external: printf(45217760, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:30
+16
+32
+64
+2048
+128
+256
+512
+1024
+Size of rdmap : 15
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %24 = load i32, i32* %3, align 4, !dbg !154
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:43
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 foo_high_1_0)))
+(Eq 4294967295
+     (ReadLSB w32 0 foo_low_0_0))
+ ]   ---->  [ 140 , 140 ]
+
+[ (Slt 4294967286
+      (ReadLSB w32 0 foo_high_1_0))
+(Eq 4294967295
+     (ReadLSB w32 0 foo_low_0_0))
+ ]   ---->  [ 116 , 116 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:44
+  br i1 %27, label %29, label %32, !dbg !163
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:54
+  br i1 %27, label %36, label %39, !dbg !174
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %24 = load i32, i32* %3, align 4, !dbg !154
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:43
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 foo_high_1_0)))
+(Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 foo_low_0_0)))
+ ]   ---->  [ 152 , 152 ]
+
+[ (Slt 4294967286
+      (ReadLSB w32 0 foo_high_1_0))
+(Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 foo_low_0_0)))
+ ]   ---->  [ 128 , 128 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:44
+  br i1 %27, label %29, label %32, !dbg !163
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:54
+  br i1 %27, label %36, label %39, !dbg !174
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+===============
+
+===============
+Found Violation at : 
+diff : 84
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 74 , 74 ]
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 foo_high_1_0)))
+(Eq false
+     (Slt (ReadLSB w32 0 foo_low_0_0)
+          0))
+ ]   ---->  [ 158 , 158 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 54
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 128 , 128 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 42
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 116 , 116 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 78
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 152 , 152 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 66
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 140 , 140 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 69
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(And (Eq false
+          (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+               1))
+      (Slt N0 5))
+ ]   ---->  [ 89 , 89 ]
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 foo_high_1_0)))
+(Eq false
+     (Slt (ReadLSB w32 0 foo_low_0_0)
+          0))
+ ]   ---->  [ 158 , 158 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 57
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+(And (Eq false
+          (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+               1))
+      (Eq false (Slt N0 5)))
+ ]   ---->  [ 101 , 101 ]
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 foo_high_1_0)))
+(Eq false
+     (Slt (ReadLSB w32 0 foo_low_0_0)
+          0))
+ ]   ---->  [ 158 , 158 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 128 , 128 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 152 , 152 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %A = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 116 , 116 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 foo_high_1_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 140 , 140 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:28
+  %8 = icmp slt i32 %6, 1, !dbg !129
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:42
+  %22 = icmp slt i32 %6, 0, !dbg !150
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:43
+	=====================
+
+	=====================
+	Function : bar
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c:23
+	=====================
+
+>>>> Found violations at  : 2 locations.
+all high sym regions: 
+foo_high_1_0
+offset=0, size=32
+all low sym regions: 
+foo_low_0_0
+offset=0, size=32
+
+KLEE: done: #Timing Side Channel  Locs = 2
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 74
+KLEE: done: maxInst = 159
+KLEE: done: HAncestors = 2
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 836
+KLEE: done: completed paths = 8
+KLEE: done: generated tests = 8
+Lazy initialization is ON 
+lazy single spec file? 
+ low function foo arg 0
+ high function foo arg 1

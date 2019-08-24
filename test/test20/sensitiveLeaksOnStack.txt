@@ -1,0 +1,8 @@
+/home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c 69: (ReadLSB w32 0 foo_high_1_0)
+
+/home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c 69: (Slt 0
+      (ReadLSB w32 0 foo_high_1_0))
+
+/home/tuba/Documents/tools/pmguidedsymex/test/test20/test20.c 69: (Slt 4294967286
+      (ReadLSB w32 0 foo_high_1_0))
+
