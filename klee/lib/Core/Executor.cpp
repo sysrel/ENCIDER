@@ -2229,6 +2229,7 @@ void Executor::executeCall(ExecutionState &state,
     unsigned numFormals = f->arg_size();
     for (unsigned i=0; i<numFormals; ++i)
       bindArgument(kf, i, state, arguments[i]);
+    symbolizeAndMarkSensitiveArgumentsOnCall(state,ki,f,arguments);
   }
 }
 
@@ -5023,6 +5024,190 @@ bool Executor::checkHighArgumentFlow(ExecutionState &state,
      return flows;
 }
 
+bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
+                                  KInstruction *target,
+                                  Function *function,
+                                  std::vector< ref<Expr> > &arguments) {
+
+    std::string fname = function->getName();
+    if (highFunctionArgs.find(fname) == highFunctionArgs.end() && 
+        lowFunctionArgs.find(fname) == lowFunctionArgs.end() && 
+        mixedFunctionArgs.find(fname) == mixedFunctionArgs.end()) { 
+       return false; 
+    }
+    KFunction *kf = kmodule->functionMap[entryFunc];
+    llvm::errs() << "Handling functions with sensitive args " << function->getName() << "\n"; 
+    std::set<int> argsH, argsL, argsM; 
+    if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+       argsH = highFunctionArgs[fname];
+    if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+       argsL = lowFunctionArgs[fname];
+    if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
+       argsM = mixedFunctionArgs[fname];      
+    unsigned int ai = 0;
+    for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
+       if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
+          // a local var
+          Type *at = agi->getType();
+          if (at->isPointerTy()) {
+                Type *bt = at->getPointerElementType();
+                std::string btname = getTypeName(bt);
+                bool hintFound = false;
+                if (funcArgTypeHints.find(fname) != funcArgTypeHints.end())
+                   if (funcArgTypeHints[fname].find(ai) != funcArgTypeHints[fname].end()) {
+                       hintFound = true;
+                       btname = funcArgTypeHints[fname][ai];
+                   }
+                std::string type_str;
+                llvm::raw_string_ostream rso(type_str);
+                at->print(rso);
+                DataLayout *TD = kmodule->targetData;
+                // find the MemoryObject for this value
+                ObjectPair op;
+                bool asuccess;
+                //ref<Expr> base = eval(target, ai+1, state).value;
+                ref<Expr> base = arguments[ai];
+                if (SimplifySymIndices) {
+                   if (!isa<ConstantExpr>(base))
+                      base = state.constraints.simplifyExpr(base);
+                }
+                ConstantExpr *cexpr = dyn_cast<ConstantExpr>(base);
+                if (cexpr) {
+                   solver->setTimeout(coreSolverTimeout);
+                   if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+                      base = toConstant(state, base, "resolveOne failure");
+                      asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+                  }
+                  solver->setTimeout(0);
+                  if (asuccess) {
+                      // mark the memory object symbolic and the region sensitive
+                   std::string name = function->getName();
+                   std::string uniqueName = name;
+                   if (argsH.find(ai) != argsH.end())
+                      uniqueName = name + "_high_" + std::to_string(ai);
+                   if (argsL.find(ai) != argsL.end())
+                      uniqueName = name + "_low_" + std::to_string(ai);
+                   uniqueName = getUniqueSymRegion(uniqueName);
+                   executeMakeSymbolic(state, op.first, uniqueName);
+                   op.first->name = uniqueName;
+                   if (argsH.find(ai) != argsH.end()) {
+                      std::vector<region> rs; 
+                      if (highTypeRegions.find(btname) != highTypeRegions.end()) {
+                         rs = highTypeRegions[btname];
+                      }
+                      else { // if not specified assume the whole region is high security sensitive
+                         region r;
+                         r.offset = 0;
+                         r.size = op.first->size * 8;
+                         rs.push_back(r); 
+                      }
+                      setHighMemoryRegion(state, op.first->getBaseExpr(), rs);
+                      setHighSymRegion(op.first->name, rs);                    
+                   }
+                   else if (argsL.find(ai) != argsL.end()) {
+                      std::vector<region> rs;
+                      if (lowTypeRegions.find(btname) != lowTypeRegions.end()) {
+                         rs = lowTypeRegions[btname];
+                      }
+                      else { // if not specified assume the whole region is  low security sensitive
+                         region r;
+                         r.offset = 0;
+                         r.size = op.first->size * 8;
+                         rs.push_back(r);
+                      }
+                      setLowMemoryRegion(state, op.first->getBaseExpr(), rs);
+                      setLowSymRegion(op.first->name, rs); 
+                   }                   
+                   else if (argsM.find(ai) != argsM.end()) {
+                      if (!hintFound && lowTypeRegions.find(btname) == lowTypeRegions.end() && 
+                            highTypeRegions.find(btname) == highTypeRegions.end())
+                         assert(false && "Mixed sensitivity arg without type based sensitive regions!\n");
+                      if (lowTypeRegions.find(btname) != lowTypeRegions.end()) {
+                         std::vector<region> rs = lowTypeRegions[btname]; 
+                         setLowMemoryRegion(state, op.first->getBaseExpr(), rs);
+                         setLowSymRegion(op.first->name, rs); 
+                      }
+                      if (highTypeRegions.find(btname) != highTypeRegions.end()) {
+                         std::vector<region> rs = highTypeRegions[btname];  
+                         setHighMemoryRegion(state, op.first->getBaseExpr(), rs);
+                         setHighSymRegion(op.first->name, rs); 
+                      }
+                   }
+               }
+            }
+         }
+         else { // pass by value args
+            size_t allocationAlignment = 8;
+            Instruction *inst = &*(entryFunc->begin()->begin());
+            const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
+            MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
+            std::string name = function->getName();
+            std::string uniqueName = name;
+            if (argsH.find(ai) != argsH.end())
+               uniqueName = name + "_high_" + std::to_string(ai);
+            if (argsL.find(ai) != argsL.end())
+               uniqueName = name + "_low_" + std::to_string(ai);
+            uniqueName = getUniqueSymRegion(uniqueName);
+            mo->name = uniqueName;
+            // make local variable (arg registers) by writing a symbolic value
+            // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
+            const Array *array = arrayCache.CreateArray(mo->name, mo->size);
+            ObjectState *sos = bindObjectInState(state, mo, true, array);
+            ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
+            bindArgument(kf, ai, state, result);
+            std::string atname = getTypeName(at);
+            if (argsH.find(ai) != argsH.end()) {
+               std::vector<region> rs; 
+               if (highTypeRegions.find(atname) != highTypeRegions.end()) {
+                  rs = highTypeRegions[atname];
+               }
+               else { // if not specified assume the whole region is high security sensitive
+                  region r;
+                  r.offset = 0;
+                  r.size = mo->size * 8;
+                  rs.push_back(r); 
+                  llvm::errs() << " setting high security region offset= " << r.offset << " size= " << r.size << "\n";
+               }
+               mo->ishigh = true;
+               setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+               setHighSymRegion(mo->name, rs);
+            }
+            else if (argsL.find(ai) != argsL.end()) {
+               std::vector<region> rs;
+               if (lowTypeRegions.find(atname) != lowTypeRegions.end()) {
+                  rs = lowTypeRegions[atname];
+               }
+               else { // if not specified assume the whole region is  low security sensitive
+                  region r;
+                  r.offset = 0;
+                  r.size = mo->size * 8;
+                  rs.push_back(r);
+                  llvm::errs() << " setting low security region offset= " << r.offset << " size= " << r.size << "\n";
+               }
+               mo->islow = true;
+               setLowMemoryRegion(state, mo->getBaseExpr(), rs);
+               setLowSymRegion(mo->name, rs);
+            }        
+            else if (argsM.find(ai) != argsM.end()) {
+               if (lowTypeRegions.find(atname) == lowTypeRegions.end() && 
+                  highTypeRegions.find(atname) == highTypeRegions.end())
+                  assert(false && "Mixed sensitivity arg without type based sensitive regions!\n");
+               if (lowTypeRegions.find(atname) != lowTypeRegions.end()) {
+                  std::vector<region> rs = lowTypeRegions[atname]; 
+                  setLowMemoryRegion(state, mo->getBaseExpr(), rs);
+                  setLowSymRegion(mo->name, rs); 
+               }
+               if (highTypeRegions.find(atname) != highTypeRegions.end()) {
+                  std::vector<region> rs = highTypeRegions[atname];  
+                 setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+                 setHighSymRegion(mo->name, rs); 
+               }
+            }
+         }
+      }
+    }
+}
+
 bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,
                                   Function *function,
@@ -6068,6 +6253,7 @@ void Executor::clearFunctionPointers(const MemoryObject *mo, ObjectState *os, Ty
        }
     }
 }
+
 
 void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bool &abort, bool nosym) {
    std::string fname = entryFunc->getName();

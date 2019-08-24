@@ -167,6 +167,11 @@ public:
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments);
 
+  bool symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
+                                  KInstruction *target,
+                                  llvm::Function *function,
+                                  std::vector< ref<Expr> > &arguments);
+
   bool symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,
                                   llvm::Function *function,
