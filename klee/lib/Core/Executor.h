@@ -153,6 +153,10 @@ public:
 
   const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
 
+  unsigned int getTimingCost(ExecutionState &state, llvm::Instruction *inst);
+
+  void checkHighSensitiveLocals(ExecutionState &state, llvm::Instruction *ii);
+
   void checkAndUpdateInfoFlow(ExecutionState &state, llvm::Function *f, std::vector<ref<Expr> > & args, const MemoryObject *mo) ;
 
   void checkAndRecordSensitiveFlow(ExecutionState &state, llvm::Function *function, 

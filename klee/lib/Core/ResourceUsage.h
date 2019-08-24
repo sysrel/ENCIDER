@@ -20,6 +20,8 @@ typedef std::map<exhash, range> RU;
 typedef std::map<exhash, HCLC> HashExpr;
 typedef std::map<exhash, ref<Expr> > HashRet;
 
+unsigned int getTimingModel(std::string fname);
+
 void printInfo(const InstructionInfo &ii);
 
 void printviolations(Executor* ex);

@@ -105,6 +105,7 @@ bool cacheLineMode;
 bool cacheBitmaskMode;
 unsigned long cacheBitmask = 0xFFFFFFF;
 unsigned int cacheLineBits = 6; // cache line size of 2^6 = 64
+extern std::map<std::string, unsigned int> timingModels;
 extern std::map<std::string, std::map<region, std::set<infoflowsource_t> > > infoFlowRules;
 extern std::map<std::string, std::map<unsigned int, std::vector<unsigned int> > > externalFuncsWithSensitiveFlow;
 // source code locations with timing side channels
@@ -135,6 +136,7 @@ extern std::map<std::string, std::vector<region> > highSymRegions;
 extern std::map<std::string, std::vector<region> > lowSymRegions;
 // Stores the functions that when executed can be observed by the timing side channel attackers, e.g., ocalls
 extern std::vector<std::string> * untrusted;
+extern std::set<std::string> highSecurityLeaksOnStack;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -159,6 +161,16 @@ void addInfoFlowRule(std::string fname, region fr,  std::set<infoflowsource_t> i
  infoFlowRules[fname] = fm; 
 }
 
+
+void writeSensitiveLeaksOnStack(const char *fname) {
+  std::fstream rc(fname, std::fstream::out);
+  if (rc.is_open()) {
+     for(auto s: highSecurityLeaksOnStack) {
+        rc << s << "\n";
+     }
+     rc.close();
+  }
+}
 
 void writeSensitiveFlows(const char *fname) {
   std::fstream rc(fname, std::fstream::out);
@@ -188,6 +200,27 @@ inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
     return s;
 }
 
+void readTimingModels(const char *fname) {
+  std::fstream rc(fname, std::fstream::in);
+  if (rc.is_open()) {
+     std::string line,fname,value;
+     while(std::getline(rc,line)) {
+       std::istringstream iss(line);
+       getline(iss,  fname, ',');
+       fname = ltrim(rtrim(fname));
+       getline(iss,  value, ',');
+       value = ltrim(rtrim(value));
+       unsigned int numinstrs = std::stoi(value);
+       if (timingModels.find(fname) == timingModels.end())
+          timingModels[fname] = numinstrs;
+       else if (timingModels[fname] != numinstrs) {
+          llvm::errs() << fname << " conflicting timing values: " << timingModels[fname] << " and " << numinstrs << "\n"; 
+          assert(false && "Inconsistent timing model!\n");
+       }
+     }
+     rc.close();
+  }
+} 
 
 void readInfoFlowModels(const char *fname) {
   std::fstream rc(fname, std::fstream::in);
@@ -381,7 +414,10 @@ namespace {
   CacheBitMask("cache-bit-mask", cl::desc("bit mask to check for secret dependent cache access\n"));    
 
   cl::opt<std::string>
-  InfoFlowModels("info-flow-models", cl::desc("Name of the file that specifies how argument regions may affect security sensitivity of the return value region\n"));
+  InfoFlowModels("info-flow-models", cl::desc("Name of the file that specifies how argument regions may affect security sensitivity of the return value region of API functions\n"));
+
+  cl::opt<std::string>
+  TimingModels("timing-models", cl::desc("Name of the file that specifies instruction count of API functions\n"));
  
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
@@ -2241,6 +2277,10 @@ int main(int argc, char **argv, char **envp) {
   if (InfoFlowModels != "") {
      readInfoFlowModels(InfoFlowModels.c_str());
   }
+ 
+  if (TimingModels != "") {
+     readTimingModels(TimingModels.c_str());
+  }
 
   if (PrefixRedact != "") {
      readPrefixes(PrefixRedact.c_str());
@@ -2449,6 +2489,7 @@ int main(int argc, char **argv, char **envp) {
   handler->getInfoStream() << stats.str();
 
   writeSensitiveFlows("sensitiveFlows.txt"); 
+  writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
 
   delete handler;
 

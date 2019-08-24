@@ -33,6 +33,15 @@ std::vector<llvm::Instruction*> *vil = new std::vector<llvm::Instruction*>();
 std::map<std::string, std::set<int> > dynamicHighLoc;
 std::map<std::string, std::set<int> > dynamicLowLoc;
 
+std::map<std::string, unsigned int> timingModels;
+
+unsigned int getTimingModel(std::string fname) {
+  if (timingModels.find(fname) != timingModels.end()) {
+     return timingModels[fname];
+  }
+  else return 1;
+}
+
 void printInfo(const InstructionInfo &ii) {
 	if (ii.file != "") {
 		llvm::errs() << "\n\t>>>> " << ii.file.c_str() << ":" << ii.line << "\n";

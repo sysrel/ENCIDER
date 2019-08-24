@@ -167,6 +167,7 @@ ArrayCache *acache = NULL;
 int maxForkMulRes = 2147483647;
 int primArraySize = 32;
 std::map<std::string, int> uniqueSym;
+std::set<std::string> highSecurityLeaksOnStack;
 /* Side channel end */
 
 //#define VBSC
@@ -258,6 +259,33 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
    return NULL;
 }
 
+void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) {
+   Cell *cells = state.stack.back().locals; 
+   KFunction *kf = state.stack.back().kf;
+   const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
+   for(unsigned int i=0; i<kf->numRegisters; i++) {
+      ref<Expr> &c = cells[i].value;
+      if (!c.isNull()) {
+         if (exprHasSymRegion(c, true)) {
+            std::stringstream ss;
+            ss << ii_info.file.c_str() << " " << ii_info.line << ": ";
+            ss << c << "\n";
+            highSecurityLeaksOnStack.insert(ss.str());
+         }
+     }
+   }
+}
+
+unsigned int Executor::getTimingCost(ExecutionState &state, Instruction *inst) {
+  
+  if (inst->getOpcode() == Instruction::Call || inst->getOpcode() == Instruction::Invoke) {
+     CallSite cs(inst);
+     Value *fp = cs.getCalledValue();
+     Function *f = getTargetFunction(fp, state);
+     return getTimingModel(removeDotSuffix(f->getName())); 
+  } 
+  else return ICost;
+}
 
 void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *function, 
                                                    std::vector<ref<Expr> > & args) {
@@ -2315,6 +2343,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   switch (i->getOpcode()) {
     // Control flow
   case Instruction::Ret: {
+    bool terminating = false;
     ReturnInst *ri = cast<ReturnInst>(i);
     Function *rf = ri->getParent()->getParent();
     KInstIterator kcaller = state.stack.back().caller;
@@ -2408,8 +2437,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
            rdd->isvoid = false;
            rdd->retval = ref<Expr>(result);
          }
+         checkHighSensitiveLocals(state,i);
          /* Side channel end */
-
+         terminating = true;
          terminateStateOnExit(state);
       }
       else {
@@ -2430,6 +2460,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                  #ifdef VB
                  llvm::outs() << "terminating state and life cycle early due to error return value!\n";
                  #endif
+                 checkHighSensitiveLocals(state,i);
+                 terminating = true;
                  terminateStateOnExit(state);
               }
            }
@@ -2443,6 +2475,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       }
       /* SYSREL extension */
     } else {
+      /* SYSREL extension */
+      if (!terminating)
+         checkHighSensitiveLocals(state,i);
+      /* SYSREL extension */
       state.popFrame();
 
       if (statsTracker)
@@ -4177,7 +4213,7 @@ void Executor::run(ExecutionState &initialState) {
   if (sidechannelstarted) {
    RD* rdd = getrdmap(&state);
    currentRD = rdd;
-   currentRD->ru += ICost;
+   currentRD->ru += getTimingCost(state, ii);
 
    if (isbranch) {
       isbranch = false;
@@ -4389,6 +4425,13 @@ void Executor::terminateState(ExecutionState &state) {
      minInstCount = state.instCount;
   if (state.instCount > maxInstCount)
      maxInstCount = state.instCount;
+  RD* rdd = getrdmap(&state);
+  if (rdd) {
+     if (rdd->ru < minInstCount)
+        minInstCount = rdd->ru; 
+     if (rdd->ru > maxInstCount)
+        maxInstCount = rdd->ru; 
+  }
   #ifdef VB
   llvm::errs() << "Checking the state at the end of path\n";
   state.check();
