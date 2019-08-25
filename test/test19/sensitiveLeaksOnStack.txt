@@ -1,33 +1,6 @@
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (Or (Or (Or (Slt 0
-                  (ReadLSB w32 0 %sym13__mm_fake1_0))
-             (Slt 0
-                  (ReadLSB w32 0 %sym17__mm_fake2_0)))
-         (Slt 0
-              (ReadLSB w32 0 %sym21__mm_fake3_0)))
-     (Slt 0
-          (ReadLSB w32 0 %sym25__mm_fake4_0)))
+/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 66: (ReadLSB w32 0 %sym21__mm_fake3_0)
 
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (Or (Or (Slt 0
-              (ReadLSB w32 0 %sym13__mm_fake1_0))
-         (Slt 0
-              (ReadLSB w32 0 %sym17__mm_fake2_0)))
-     (Slt 0
-          (ReadLSB w32 0 %sym21__mm_fake3_0)))
+/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 66: (ReadLSB w32 0 %sym25__mm_fake4_0)
 
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (Or (Slt 0
-          (ReadLSB w32 0 %sym13__mm_fake1_0))
-     (Slt 0
-          (ReadLSB w32 0 %sym17__mm_fake2_0)))
-
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (ReadLSB w32 0 %sym13__mm_fake1_0)
-
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (ReadLSB w32 0 %sym21__mm_fake3_0)
-
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (ReadLSB w32 0 foo_arg_1_0)
-
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (Slt 0
-      (ReadLSB w32 0 %sym13__mm_fake1_0))
-
-/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 55: (Slt 0
-      (ReadLSB w32 0 %sym21__mm_fake3_0))
+/home/tuba/Documents/tools/pmguidedsymex/test/test19/test19.c 66: (ReadLSB w32 0 foo_arg_1_0)
 

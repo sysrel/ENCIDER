@@ -33,24 +33,35 @@ int foo(int L, int H) {
     if (H1 > 0 || H2 > 0 || H3 > 0 || H4 > 0) {
        if (L5 > 0) {
           printf("%d\n", loop(ru1,2));
+          memset(&H1, 0, sizeof(H1));
+          H2 = 0;   
+          printf("cleanued up %d%d\n", H1, H2);
           return 1;         
        }
        else {
           printf("%d\n", loop(ru2,2));
+          memset(&H1, 0, sizeof(H1));
+          H2 = 0;   
+          printf("cleanued up %d%d\n", H1, H2);
           return 1; 
        }
     }
     else {
        if (L5 > 0) {
           printf("%d\n", loop(ru8,2));
+          memset(&H1, 0, sizeof(H1));
+          H2 = 0;   
+          printf("cleanued up %d%d\n", H1, H2);
           return 1; 
        }
        else {
           printf("%d\n", loop(ru7,2));
+          memset(&H1, 0, sizeof(H1));
+          H2 = 0;   
+          printf("cleanued up %d%d\n", H1, H2);
           return 1; 
        }
     }   
-    memset(&H1, 0, sizeof(H1));
-    H2 = 0;   
+   
 }
 
