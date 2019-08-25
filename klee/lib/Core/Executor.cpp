@@ -266,9 +266,9 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
   llvm::errs() << "checking leak in " << sf.kf->function->getName() << "\n"; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
          ie = sf.allocas.end(); it != ie; ++it) {
-      llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " size=" << (*it)->size << "\n";
+      llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
       const ObjectState *os = state.addressSpace.findObject((*it));
-      ref<Expr> value = os->read(ConstantExpr::alloc(0, Expr::Int64),(*it)->size/8);
+      ref<Expr> value = os->read(ConstantExpr::alloc(0, Expr::Int64),(*it)->size*8);
       ref<Expr> &test = value;
       if (test.isNull()) continue;
       llvm::errs() << "checking leak in " << value << "\n";
