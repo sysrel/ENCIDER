@@ -231,6 +231,7 @@ public:
   std::map<llvm::Type*, ref<Expr> > typeToAddr;
   std::map<std::string, long int> symIdCounters;
   std::vector<PMFrame*> pmstack;
+  bool isSymbolic(const MemoryObject *mo) ;
   void pushPMFrame(APIAction *a, std::vector< ref<Expr> > arguments, 
              KInstruction *target, int tid=-1);
   void popPMFrame();

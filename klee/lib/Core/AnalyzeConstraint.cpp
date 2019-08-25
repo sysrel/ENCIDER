@@ -97,6 +97,7 @@ void shiftRight(std::vector<region> r1, std::vector<region> &rs, unsigned value,
 
 
 bool canCoalesce(region r1, region r2) {
+     //llvm::errs() << "in can coalesce " << r1.offset << "," << r1.size << " and " << r2.offset << "," << r2.size << "\n";
      if (r1.offset + r1.size == r2.offset || r2.offset + r2.size == r1.offset)
         return true;
      return rangesIntersect(r1.offset,r1.offset+r1.size-1,r2.offset,r2.offset+r2.size-1);
@@ -110,6 +111,7 @@ bool coalasce(region r1, region r2, region &res) {
         res.offset = newoffset;
         res.size = newsize;
         result = true;
+        //llvm::errs() << "coalsced region: " << res.offset << "," << res.size << "\n";
      }
      return result;
 }
@@ -130,6 +132,13 @@ void mergeAndCoalesce(region r1, std::vector<region> rs2, std::vector<region> &r
 }
 
 void mergeAndCoalesce(std::vector<region> rs1, std::vector<region> rs2, std::vector<region> &rs3) {
+    //llvm::errs() << "coalesceAndMerge:\n";
+    //llvm::errs() << "rs1:\n"; 
+    //for(unsigned int i=0; i<rs1.size(); i++)
+      // llvm::errs() << rs1[i].offset << "," << rs1[i].size << "\n";
+    //llvm::errs() << "rs2:\n"; 
+    //for(unsigned int i=0; i<rs2.size(); i++)
+      // llvm::errs() << rs2[i].offset << "," << rs2[i].size << "\n";
     std::vector<region> temp = rs2;
     std::vector<region> temp2;
     for(unsigned int i=0; i<rs1.size(); i++) {
@@ -139,6 +148,9 @@ void mergeAndCoalesce(std::vector<region> rs1, std::vector<region> rs2, std::vec
     } 
     for(unsigned int i=0; i<temp.size(); i++)
        rs3.push_back(temp[i]);
+    //llvm::errs() << "rs3:\n"; 
+    //for(unsigned int i=0; i<rs3.size(); i++)
+      // llvm::errs() << rs3[i].offset << "," << rs3[i].size << "\n";
 }
 
 std::vector<region> extractRegion(ref<Expr> expr, region range, bool high);
@@ -387,10 +399,10 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
           else return rs;
       } 
       case Expr::Concat: {
-          //llvm::errs() << "concat: \n"; 
+          //llvm::errs() << "in concat: \n"; 
           std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
           std::vector<region> r2 = extractRegion(cexpr->getKid(1), range, high);
-          if  (r1.size() == 0 && r2.size()) {
+          if  (r1.size() == 0 && r2.size() == 0) {
               return rs;
           }
           else if (r1.size() == 0) {
@@ -399,7 +411,7 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
           else if (r2.size() == 0) {
              return r1; 
           }           
-          //moveOffset(r2, cexpr->getKid(0)->getWidth());
+          //llvm::errs() << " concat merging..\n";
           mergeAndCoalesce(r1, r2, rs);           
           return rs;
       }
@@ -450,16 +462,18 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
                  
          }*/
          else if (cexpr->getNumKids() > 0) {
+            //llvm::errs() << "child 0 " << cexpr->getKid(0) << "\n";
             std::vector<region> rtemp1 = extractRegion(cexpr->getKid(0), range, high);
             //llvm::errs() << "child 0 " << cexpr->getKid(0) << " results (high=" << high << "): \n"; 
             //for(unsigned int i=0; i<rtemp1.size(); i++)
-            //   llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
+              // llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
             std::vector<region> rtemp3; 
             for(unsigned int i=1; i<cexpr->getNumKids(); i++) {
+               //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << "\n";
                std::vector<region> rtemp2 = extractRegion(cexpr->getKid(i), range, high);
                //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << " results (high=" << high << "): \n";
                //for(unsigned int j=0; j<rtemp2.size(); j++)
-               //   llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
+                 // llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
                mergeAndCoalesce(rtemp1, rtemp2, rtemp3);
                rtemp1 = rtemp3;
                rtemp3.clear();
@@ -499,9 +513,20 @@ ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
           if (!maybebitwise) {
              bool k0 = exprHasSymRegion(cexpr->getKid(0), high);
              bool k1 = exprHasSymRegion(cexpr->getKid(1), high);
+             //llvm::errs() << cexpr->getKid(0) << " has high (" << high << " sym region?: " << k0 << "\n";
+             //llvm::errs() << cexpr->getKid(1) << " has high (" << high << " sym region?: " << k1 << "\n";
              if (k0 && k1) {
-                return AndExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
+                if (cexpr->getKind() == Expr::And)
+                   return AndExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
                                        getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise));
+                else if (cexpr->getKind() == Expr::Or)
+                   return OrExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
+                                       getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise));
+                else if (cexpr->getKind() == Expr::Xor)
+                   return XorExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
+                                       getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise)); 
+                else assert(false);
+                  
              }
              else if (k0) {
                 return getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise);

@@ -283,6 +283,15 @@ void ExecutionState::popFrameThread(int tid) {
     addressSpace.unbindObject(*it);
   threads[tid].stack.pop_back();
 }
+
+bool ExecutionState::isSymbolic(const MemoryObject *mo) {
+  for(unsigned int i=0; i<symbolics.size(); i++) {
+     if (symbolics[i].first == mo)
+        return true;
+  }
+  return false;
+}
+
 /* SYSREL extension */
 
 void ExecutionState::addSymbolic(const MemoryObject *mo, const Array *array) { 

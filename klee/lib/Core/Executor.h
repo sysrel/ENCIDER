@@ -167,6 +167,14 @@ public:
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments);
 
+  void setSymRegionSensitive(ExecutionState &state,
+                                     const MemoryObject *sm, 
+                                     std::string fname, 
+                                     llvm::Type *argtype, 
+                                     unsigned int ai, 
+                                     unsigned int offset=0);
+
+
   bool symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                                   KInstruction *target,
                                   llvm::Function *function,
@@ -779,3 +787,4 @@ public:
 
   // const llvm::fltSemantics * fpWidthToSemantics(unsigned width);
 #endif
+
