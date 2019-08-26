@@ -12,7 +12,8 @@ low,%struct.mytest,32,32
 high,%struct.mytest,64,32
 
 $ more inputFunctions.txt 
-bar
+bar,0
+
 
 $ ./run.sh test14.bc foo 2>&1 | tee o.txt 
 

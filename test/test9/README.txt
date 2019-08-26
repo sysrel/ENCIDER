@@ -9,7 +9,8 @@ low,bar,0
 high,bar,1
 
 $ more inputFunctions.txt 
-bar
+bar,0
+bar,1
 
 ./run.sh test9.bc foo 2>&1 | tee o.txt 
 
