@@ -117,6 +117,8 @@ std::set<std::string> voidTypeCasts;
 extern std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 //  Functions that receive input from the environment
 extern std::set<std::string> inputFuncs;
+// Functions to arguments that receive input from the environment
+extern std::map<std::string, std::set<unsigned int> > inputFuncArgs;
 // Maps function arguments to its high security regions
 extern std::map<std::string, std::set<int> > highFunctionArgs;
 // Maps function arguments to its low security regions
@@ -1437,10 +1439,21 @@ void readSensitiveFunctionArgs(const char *name) {
 void readInputFuncs(const char *name) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
-     std::string  line;
+     std::string  line, fname, token;
      while(std::getline(cf,line)) {
-         inputFuncs.insert(ltrim(rtrim(line)));
-         llvm::outs() << " input function: " << line << "\n";
+         std::istringstream iss(line);
+         getline(iss, fname, ',');
+         fname = ltrim(rtrim(fname)); 
+         inputFuncs.insert(fname);
+         llvm::outs() << " input function: " << fname << "\n";
+         getline(iss, token, ',');
+         token = ltrim(rtrim(token)); 
+         unsigned int arg = std::stoi(token);
+         std::set<unsigned int> args;
+         if (inputFuncArgs.find(fname) != inputFuncArgs.end())
+            args = inputFuncArgs[fname];
+         args.insert(arg);
+         inputFuncArgs[fname] = args;
      }
   }
   cf.close();

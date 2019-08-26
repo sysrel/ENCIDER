@@ -120,6 +120,7 @@ extern bool cacheBitmaskMode;
 extern unsigned int cacheBitmask;
 //  Functions that receive input from the environment
 std::set<std::string> inputFuncs;
+std::map<std::string, std::set<unsigned int> > inputFuncArgs;
 // Maps function arguments to its high security regions
 std::map<std::string, std::set<int> > highFunctionArgs;
 // Maps function arguments to its low security regions
@@ -5275,6 +5276,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
        return false; 
     }
     std::string fname = function->getName();    
+    std::set<unsigned int> argset = inputFuncArgs[fname];
     std::set<int> argsH, argsL, argsM; 
     if (highFunctionArgs.find(fname) != highFunctionArgs.end())
        argsH = highFunctionArgs[fname];
@@ -5285,7 +5287,8 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
     llvm::errs() << "Handling input function " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
-       if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
+       //if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
+       if (argset.find(ai) != argset.end()) { 
           // a local var
           Type *at = agi->getType();
           if (at->isPointerTy()) {
