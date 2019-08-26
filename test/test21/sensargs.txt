@@ -1,0 +1,3 @@
+low,foo,0
+high,foo,1
+high,bar,0

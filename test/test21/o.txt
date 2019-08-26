@@ -1,0 +1,770 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test21/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=825
+Couldn't open file 
+Using cache line mode (as default)!
+KLEE: WARNING: undefined reference to function: printf
+0x4293f90
+0x4293f40
+0x4293ef0
+0x4293ea0
+0x4293e50
+0x4293e00
+0x4293db0
+0x4293d60
+0x4293d10
+0x4293cc0
+0x4293c70
+0x4293c20
+0x4293bd0
+0x4293b80
+0x4293b30
+0x4293a90
+0x42939f0
+0x42939a0
+arg 0 type %struct.compos count=20
+Symbolizing arg of bar, address 69810432
+is arg 0 type %struct.compos* single instance? 0
+to be made symbolic? 1
+ setting high security region offset= 0 size= 640
+recording address of bar_arg_0_0 69810432 as high security sensitive
+0x4293810
+High symbolic regions:
+bar_arg_0_0
+Low symbolic regions:
+Registering publicOutputReturningFName as bar
+0x4293770
+0x4293720
+reached bar
+Handling functions with sensitive args foo
+0x4293680
+yes!
+(ReadLSB w640 0 bar_arg_0_0)already known to be sensitive 
+0x4293630
+0x4293540
+0x4293590
+0x42934f0
+reached foo
+0x42936d0
+0x4294210
+0x4294260
+0x42942b0
+0x4294300
+reached loop
+0x4294350
+0x42943a0
+0x42943f0
+0x4294530
+0x4294580
+0x4294620
+0x4294670
+0x4294710
+0x42945d0
+0x42947b0
+0x4294800
+0x4294120
+0x42948a0
+0x42948f0
+0x4294940
+0x4294990
+0x42949e0
+0x4294a30
+0x4294a80
+0x4294ad0
+0x4294b20
+0x4294b70
+0x4294bc0
+0x4294c10
+0x4294c60
+0x4294cb0
+0x4294d00
+checking leak in loop
+base of alloca: unnamed 68524880 num bytes=4
+checking leak in 3
+base of alloca: unnamed 68524840 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524592 num bytes=4
+checking leak in 16
+base of alloca: unnamed 68524808 num bytes=4
+checking leak in 3
+KLEE: WARNING ONCE: calling external: printf(68524040, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:35
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+checking leak in loop
+base of alloca: unnamed 68524760 num bytes=4
+checking leak in 4
+base of alloca: unnamed 68524672 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524632 num bytes=4
+checking leak in 32
+base of alloca: unnamed 68524568 num bytes=4
+checking leak in 4
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+checking leak in loop
+base of alloca: unnamed 68524776 num bytes=4
+checking leak in 5
+base of alloca: unnamed 68524624 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524352 num bytes=4
+checking leak in 64
+base of alloca: unnamed 68524416 num bytes=4
+checking leak in 5
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+checking leak in loop
+base of alloca: unnamed 68524528 num bytes=4
+checking leak in 10
+base of alloca: unnamed 68524896 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524560 num bytes=4
+checking leak in 2048
+base of alloca: unnamed 68524936 num bytes=4
+checking leak in 10
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+checking leak in loop
+base of alloca: unnamed 68524448 num bytes=4
+checking leak in 6
+base of alloca: unnamed 68524320 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524904 num bytes=4
+checking leak in 128
+base of alloca: unnamed 68525024 num bytes=4
+checking leak in 6
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+16
+32
+64
+2048
+128
+checking leak in loop
+base of alloca: unnamed 68524376 num bytes=4
+checking leak in 7
+base of alloca: unnamed 68525000 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524960 num bytes=4
+checking leak in 256
+base of alloca: unnamed 68525040 num bytes=4
+checking leak in 7
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+checking leak in loop
+base of alloca: unnamed 68524408 num bytes=4
+checking leak in 8
+base of alloca: unnamed 68524944 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524968 num bytes=4
+checking leak in 512
+base of alloca: unnamed 68524984 num bytes=4
+checking leak in 8
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+checking leak in loop
+base of alloca: unnamed 68524616 num bytes=4
+checking leak in 9
+base of alloca: unnamed 68524728 num bytes=4
+checking leak in 2
+base of alloca: unnamed 68524600 num bytes=4
+checking leak in 1024
+base of alloca: unnamed 68524480 num bytes=4
+checking leak in 9
+checking leak in foo
+base of alloca: foo_low_0_0 68524000 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524248 num bytes=4
+checking leak in 1
+base of alloca: unnamed 68524232 num bytes=4
+checking leak in (ReadLSB w32 0 foo_low_0_0)
+base of alloca: unnamed 68524888 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524304 num bytes=4
+checking leak in (ReadLSB w32 0 bar_arg_0_0)
+checking leak in bar
+base of alloca: unnamed 68524160 num bytes=8
+checking leak in 69810432
+base of alloca: unnamed 68524184 num bytes=4
+checking leak in 2880154539
+256
+512
+1024
+Size of rdmap : 15
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %27 = load i32, i32* %H, align 4, !dbg !163
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:48
+
+[ (Slt 4294967286
+      (ReadLSB w32 0 bar_arg_0_0))
+(Eq 4294967295
+     (ReadLSB w32 0 foo_low_0_0))
+ ]   ---->  [ 122 , 122 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 bar_arg_0_0)))
+(Eq 4294967295
+     (ReadLSB w32 0 foo_low_0_0))
+ ]   ---->  [ 146 , 146 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:49
+  br i1 %30, label %32, label %35, !dbg !172
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:59
+  br i1 %30, label %39, label %42, !dbg !183
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %27 = load i32, i32* %H, align 4, !dbg !163
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:48
+
+[ (Slt 4294967286
+      (ReadLSB w32 0 bar_arg_0_0))
+(Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 foo_low_0_0)))
+ ]   ---->  [ 134 , 134 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 0 bar_arg_0_0)))
+(Eq false
+     (Eq 4294967295
+         (ReadLSB w32 0 foo_low_0_0)))
+ ]   ---->  [ 158 , 158 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:49
+  br i1 %30, label %32, label %35, !dbg !172
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:59
+  br i1 %30, label %39, label %42, !dbg !183
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 134 , 134 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 158 , 158 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 54
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 134 , 134 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 80 , 80 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 122 , 122 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 146 , 146 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 42
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 122 , 122 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 80 , 80 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 78
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq false (Eq 4294967295 N0)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 80 , 80 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 66
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 0 bar_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+           0)
+      (Eq 4294967295 N0))
+ ]   ---->  [ 146 , 146 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 80 , 80 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 84
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_arg_0_0)))
+(Eq false
+     (Slt (ReadLSB w32 0 foo_low_0_0)
+          0))
+ ]   ---->  [ 164 , 164 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(Slt (ReadLSB w32 0 foo_low_0_0)
+      1)
+ ]   ---->  [ 80 , 80 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 69
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_arg_0_0)))
+(Eq false
+     (Slt (ReadLSB w32 0 foo_low_0_0)
+          0))
+ ]   ---->  [ 164 , 164 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(And (Eq false
+          (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+               1))
+      (Slt N0 5))
+ ]   ---->  [ 95 , 95 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 57
+Instruction:
+  %1 = alloca %struct.compos*, align 8
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 0 bar_arg_0_0)))
+(Eq false
+     (Slt (ReadLSB w32 0 foo_low_0_0)
+          0))
+ ]   ---->  [ 164 , 164 ]
+
+[ (Slt 0
+      (ReadLSB w32 0 bar_arg_0_0))
+(And (Eq false
+          (Slt N0:(ReadLSB w32 0 foo_low_0_0)
+               1))
+      (Eq false (Slt N0 5)))
+ ]   ---->  [ 107 , 107 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:47
+  %25 = icmp slt i32 %9, 0, !dbg !159
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:33
+  %11 = icmp slt i32 %9, 1, !dbg !138
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:48
+	=====================
+
+	=====================
+	Function : bar
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test21/test21.c:27
+	=====================
+
+>>>> Found violations at  : 2 locations.
+all high sym regions: 
+bar_arg_0_0
+offset=0, size=640
+all low sym regions: 
+foo_low_0_0
+offset=0, size=32
+
+KLEE: done: #Timing Side Channel  Locs = 2
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 80
+KLEE: done: maxInst = 165
+KLEE: done: HAncestors = 2
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 842
+KLEE: done: completed paths = 8
+KLEE: done: generated tests = 8
+Lazy initialization is ON 
+lazy single spec file? 
+ low function foo arg 0
+ high function foo arg 1
+ high function bar arg 0
