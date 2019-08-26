@@ -5111,7 +5111,8 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                         }
                      } 
                      // set high/low
-                     ConstantExpr *mob = dyn_cast<ConstantExpr>( op.first->getBaseExpr());
+                     ref<Expr> mobase = op.first->getBaseExpr(); 
+                     ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);
                      unsigned long diff = 0;
                      if (mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
