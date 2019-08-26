@@ -5100,9 +5100,19 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                   solver->setTimeout(0);
                   if (asuccess) {
                    if (state.isSymbolic(op.first)) {
+                      llvm::errs() << "yes!\n";
+                      // check if it is already known to have a sensitive region
+                      ref<Expr> cur = op.second->read(ConstantExpr::alloc(0, Expr::Int64),op.first->size*8);
+                      ConstantExpr *CE = dyn_cast<ConstantExpr>(cur);
+                      if (!CE) {
+                        if (isSymRegionSensitive(state, cur, fname, ai)) {
+                           llvm::errs() << cur << "already known to be sensitive \n";
+                           continue;
+                        }
+                     } 
                      // set high/low
                      ConstantExpr *mob = dyn_cast<ConstantExpr>( op.first->getBaseExpr());
-                     unsigned int diff = 0;
+                     unsigned long diff = 0;
                      if (mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                      setSymRegionSensitive(state,op.first,fname,bt,ai,diff); 
@@ -5118,16 +5128,32 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                    uniqueName = getUniqueSymRegion(uniqueName);
                    executeMakeSymbolic(state, op.first, uniqueName);
                    op.first->name = uniqueName;
-                   ConstantExpr *mob = dyn_cast<ConstantExpr>(op.first->getBaseExpr());
-                   unsigned int diff = 0;
-                   if (mob) 
+                   ref<Expr> mobase = op.first->getBaseExpr(); 
+                   ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);
+                   unsigned long diff = 0;
+                   if (mob) {
+                      llvm::errs() << "cexpr: " <<  cexpr << "\n"; 
+                      llvm::errs() << "width: " << cexpr->getWidth() << "\n";
+                      llvm::errs() << "mob: " <<  mob << "\n";  
+                      llvm::errs() << "width: " << mob->getWidth() << "\n";
                       diff = cexpr->getZExtValue() - mob->getZExtValue();                    
+                   }
                    setSymRegionSensitive(state, op.first, fname, bt, ai,diff);
                   }
                  }
               }
           }
           else { // pass by value args
+            // check if it is already known to have a sensitive region
+            ref<Expr> &cur = getArgumentCell(state, kf, ai).value;
+            if (cur.isNull()) continue;
+            ConstantExpr *CE = dyn_cast<ConstantExpr>(cur); 
+            if (!CE) {
+               if (isSymRegionSensitive(state, cur, fname, ai)) {
+                  llvm::errs() << cur << "already known to be sensitive \n";
+                  continue;
+               }
+            } 
             size_t allocationAlignment = 8;
             Instruction *inst = &*(entryFunc->begin()->begin());
             const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
@@ -5154,6 +5180,21 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
     return true;
 }
 
+bool Executor::isSymRegionSensitive(ExecutionState &state, ref<Expr> CE, std::string fname, unsigned int ai) {
+   std::set<int> argsH, argsL, argsM; 
+   if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+      argsH = highFunctionArgs[fname];
+   if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+      argsL = lowFunctionArgs[fname];
+   if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
+      argsM = mixedFunctionArgs[fname];     
+   if (argsH.find(ai) != argsH.end()) 
+      return exprHasSymRegion(CE, true);
+   else if (argsL.find(ai) != argsL.end()) 
+      return exprHasSymRegion(CE, false);
+   else assert(false && "found a case of mixed sensitivity of arg at a callsite!!!");
+
+}
 
 void Executor::setSymRegionSensitive(ExecutionState &state,
                                      const MemoryObject *sm, 
@@ -5508,7 +5549,7 @@ ObjectState *Executor::bindObjectInState(ExecutionState &state,
                                          const MemoryObject *mo,
                                          bool isLocal,
                                          const Array *array) {
-  llvm::errs() << "binding a new object to mo " << mo->getBaseExpr() << ":\n"; 
+  //llvm::errs() << "binding a new object to mo " << mo->getBaseExpr() << ":\n"; 
 
   ObjectState *os = array ? new ObjectState(mo, array) : new ObjectState(mo);
   llvm::errs() << os << "\n";
@@ -5519,7 +5560,7 @@ ObjectState *Executor::bindObjectInState(ExecutionState &state,
   // matter because all we use this list for is to unbind the object
   // on function return.
   if (isLocal) {
-    llvm::errs() << "alloca at " << mo->getBaseExpr() << "\n";
+    //llvm::errs() << "alloca at " << mo->getBaseExpr() << "\n";
     state.stack.back().allocas.push_back(mo);
   }
 
@@ -5783,14 +5824,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -6410,7 +6451,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                     setHighSymRegion(mo->name, rs); 
                  }
               }
-              if (!nosym && mksym) {
+              if (!nosym/* && mksym*/) {
                  executeMakeSymbolic(state, mo,
                                      mo->name,
                                      at, true);

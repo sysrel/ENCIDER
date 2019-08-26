@@ -167,6 +167,8 @@ public:
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments);
 
+  bool isSymRegionSensitive(ExecutionState &state, ref<Expr> CE, std::string fname, unsigned int ai);
+
   void setSymRegionSensitive(ExecutionState &state,
                                      const MemoryObject *sm, 
                                      std::string fname, 
