@@ -5346,7 +5346,8 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    sm->name = getUniqueSymRegion(uniqueName);
                    unsigned int diff = 0;
                    ConstantExpr *cexpr = dyn_cast<ConstantExpr>(base);
-                   ConstantExpr *mob = dyn_cast<ConstantExpr>(op.first->getBaseExpr());  
+                   ref<Expr> mobase = op.first->getBaseExpr();
+                   ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                    setSymRegionSensitive(state,sm,fname,bt,ai,diff); 
