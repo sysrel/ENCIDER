@@ -1,2 +1,0 @@
-/home/tuba/Documents/tools/pmguidedsymex/test/test9/test9.c 66: (ReadLSB w32 0 bar_high_1_0)
-

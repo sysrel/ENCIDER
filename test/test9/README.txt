@@ -5,12 +5,11 @@ $ more run.sh
 itive-inputs=sensargs.txt -input-funcs=inputFunctions.txt $1
 
 $ more sensargs.txt 
-low,bar,0
-high,bar,1
+$
 
 $ more inputFunctions.txt 
-bar,0
-bar,1
+low,bar,0
+high,bar,1
 
 ./run.sh test9.bc foo 2>&1 | tee o.txt 
 

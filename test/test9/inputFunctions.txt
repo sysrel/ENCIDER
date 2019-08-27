@@ -1,2 +1,2 @@
-bar,0
-bar,1
+low,bar,0
+high,bar,1

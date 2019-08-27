@@ -1,2 +1,0 @@
-/home/tuba/Documents/tools/pmguidedsymex/test/test14/test14.c 72: (ReadLSB w96 0 bar_0)
-

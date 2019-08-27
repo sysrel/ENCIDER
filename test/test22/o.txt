@@ -1,0 +1,32 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test22/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=819
+Couldn't open file 
+Using cache line mode (as default)!
+KLEE: WARNING: undefined reference to function: bar
+KLEE: WARNING: undefined reference to function: printf
+lazy init arg foo_arg_0_0
+ setting low security region offset= 0 size= 32
+recording address of foo_arg_0_0 53082160 as not security sensitive
+arg 1 type i32 count=32
+Symbolizing arg of foo, address 54570752
+is arg 1 type i32* single instance? 0
+to be made symbolic? 1
+ setting high security region offset= 0 size= 1024
+recording address of foo_arg_1_0 54570752 as high security sensitive
+High symbolic regions:
+foo_arg_1_0
+Low symbolic regions:
+foo_arg_0_0
+Registering publicOutputReturningFName as foo
+reached foo
+KLEE: WARNING ONCE: calling external: bar(54570752) at /home/tuba/Documents/tools/pmguidedsymex/test/test22/test22.c:24
+checking arg 0 of bar : (ReadLSB w32 0 foo_arg_1_0) for sensitive flow
+ high region flows into bar
+Handling input function bar
+0  klee            0x000000000137af88 llvm::sys::PrintStackTrace(llvm::raw_ostream&) + 56
+1  klee            0x0000000001379216 llvm::sys::RunSignalHandlers() + 54
+2  klee            0x0000000001379379
+3  libpthread.so.0 0x000015084a6b9390
+4  klee            0x0000000001645428 vtable for klee::ConstantExpr + 16
+./run.sh: line 1: 12337 Illegal instruction     (core dumped) /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/bin/klee -entry-point=$2 -lazy-init=true -prog-model-spec=pm.txt -sensitive-inputs=sensargs.txt -input-funcs=inputFuncs.txt $1
