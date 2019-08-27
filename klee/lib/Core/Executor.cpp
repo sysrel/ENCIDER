@@ -127,6 +127,12 @@ std::map<std::string, std::set<int> > highFunctionArgs;
 std::map<std::string, std::set<int> > lowFunctionArgs;  
 // Maps function arguments to its mixed security regions
 std::map<std::string, std::set<int> > mixedFunctionArgs;  
+// Maps function arguments to its high security regions
+std::map<std::string, std::set<int> > highFunctionArgsRet;
+// Maps function arguments to its low security regions
+std::map<std::string, std::set<int> > lowFunctionArgsRet;  
+// Maps function arguments to its mixed security regions
+std::map<std::string, std::set<int> > mixedFunctionArgsRet; 
 // Maps types to its high security regions
 std::map<std::string, std::vector<region> > highTypeRegions;
 // Maps types to its low security regions
@@ -234,6 +240,7 @@ bool singleSuccessor = true;
 
 std::string getTypeName(Type *t);
 
+bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2) ;
 
 std::string removeDotSuffix(std::string name) {
   if (name.find(".") != std::string::npos) 
@@ -262,17 +269,18 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
 }
 
 void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) {
+  return;
   const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
   StackFrame &sf = state.stack.back();
-  llvm::errs() << "checking leak in " << sf.kf->function->getName() << "\n"; 
+  llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
          ie = sf.allocas.end(); it != ie; ++it) {
-      llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
+      //llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
       const ObjectState *os = state.addressSpace.findObject((*it));
       ref<Expr> value = os->read(ConstantExpr::alloc(0, Expr::Int64),(*it)->size*8);
       ref<Expr> &test = value;
       if (test.isNull()) continue;
-      llvm::errs() << "checking leak in " << value << "\n";
+      //llvm::errs() << "checking leak in " << value << "\n";
       if (exprHasSymRegion(value, true)) {
             std::stringstream ss;
             ss << ii_info.file.c_str() << " " << ii_info.line << ": ";
@@ -294,6 +302,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
          }
      }
    }*/
+   llvm::errs() << "checking done\n";
 }
 
 unsigned int Executor::getTimingCost(ExecutionState &state, Instruction *inst) {
@@ -302,7 +311,12 @@ unsigned int Executor::getTimingCost(ExecutionState &state, Instruction *inst) {
      CallSite cs(inst);
      Value *fp = cs.getCalledValue();
      Function *f = getTargetFunction(fp, state);
-     return getTimingModel(removeDotSuffix(f->getName())); 
+     if (f) {
+        std::string fname = f->getName();
+        std::string cname = removeDotSuffix(fname);
+        return getTimingModel(cname); 
+     }
+     else return ICost; 
   } 
   else return ICost;
 }
@@ -381,15 +395,121 @@ std::string getUniqueSymRegion(std::string name) {
   return result;   
 }
 
+void clearRegion(region r, std::vector<region> source, std::vector<region> &target) {
+   for(unsigned int i=0; i<source.size(); i++) {
+      if (r.offset == source[i].offset && r.size == source[i].size) {
+         // clear as it is!
+         continue;
+      }
+      else {
+        unsigned int min1 = r.offset;
+        unsigned int max1 = r.offset + r.size - 1;
+        unsigned int size1 = r.size;
+        unsigned int min2 = source[i].offset;
+        unsigned int max2 = source[i].offset + source[i].size - 1;
+        unsigned int size2 = source[i].size;
+        if (rangesIntersect(min1,max1,min2,max2)) {
+           if (min1 + size1 == min2 + size2) {
+              region r1;
+              r1.offset = min1 < min2 ? min1 : min2;
+              r1.size = min1 < min2 ? size1 - size2 : size2 - size1;  
+              target.push_back(r1);
+           }
+           else if (min1 == min2) {
+              region r1;
+              r1.offset = size1 > size2 ? min2 + size2 : min1 + size1;
+              r1.size = size1 > size2 ? size1 - size2 : size2 - size1; 
+              target.push_back(r1);
+           } 
+           else {
+              region r1, r2;
+              r1.offset = min1 < min2 ? min1 : min2;
+              r2.offset = max1 < max2 ? max1 + 1 : max2 + 1;
+              r1.size = min1 > min2 ? min1 - min2 : min2 - min1;
+              r2.size = max1 > max2 ? max1 - max2 : max2 - max1;
+              target.push_back(r1);
+              target.push_back(r2);        
+           }
+        }
+        else {
+           // preserve as it is 
+           target.push_back(source[i]);
+        }
+      }
+   } 
+}
+
+void clearRegion(std::vector<region> rs, std::vector<region> source, std::vector<region> &target) {
+   std::vector<region> temp = source;
+   for(unsigned int i=0; i<rs.size(); i++) { 
+      std::vector<region>  result;
+      clearRegion(rs[i], temp, result);
+      temp = result;
+      if (result.size() == 0) {
+         break;
+      }
+   }
+   target = temp;
+}
+
+void clearMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs, bool high) {
+   long saddr = (long)&state;
+   std::map<ref<Expr>, std::vector<region> > m;
+   if (high && highMemoryRegions.find(saddr) != highMemoryRegions.end()) {
+      m = highMemoryRegions[saddr];
+   }
+   else if (!high && lowMemoryRegions.find(saddr) != lowMemoryRegions.end()) {
+     m = lowMemoryRegions[saddr];
+   }
+   else return;
+   if (m.find(a) != m.end()) {
+      std::vector<region> temp;
+      clearRegion(rs, m[a], temp);
+      if (temp.size() == 0) {
+         m.erase(a);
+         llvm::errs() << "clearing high=" << high << " status of " << a << "\n";
+      }
+      else m[a] = temp;
+      if (high) 
+         highMemoryRegions[saddr] = m;
+     else lowMemoryRegions[saddr] = m;
+  }
+}
+
+void clearSymRegion(std::string name, std::vector<region> rs, bool high) {
+  if (high && highSymRegions.find(name) != highSymRegions.end()) {
+     std::vector<region> cur = highSymRegions[name];
+     std::vector<region> temp;
+     clearRegion(rs, cur, temp);
+      if (temp.size() == 0) {
+         highSymRegions.erase(name);
+         llvm::errs() << "clearing high=" << high << " status of " << name << "\n";
+      }
+      highSymRegions[name] = temp; 
+  }
+  else if (!high && lowSymRegions.find(name) != lowSymRegions.end()) {
+     std::vector<region> cur = lowSymRegions[name];
+     std::vector<region> temp;
+     clearRegion(rs, cur, temp);
+      if (temp.size() == 0) {
+         lowSymRegions.erase(name);
+         llvm::errs() << "clearing high=" << high << " status of " << name << "\n";
+      }
+      lowSymRegions[name] = temp; 
+  }
+}
+
+
 void setHighMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs) {
    long saddr = (long)&state;
    std::map<ref<Expr>, std::vector<region> > m;
    if (highMemoryRegions.find(saddr) != highMemoryRegions.end())
       m = highMemoryRegions[saddr];
-   if (m.find(a) != m.end())
-      assert(false && "address already has high security memory region set!\n");
+   //if (m.find(a) != m.end())
+     // assert(false && "address already has high security memory region set!\n");
    m[a] = rs;
    highMemoryRegions[saddr] = m; 
+   clearMemoryRegion(state, a, rs, false);
 }
 
 void setLowMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs) {
@@ -397,10 +517,11 @@ void setLowMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> 
    std::map<ref<Expr>, std::vector<region> > m;
    if (lowMemoryRegions.find(saddr) != lowMemoryRegions.end())
       m = lowMemoryRegions[saddr];
-   if (m.find(a) != m.end())
-      assert(false && "address already has low security memory region set!\n");
+   //if (m.find(a) != m.end())
+     // assert(false && "address already has low security memory region set!\n");
    m[a] = rs;
    lowMemoryRegions[saddr] = m; 
+   clearMemoryRegion(state, a, rs, true);
 }
 
 void addHighMemoryRegion(ExecutionState &state, ref<Expr> a, region r) {
@@ -430,7 +551,7 @@ void addLowMemoryRegion(ExecutionState &state, ref<Expr> a, region r) {
 }
 
 void setHighSymRegion(std::string name, std::vector<region> rs) {
-  if (highSymRegions.find(name) != highSymRegions.end()) {
+  /*if (highSymRegions.find(name) != highSymRegions.end()) {
      for(unsigned int i=0; i < rs.size(); i++) {
         llvm::errs() << "[" << rs[i].offset << "," << rs[i].size << "]\n"; 
      }
@@ -440,16 +561,18 @@ void setHighSymRegion(std::string name, std::vector<region> rs) {
         llvm::errs() << "[" << ers[i].offset << "," << ers[i].size << "]\n"; 
      }
      assert(false && "duplicate entry for highsymregions");
-  }
+  }*/
   highSymRegions[name] = rs;
+  clearSymRegion(name, rs, false);
 }
 
 void setLowSymRegion(std::string name, std::vector<region> rs) {
-  if (lowSymRegions.find(name) != lowSymRegions.end()) {
+  /*if (lowSymRegions.find(name) != lowSymRegions.end()) {
      llvm::errs() << "setting low sym region for " << name << "failed!\n";
      assert(false && "duplicate entry for lowsymregions");
-  }
-  lowSymRegions[name] = rs;
+  }*/
+  lowSymRegions[name] = rs; 
+  clearSymRegion(name, rs, true);
 }
 
 void initHighLowRegions(ExecutionState &state) {
@@ -5106,7 +5229,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                       ref<Expr> cur = op.second->read(ConstantExpr::alloc(0, Expr::Int64),op.first->size*8);
                       ConstantExpr *CE = dyn_cast<ConstantExpr>(cur);
                       if (!CE) {
-                        if (isSymRegionSensitive(state, cur, fname, ai)) {
+                        if (isSymRegionSensitive(state, cur, fname, ai, true)) {
                            llvm::errs() << cur << "already known to be sensitive \n";
                            continue;
                         }
@@ -5117,7 +5240,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                      unsigned long diff = 0;
                      if (mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                     setSymRegionSensitive(state,op.first,fname,bt,ai,diff); 
+                     setSymRegionSensitive(state,op.first,fname,bt,ai,true,diff); 
                    }
                    else {
                       // mark the memory object symbolic and the region sensitive
@@ -5140,7 +5263,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                       llvm::errs() << "width: " << mob->getWidth() << "\n";
                       diff = cexpr->getZExtValue() - mob->getZExtValue();                    
                    }
-                   setSymRegionSensitive(state, op.first, fname, bt, ai,diff);
+                   setSymRegionSensitive(state, op.first, fname, bt, ai,true, diff);
                   }
                  }
               }
@@ -5151,7 +5274,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             if (cur.isNull()) continue;
             ConstantExpr *CE = dyn_cast<ConstantExpr>(cur); 
             if (!CE) {
-               if (isSymRegionSensitive(state, cur, fname, ai)) {
+               if (isSymRegionSensitive(state, cur, fname, ai, true)) {
                   llvm::errs() << cur << "already known to be sensitive \n";
                   continue;
                }
@@ -5175,27 +5298,32 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
             bindArgument(kf, ai, state, result);
             std::string atname = getTypeName(at);
-            setSymRegionSensitive(state,mo, fname, at, ai);
+            setSymRegionSensitive(state,mo, fname, at, true, ai);
          }
       }
     }
     return true;
 }
 
-bool Executor::isSymRegionSensitive(ExecutionState &state, ref<Expr> CE, std::string fname, unsigned int ai) {
+bool Executor::isSymRegionSensitive(ExecutionState &state, ref<Expr> CE, std::string fname, unsigned int ai, bool oncall) {
    std::set<int> argsH, argsL, argsM; 
-   if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+   if (oncall && highFunctionArgs.find(fname) != highFunctionArgs.end())
       argsH = highFunctionArgs[fname];
-   if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+   else if (!oncall && highFunctionArgsRet.find(fname) != highFunctionArgsRet.end())
+     argsH = highFunctionArgsRet[fname];
+   if (oncall && lowFunctionArgs.find(fname) != lowFunctionArgs.end())
       argsL = lowFunctionArgs[fname];
-   if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
-      argsM = mixedFunctionArgs[fname];     
+   else if (!oncall && lowFunctionArgsRet.find(fname) != lowFunctionArgsRet.end())
+      argsL = lowFunctionArgsRet[fname];
+   if (oncall && mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
+      argsM = mixedFunctionArgs[fname];    
+   else if (!oncall && mixedFunctionArgsRet.find(fname) != mixedFunctionArgsRet.end())
+      argsM = mixedFunctionArgsRet[fname];  
    if (argsH.find(ai) != argsH.end()) 
       return exprHasSymRegion(CE, true);
    else if (argsL.find(ai) != argsL.end()) 
       return exprHasSymRegion(CE, false);
    else assert(false && "found a case of mixed sensitivity of arg at a callsite!!!");
-
 }
 
 void Executor::setSymRegionSensitive(ExecutionState &state,
@@ -5203,6 +5331,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
                                      std::string fname, 
                                      Type *argtype, 
                                      unsigned int ai, 
+                                     bool oncall,
                                      unsigned int offset)  {
    DataLayout *TD = kmodule->targetData;
    std::string btname = getTypeName(argtype); 
@@ -5215,12 +5344,18 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
       }
    size_t argsize = TD->getTypeAllocSize(argtype);
    std::set<int> argsH, argsL, argsM; 
-   if (highFunctionArgs.find(fname) != highFunctionArgs.end())
+   if (oncall && highFunctionArgs.find(fname) != highFunctionArgs.end())
       argsH = highFunctionArgs[fname];
-   if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
+   else if (!oncall && highFunctionArgsRet.find(fname) != highFunctionArgsRet.end())
+     argsH = highFunctionArgsRet[fname];
+   if (oncall && lowFunctionArgs.find(fname) != lowFunctionArgs.end())
       argsL = lowFunctionArgs[fname];
-   if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
-      argsM = mixedFunctionArgs[fname];     
+   else if (!oncall && lowFunctionArgsRet.find(fname) != lowFunctionArgsRet.end())
+      argsL = lowFunctionArgsRet[fname];
+   if (oncall && mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
+      argsM = mixedFunctionArgs[fname];    
+    else if (!oncall &&  mixedFunctionArgsRet.find(fname) != mixedFunctionArgsRet.end())
+      argsM = mixedFunctionArgsRet[fname];
    if (argsH.find(ai) != argsH.end()) {
       std::vector<region> rs; 
       if (highTypeRegions.find(btname) != highTypeRegions.end()) {
@@ -5278,12 +5413,12 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
     std::string fname = function->getName();    
     std::set<unsigned int> argset = inputFuncArgs[fname];
     std::set<int> argsH, argsL, argsM; 
-    if (highFunctionArgs.find(fname) != highFunctionArgs.end())
-       argsH = highFunctionArgs[fname];
-    if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
-       argsL = lowFunctionArgs[fname];
-    if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
-       argsM = mixedFunctionArgs[fname];     
+    if (highFunctionArgsRet.find(fname) != highFunctionArgsRet.end())
+       argsH = highFunctionArgsRet[fname];
+    if (lowFunctionArgsRet.find(fname) != lowFunctionArgsRet.end())
+       argsL = lowFunctionArgsRet[fname];
+    if (mixedFunctionArgsRet.find(fname) != mixedFunctionArgsRet.end())
+       argsM = mixedFunctionArgsRet[fname];     
     llvm::errs() << "Handling input function " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
@@ -5324,10 +5459,11 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                      // set high/low
                      unsigned int diff = 0;
                      ConstantExpr *cexpr = dyn_cast<ConstantExpr>(base);
-                     ConstantExpr *mob = dyn_cast<ConstantExpr>(op.first->getBaseExpr());  
+                     ref<Expr> mobase = op.first->getBaseExpr();
+                     ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                      if (cexpr && mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                     setSymRegionSensitive(state,op.first,fname,bt,ai,diff); 
+                     setSymRegionSensitive(state,op.first,fname,bt,ai,diff,false); 
                   }
                   else {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
@@ -5350,7 +5486,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                   setSymRegionSensitive(state,sm,fname,bt,ai,diff); 
+                   setSymRegionSensitive(state,sm,fname,bt,ai,diff,false); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
                    ObjectState *sos = bindObjectInState(state, sm, true, array);
@@ -5557,7 +5693,6 @@ ObjectState *Executor::bindObjectInState(ExecutionState &state,
   //llvm::errs() << "binding a new object to mo " << mo->getBaseExpr() << ":\n"; 
 
   ObjectState *os = array ? new ObjectState(mo, array) : new ObjectState(mo);
-  llvm::errs() << os << "\n";
   state.addressSpace.bindObject(mo, os);
 
   // Its possible that multiple bindings of the same mo in the state

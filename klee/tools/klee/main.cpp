@@ -125,6 +125,12 @@ extern std::map<std::string, std::set<int> > highFunctionArgs;
 extern std::map<std::string, std::set<int> > lowFunctionArgs;  
 // Maps function arguments to its mixed security regions
 extern std::map<std::string, std::set<int> > mixedFunctionArgs;  
+// Maps function arguments to its high security regions
+extern std::map<std::string, std::set<int> > highFunctionArgsRet;
+// Maps function arguments to its low security regions
+extern std::map<std::string, std::set<int> > lowFunctionArgsRet;  
+// Maps function arguments to its mixed security regions
+extern std::map<std::string, std::set<int> > mixedFunctionArgsRet;  
 // Maps types to its high security regions
 extern std::map<std::string, std::vector<region> > highTypeRegions;
 // Maps types to its low security regions
@@ -1392,71 +1398,70 @@ void readFuncArgTypeHints(const char *name) {
 }
 
 
-void readSensitiveFunctionArgs(const char *name) {
+void processSensitivitySpec(std::string fname, int value, std::string marker, 
+                            std::map<std::string, std::set<int> > &high, 
+                            std::map<std::string, std::set<int> > &low, 
+                            std::map<std::string, std::set<int> > &mixed) {
+
+   if (marker == "high") {
+      llvm::outs() << " high function " << fname << " arg " << value << "\n";
+      std::set<int> args;
+      if (high.find(fname) != high.end())
+         args = high[fname];
+      args.insert(value);       
+      high[fname] = args;
+   } 
+   else if (marker == "low") {
+      llvm::outs() << " low function " << fname << " arg " << value << "\n";
+      std::set<int> args;
+      if (low.find(fname) != low.end())
+         args = low[fname];
+         args.insert(value);       
+         low[fname] = args;
+   }
+   else if (marker == "mixed") {
+      llvm::outs() << " mixed function " << fname << " arg " << value << "\n";
+      std::set<int> args;
+      if (mixed.find(fname) != mixed.end())
+         args = mixed[fname];
+         args.insert(value);       
+         mixed[fname] = args;            
+      } 
+   else assert(false && "function argument sensitivity other than high/low");
+}
+
+void readSensitiveFunctionArgs(const char *name, bool inflow) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
      std::string  line;
      while(std::getline(cf,line)) {
          std::string marker, fname, arg;
          std::istringstream iss(line);
-        std::getline(iss, marker,',');  
+         std::getline(iss, marker,',');  
          marker = ltrim(rtrim(marker));
          std::getline(iss, fname,',');
          fname = ltrim(rtrim(fname));
          std::getline(iss, arg,',');
          arg = ltrim(rtrim(arg));
          unsigned int value = std::stoi(arg);
-         if (marker == "high") {
-            llvm::outs() << " high function " << fname << " arg " << value << "\n";
-            std::set<int> args;
-            if (highFunctionArgs.find(fname) != highFunctionArgs.end())
-               args = highFunctionArgs[fname];
-            args.insert(value);       
-            highFunctionArgs[fname] = args;
-         } 
-         else if (marker == "low") {
-            llvm::outs() << " low function " << fname << " arg " << value << "\n";
-            std::set<int> args;
-            if (lowFunctionArgs.find(fname) != lowFunctionArgs.end())
-               args = lowFunctionArgs[fname];
-            args.insert(value);       
-            lowFunctionArgs[fname] = args;
+         if (inflow)
+            processSensitivitySpec(fname, value, marker, highFunctionArgs, lowFunctionArgs, mixedFunctionArgs);
+         else {
+            processSensitivitySpec(fname, value, marker, highFunctionArgsRet, lowFunctionArgsRet, mixedFunctionArgsRet);
+            inputFuncs.insert(fname);
+            std::set<unsigned int> args;
+            if (inputFuncArgs.find(fname) != inputFuncArgs.end())
+               args = inputFuncArgs[fname];
+            args.insert(value);
+            inputFuncArgs[fname] = args;
          }
-         else if (marker == "mixed") {
-            llvm::outs() << " mixed function " << fname << " arg " << value << "\n";
-            std::set<int> args;
-            if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
-               args = mixedFunctionArgs[fname];
-            args.insert(value);       
-            mixedFunctionArgs[fname] = args;            
-         } 
-         else assert(false && "function argument sensitivity other than high/low");
      }
   }
   cf.close();
 }
 
 void readInputFuncs(const char *name) {
-  std::fstream cf(name, std::fstream::in);
-  if (cf.is_open()) {
-     std::string  line, fname, token;
-     while(std::getline(cf,line)) {
-         std::istringstream iss(line);
-         getline(iss, fname, ',');
-         fname = ltrim(rtrim(fname)); 
-         inputFuncs.insert(fname);
-         llvm::outs() << " input function: " << fname << "\n";
-         getline(iss, token, ',');
-         token = ltrim(rtrim(token)); 
-         unsigned int arg = std::stoi(token);
-         std::set<unsigned int> args;
-         if (inputFuncArgs.find(fname) != inputFuncArgs.end())
-            args = inputFuncArgs[fname];
-         args.insert(arg);
-         inputFuncArgs[fname] = args;
-     }
-  }
-  cf.close();
+     readSensitiveFunctionArgs(name, false);
 }
 
 /* SYSREL extension */
@@ -2263,7 +2268,7 @@ int main(int argc, char **argv, char **envp) {
      readInputFuncs(InputFuncs.c_str());
 
   if (SensitiveInputs != "")
-     readSensitiveFunctionArgs(SensitiveInputs.c_str());
+     readSensitiveFunctionArgs(SensitiveInputs.c_str(), true);
 
   if (SensitiveTypeRegions != "")
      readSensitiveTypeRegions(SensitiveTypeRegions.c_str());
