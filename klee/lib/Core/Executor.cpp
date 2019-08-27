@@ -275,7 +275,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
   if (stackLeakToBeChecked.find(fname) == stackLeakToBeChecked.end())
      return;
   const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
-  //llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
+  llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
          ie = sf.allocas.end(); it != ie; ++it) {
       //llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
@@ -5492,7 +5492,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    setSymRegionSensitive(state,sm,fname,bt,ai,diff,false); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
-                   ObjectState *sos = bindObjectInState(state, sm, true, array);
+                   ObjectState *sos = bindObjectInState(state, sm, false, array);
                    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr()
@@ -5511,6 +5511,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                       }
                    }
                    wos->write(offsetexpr, result);
+                   
                }
              }
          }
