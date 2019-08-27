@@ -145,6 +145,7 @@ extern std::map<std::string, std::vector<region> > lowSymRegions;
 // Stores the functions that when executed can be observed by the timing side channel attackers, e.g., ocalls
 extern std::vector<std::string> * untrusted;
 extern std::set<std::string> highSecurityLeaksOnStack;
+extern std::set<std::string> stackLeakToBeChecked;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -426,6 +427,9 @@ namespace {
 
   cl::opt<std::string>
   TimingModels("timing-models", cl::desc("Name of the file that specifies instruction count of API functions\n"));
+
+  cl::opt<std::string>
+  CheckStackLeak("check-stack-leak", cl::desc("Name of the file that specifies the functions for which stack leak check will be performed\n"));
  
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
@@ -1313,6 +1317,18 @@ void externalsAndGlobalsCheck(const Module *m) {
 
 
 /* SYSREL static */ Interpreter *theInterpreter = 0;
+
+
+void readCheckStackLeak(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string  line;
+     while(std::getline(cf,line)) {
+         stackLeakToBeChecked.insert(ltrim(rtrim(line)));
+     }
+  }
+  cf.close();
+}
 
 void readTimingObservationPoints(const char *name) {
   std::fstream cf(name, std::fstream::in);
@@ -2272,6 +2288,9 @@ int main(int argc, char **argv, char **envp) {
 
   if (SensitiveTypeRegions != "")
      readSensitiveTypeRegions(SensitiveTypeRegions.c_str());
+
+  if (CheckStackLeak != "")
+     readCheckStackLeak(CheckStackLeak.c_str());
 
   if (CacheLineBits && CacheBitMask) {
      llvm::errs() << "Choose either cache line mode (by setting cache line bits) or cache bitmask (by setting cache bitmask)!\n";

@@ -175,6 +175,7 @@ int maxForkMulRes = 2147483647;
 int primArraySize = 32;
 std::map<std::string, int> uniqueSym;
 std::set<std::string> highSecurityLeaksOnStack;
+std::set<std::string> stackLeakToBeChecked;
 /* Side channel end */
 
 //#define VBSC
@@ -269,10 +270,12 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
 }
 
 void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) {
-  return;
-  const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
   StackFrame &sf = state.stack.back();
-  llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
+  std::string fname = sf.kf->function->getName();
+  if (stackLeakToBeChecked.find(fname) == stackLeakToBeChecked.end())
+     return;
+  const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
+  //llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
          ie = sf.allocas.end(); it != ie; ++it) {
       //llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
