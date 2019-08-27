@@ -146,6 +146,7 @@ extern std::map<std::string, std::vector<region> > lowSymRegions;
 extern std::vector<std::string> * untrusted;
 extern std::set<std::string> highSecurityLeaksOnStack;
 extern std::set<std::string> stackLeakToBeChecked;
+extern std::set<std::string> securitySensitiveBranches;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -169,6 +170,20 @@ void addInfoFlowRule(std::string fname, region fr,  std::set<infoflowsource_t> i
  fm[fr] = ifss;
  infoFlowRules[fname] = fm; 
 }
+
+
+void writeSecuritySenstiveBranches(const char *fname) {
+  std::fstream rc(fname, std::fstream::out);
+  if (rc.is_open()) {
+     for(auto s: securitySensitiveBranches) {
+        rc << s << "\n";
+     }
+     rc.close();
+  }
+}
+
+
+
 
 
 void writeSensitiveLeaksOnStack(const char *fname) {
@@ -2527,6 +2542,7 @@ int main(int argc, char **argv, char **envp) {
 
   writeSensitiveFlows("sensitiveFlows.txt"); 
   writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
+  writeSecuritySenstiveBranches("securitySensitiveBranches.txt");
 
   delete handler;
 

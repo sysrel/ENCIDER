@@ -176,6 +176,7 @@ int primArraySize = 32;
 std::map<std::string, int> uniqueSym;
 std::set<std::string> highSecurityLeaksOnStack;
 std::set<std::string> stackLeakToBeChecked;
+std::set<std::string> securitySensitiveBranches;
 /* Side channel end */
 
 //#define VBSC
@@ -4416,6 +4417,10 @@ void Executor::run(ExecutionState &initialState) {
 		      done = true;
 	              printsucc = true;
                       RD::numHAncestors++;
+                      std::stringstream ss;
+                      ss << ii_info.file.c_str() << " " << ii_info.line << ":\n ";
+                      ss << proj << "\n";
+                      securitySensitiveBranches.insert(ss.str());
 	           }
 	   	   srd->HA = currentRD;
 		   srd->HAset = true;
