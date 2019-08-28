@@ -568,6 +568,7 @@ void setHighSymRegion(std::string name, std::vector<region> rs) {
   }*/
   highSymRegions[name] = rs;
   clearSymRegion(name, rs, false);
+  llvm::errs() << "setting symbolic region high: " << name << "\n";
 }
 
 void setLowSymRegion(std::string name, std::vector<region> rs) {
@@ -692,6 +693,7 @@ void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::v
       for(unsigned int i=0; i<rs.size(); i++)
          llvm::errs() << rs[i].offset << "," << rs[i].size << "\n";
       setHighMemoryRegion(state, mo->getBaseExpr(), rs);
+      llvm::errs() << "calling setHighSym from checkAndUpdateInfoFlow for " << fname << "\n"; 
       setHighSymRegion(mo->name, rs);
    }
 }
@@ -5203,7 +5205,8 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
     llvm::errs() << "Handling functions with sensitive args " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
-       if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
+       if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) {
+          llvm::errs() << "handling arg " << ai << " " << arguments[ai] << "\n"; 
           // a local var
           Type *at = agi->getType();
           if (at->isPointerTy()) {
@@ -5248,6 +5251,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                      unsigned long diff = 0;
                      if (mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
+                     llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
                      setSymRegionSensitive(state,op.first,fname,bt,ai,true,diff); 
                    }
                    else {
@@ -5271,6 +5275,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                       llvm::errs() << "width: " << mob->getWidth() << "\n";
                       diff = cexpr->getZExtValue() - mob->getZExtValue();                    
                    }
+                   llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
                    setSymRegionSensitive(state, op.first, fname, bt, ai,true, diff);
                   }
                  }
@@ -5306,7 +5311,8 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
             bindArgument(kf, ai, state, result);
             std::string atname = getTypeName(at);
-            setSymRegionSensitive(state,mo, fname, at, true, ai);
+            llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
+            setSymRegionSensitive(state,mo, fname, at, ai, true);
          }
       }
     }
@@ -5377,6 +5383,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
          rs.push_back(r); 
       }
       setHighMemoryRegion(state, sm->getBaseExpr(), rs);
+      llvm::errs() << &state << " calling setHighSym from setSymRegionSensitive for " << fname  << " for arg " << ai << "\n";
       setHighSymRegion(sm->name, rs);                    
    }
    else if (argsL.find(ai) != argsL.end()) {
@@ -5405,6 +5412,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
        if (highTypeRegions.find(btname) != highTypeRegions.end()) {
           std::vector<region> rs = highTypeRegions[btname];  
           setHighMemoryRegion(state, sm->getBaseExpr(), rs);
+          llvm::errs() << "calling setHighSym from setSymRegionSensitive for " << fname  << "\n";
           setHighSymRegion(sm->name, rs); 
        }
    }
@@ -5430,8 +5438,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
     llvm::errs() << "Handling input function " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
-       //if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
-       if (argset.find(ai) != argset.end()) { 
+       if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
           // a local var
           Type *at = agi->getType();
           if (at->isPointerTy()) {
@@ -5471,6 +5478,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                      ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                      if (cexpr && mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
+                     llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << "\n";
                      setSymRegionSensitive(state,op.first,fname,bt,ai,diff,false); 
                   }
                   else {
@@ -5494,6 +5502,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
+                   llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << "\n";
                    setSymRegionSensitive(state,sm,fname,bt,ai,diff,false); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
