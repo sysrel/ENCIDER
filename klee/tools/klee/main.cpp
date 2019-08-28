@@ -2295,8 +2295,11 @@ int main(int argc, char **argv, char **envp) {
   if (FuncArgTypeHints != "")
      readFuncArgTypeHints(FuncArgTypeHints.c_str());
 
-  if (InputFuncs != "")
+  if (InputFuncs != "") {
      readInputFuncs(InputFuncs.c_str());
+     for(auto a: inputFuncs) 
+        llvm::errs() << "input function: " << a << "\n";
+  }
 
   if (SensitiveInputs != "")
      readSensitiveFunctionArgs(SensitiveInputs.c_str(), true);

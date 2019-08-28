@@ -26,6 +26,7 @@ bool replace(std::string& str, const std::string& from, const std::string& to);
 void removeBrackets(std::string& str);
 ref<Expr> buildProjection(ref<Expr>& cexpr, bool high);
 
+
 namespace std {
 
 bool operator<(const region r1, const region r2) {
@@ -155,29 +156,19 @@ void mergeAndCoalesce(std::vector<region> rs1, std::vector<region> rs2, std::vec
 
 std::vector<region> extractRegion(ref<Expr> expr, region range, bool high);
 
-
-
 std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Expr> > & args) {
   std::vector<region> rs;
   if (infoFlowRules.find(fname) != infoFlowRules.end()) {
      std::map<region, std::set<infoflowsource_t> > fm = infoFlowRules[fname];
      for(auto fme : fm) {
-        //llvm::errs() << "target range: " << fme.first.offset << "," << fme.first.size << "\n";
         region ur; 
         ur.size = 0; 
         for(auto ifs : fme.second) {
-              //llvm::errs() << "processing " << args[ifs.argno] << "\n";
               std::vector<region> temp;
               std::vector<region> r1 = extractRegion(args[ifs.argno],ifs.ifregion,true);
               if (r1.size() == 0) continue;
               std::vector<region> r2;
-              //llvm::errs() << "before projecting to the source range\n";
-              //for(unsigned int ti = 0; ti<r1.size(); ti++)
-              //   llvm::errs() << r1[ti].offset << "," << r1[ti].size << "\n"; 
               intersect(ifs.ifregion, r1, r2);
-              //llvm::errs() << "after projecting to the source range\n";  
-              //for(unsigned int ti = 0; ti<r2.size(); ti++)
-              //   llvm::errs() << r2[ti].offset << "," << r2[ti].size << "\n";
               moveOffset(r2, fme.first.offset - ifs.ifregion.offset);
               if (r2.size() > 0) {
                  if (rs.size() > 0) {
@@ -190,9 +181,6 @@ std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Ex
         }
      }     
   }
-  //llvm::errs() << "Extracted the following from " << fname << ":\n";
-  //for(unsigned int i =0; i<rs.size(); i++) 
-  //   llvm::errs() << "\t(" << rs[i].offset << "," << rs[i].size << ")\n";
   return rs;
 }
 

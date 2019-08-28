@@ -245,8 +245,17 @@ std::string getTypeName(Type *t);
 bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2) ;
 
 std::string removeDotSuffix(std::string name) {
-  if (name.find(".") != std::string::npos) 
-     return name.substr(0,name.find("."));
+  size_t pos = name.find(".");
+  if (pos != std::string::npos)  {
+     if (name.length() > pos) {
+        // we want to get the original name when functions copies are made based on numbering
+        // and keep other suffixes, e.g., those used in intrinsics
+        if (!isdigit(name[pos+1]))
+           return name.substr(0,name.find("."));
+     }
+     // unlikely but better to get rid of the single dot!
+     else return name.substr(0,name.find("."));
+  }
   return name;
 }
 
@@ -682,11 +691,12 @@ void cloneLowMemoryRegions(const ExecutionState &from, ExecutionState &to) {
    lowMemoryRegions[taddr] = lowMemoryRegions[faddr];
 }
 
-
 void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::vector<ref<Expr> > & args, 
           const MemoryObject *mo) {
    std::string fname = removeDotSuffix(f->getName()); 
-   std::vector<region> rs = getHighInfoFlowRegions(fname, args);
+   std::vector<ref<Expr> > argsValues;
+   getArgValue(state, f, args, argsValues);
+   std::vector<region> rs = getHighInfoFlowRegions(fname, argsValues);
    //llvm::errs() << "will info flow into " << mo->name << "\n";
    if (rs.size() > 0) {
       //llvm::errs() << "yes!\n";
@@ -1245,6 +1255,45 @@ void cloneLowAddresses(const ExecutionState &from, ExecutionState &to) {
 }
 
 */
+
+// for pointer type args use the expressions pointed by them
+void Executor::getArgValue(ExecutionState &state, Function *function, 
+                 std::vector<ref<Expr> > &arguments, 
+                 std::vector<ref<Expr> > &argsRes) {
+   unsigned int ai = 0;
+   for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
+      Type *at = agi->getType();
+      if (at->isPointerTy()) {
+         Type *bt = at->getPointerElementType();
+         DataLayout *TD = kmodule->targetData;
+         ObjectPair op;
+         bool asuccess;
+         ref<Expr> base = arguments[ai];
+         if (SimplifySymIndices) {
+            if (!isa<ConstantExpr>(base))
+               base = state.constraints.simplifyExpr(base);
+         }
+         ConstantExpr *cexpr = dyn_cast<ConstantExpr>(base);
+         if (cexpr) {
+            solver->setTimeout(coreSolverTimeout);
+            if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
+               base = toConstant(state, base, "resolveOne failure");
+               asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+            }
+         }
+         solver->setTimeout(0);
+         if (asuccess) {
+            ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
+            argsRes.push_back(result);
+        }
+     }
+     else {
+        argsRes.push_back(arguments[ai]);
+     }
+  }
+}
+
+
 bool isAsyncInitiate(std::string name) {
   return name.find(ASYNC_STR) == 0;
 }
@@ -5423,10 +5472,11 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   Function *function,
                                   std::vector< ref<Expr> > &arguments) {
 
-    if (inputFuncs.find(function->getName()) == inputFuncs.end()) { 
+    std::string fname = removeDotSuffix(function->getName());    
+    llvm::errs() << "checking " << fname << " to see if an input function\n";
+    if (inputFuncs.find(fname) == inputFuncs.end()) { 
        return false; 
     }
-    std::string fname = function->getName();    
     std::set<unsigned int> argset = inputFuncArgs[fname];
     std::set<int> argsH, argsL, argsM; 
     if (highFunctionArgsRet.find(fname) != highFunctionArgsRet.end())
