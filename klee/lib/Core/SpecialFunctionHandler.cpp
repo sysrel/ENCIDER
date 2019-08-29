@@ -2088,6 +2088,8 @@ bool APIHandler::handle(ExecutionState &state,
         //#endif
         ((Executor*)(theInterpreter))->symbolizeReturnValue(state, arguments, target, function, abort);
         if (abort) return false;
+        ref<Expr> ret_value = ((Executor*)(theInterpreter))->getDestCell(state, target).value;
+        ((Executor*)(theInterpreter))->symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments, ret_value);
      }
      
      if (apiModel[fname].size() > 1)

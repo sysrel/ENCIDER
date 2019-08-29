@@ -190,7 +190,8 @@ public:
   bool symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,
                                   llvm::Function *function,
-                                  std::vector< ref<Expr> > &arguments);
+                                  std::vector< ref<Expr> > &arguments,
+                                  ref<Expr> ret_value);
 
   void symbolizeArguments(ExecutionState &state, 
                                   KInstruction *target,

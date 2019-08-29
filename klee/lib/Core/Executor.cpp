@@ -177,6 +177,7 @@ std::map<std::string, int> uniqueSym;
 std::set<std::string> highSecurityLeaksOnStack;
 std::set<std::string> stackLeakToBeChecked;
 std::set<std::string> securitySensitiveBranches;
+std::map<std::string, int> inputFuncsSuccRetValue;
 /* Side channel end */
 
 //#define VBSC
@@ -244,6 +245,8 @@ std::string getTypeName(Type *t);
 
 bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2) ;
 
+
+
 std::string removeDotSuffix(std::string name) {
   size_t pos = name.find(".");
   if (pos != std::string::npos)  {
@@ -258,6 +261,13 @@ std::string removeDotSuffix(std::string name) {
   }
   return name;
 }
+
+bool isInputFunction(Function *function) {
+    std::string fname = removeDotSuffix(function->getName());    
+    llvm::errs() << "checking " << fname << " to see if an input function\n";
+    return (inputFuncs.find(fname) != inputFuncs.end());
+}
+
 
 void timeSideChannelAnalysis(Executor *executor) {
  for(rroot : resourceTreeRootList) {
@@ -2608,7 +2618,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       for (unsigned ind=0; ind<numFormals; ++ind) { 
           args.push_back(getArgumentCell(state, kf, ind).value);
       }
-      symbolizeAndMarkArgumentsOnReturn(state, ki, ri->getParent()->getParent(), args);
+      symbolizeAndMarkArgumentsOnReturn(state, ki, ri->getParent()->getParent(), args, result);
       /* side channel */   
       if (state.hasLCM()) {
          #ifdef VB
@@ -5029,7 +5039,8 @@ void Executor::callExternalFunction(ExecutionState &state,
           #ifdef VB
           llvm::outs() << "symbolizing args and ret  value for function " << function->getName() << "\n";
           #endif
-          if (!symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments)) {
+          //if (!symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments)) {
+          if (!isInputFunction(function)) {
            bool term = false;
            if (!isInfoFlowAPI(removeDotSuffix(function->getName())))
               symbolizeArguments(state, target, function, arguments, term);
@@ -5039,6 +5050,8 @@ void Executor::callExternalFunction(ExecutionState &state,
                 terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
                 return;
              }
+             ref<Expr> ret_value = getDestCell(state, target).value;
+             symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments, ret_value);
            }
           }
           else { // if input function, we also want to symbolize return value
@@ -5047,9 +5060,12 @@ void Executor::callExternalFunction(ExecutionState &state,
                 terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
                 return;
              }
+             ref<Expr> ret_value = getDestCell(state, target).value;
+             symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments, ret_value);
           }
        } // even if a model is handled via modeling it may be designated as an input function!
-       else symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments);
+       // to be handled while model is simulated!
+       // else symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments);
        return;
        /*
        bool resHandled = false;
@@ -5498,16 +5514,45 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
    }
 }
 
+
 bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,
                                   Function *function,
-                                  std::vector< ref<Expr> > &arguments) {
-
+                                  std::vector< ref<Expr> > &arguments,
+                                  ref<Expr> ret_value) {
     std::string fname = removeDotSuffix(function->getName());    
-    llvm::errs() << "checking " << fname << " to see if an input function\n";
+    llvm::errs() << "state :" << &state << " checking " << fname << " to see if an input function\n";
+    //llvm::errs() << "instruction: " << (*target->inst) << "\n";
+    //llvm::errs() << "return value: " << ret_value << "\n";
     if (inputFuncs.find(fname) == inputFuncs.end()) { 
        return false; 
     }
+    ExecutionState *tstate = NULL;
+    int success_value = 0;
+    if (!function->getReturnType()->isVoidTy()) {
+       if (inputFuncsSuccRetValue.find(fname) != inputFuncsSuccRetValue.end())
+          success_value = inputFuncsSuccRetValue[fname];
+       ConstantExpr *CE = dyn_cast<ConstantExpr>(ret_value);
+       if (CE) {
+          if (CE->getZExtValue() != success_value) {
+             llvm::errs() << "skipping input function " << fname << " handling due to error path\n";
+             return true;
+          }
+          tstate = &state;
+       }
+       else {
+          ref<Expr> cond = EqExpr::create(ret_value, ConstantExpr::alloc(success_value,32));
+          Executor::StatePair branches = fork(state, cond, false);
+          if (branches.first) {
+             tstate = branches.first;
+          }
+          else {
+             llvm::errs() << "skipping input function " << fname << " handling due to not satisfying success case:\n";
+             return true;
+          }
+       }
+    }
+
     std::set<unsigned int> argset = inputFuncArgs[fname];
     std::set<int> argsH, argsL, argsM; 
     if (highFunctionArgsRet.find(fname) != highFunctionArgsRet.end())
@@ -5516,7 +5561,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
        argsL = lowFunctionArgsRet[fname];
     if (mixedFunctionArgsRet.find(fname) != mixedFunctionArgsRet.end())
        argsM = mixedFunctionArgsRet[fname];     
-    llvm::errs() << "Handling input function " << function->getName() << "\n"; 
+    llvm::errs() << "state: " << tstate << " Handling input function " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
        if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
@@ -5542,16 +5587,16 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                 ref<Expr> base = arguments[ai];
                 if (SimplifySymIndices) {
                    if (!isa<ConstantExpr>(base))
-                      base = state.constraints.simplifyExpr(base);
+                      base = tstate->constraints.simplifyExpr(base);
                 }
                 solver->setTimeout(coreSolverTimeout);
-                if (!state.addressSpace.resolveOne(state, solver, base, op, asuccess)) {
-                   base = toConstant(state, base, "resolveOne failure");
-                   asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
+                if (!tstate->addressSpace.resolveOne((*tstate), solver, base, op, asuccess)) {
+                   base = toConstant((*tstate), base, "resolveOne failure");
+                   asuccess = tstate->addressSpace.resolveOne(cast<ConstantExpr>(base), op);
                 }
                 solver->setTimeout(0);
                 if (asuccess) {
-                  if (state.isSymbolic(op.first)) {
+                  if (tstate->isSymbolic(op.first)) {
                      // set high/low
                      unsigned int diff = 0;
                      ConstantExpr *cexpr = dyn_cast<ConstantExpr>(base);
@@ -5560,7 +5605,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                      if (cexpr && mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                      llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << "\n";
-                     setSymRegionSensitive(state,op.first,fname,bt,ai,diff,false); 
+                     setSymRegionSensitive((*tstate),op.first,fname,bt,ai,diff,false); 
                   }
                   else {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
@@ -5584,12 +5629,12 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                    llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << "\n";
-                   setSymRegionSensitive(state,sm,fname,bt,ai,diff,false); 
+                   setSymRegionSensitive((*tstate),sm,fname,bt,ai,diff,false); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
-                   ObjectState *sos = bindObjectInState(state, sm, false, array);
+                   ObjectState *sos = bindObjectInState((*tstate), sm, false, array);
                    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
-                   ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
+                   ObjectState *wos = (*tstate).addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr()
                    ref<Expr> offsetexpr = SubExpr::create(base, op.first->getBaseExpr());
                    // check sanity
@@ -5600,8 +5645,8 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                          llvm::errs() << "Lazy init of a void pointer mismatches real type, "
                                        << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
                          #endif
-                         terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
-                            NULL, getAddressInfo(state, op.first->getBaseExpr()));
+                         terminateStateOnError((*tstate), "memory error: cast due a void pointer", Ptr,
+                            NULL, getAddressInfo((*tstate), op.first->getBaseExpr()));
                          return false;
                       }
                    }
