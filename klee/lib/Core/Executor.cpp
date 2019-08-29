@@ -250,7 +250,7 @@ std::string removeDotSuffix(std::string name) {
      if (name.length() > pos) {
         // we want to get the original name when functions copies are made based on numbering
         // and keep other suffixes, e.g., those used in intrinsics
-        if (!isdigit(name[pos+1]))
+        if (isdigit(name[pos+1]))
            return name.substr(0,name.find("."));
      }
      // unlikely but better to get rid of the single dot!
@@ -279,6 +279,27 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
    return NULL;
 }
 
+bool exprHasSymRegionFast(ref<Expr> expr, bool high) {
+   std::string expr_str;
+   llvm::raw_string_ostream rso(expr_str);
+   expr->print(rso);
+   std::string exprs = rso.str();
+   if (high) {
+      for(auto sr : highSymRegions) {
+         if (exprs.find(sr.first) != std::string::npos)
+            return true;
+      }
+   }
+   else {
+      for(auto sr : lowSymRegions) {
+         if (exprs.find(sr.first) != std::string::npos)
+            return true;
+      }
+   }
+   return false;
+}
+
+
 void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) {
   StackFrame &sf = state.stack.back();
   std::string fname = sf.kf->function->getName();
@@ -294,7 +315,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
       ref<Expr> &test = value;
       if (test.isNull()) continue;
       //llvm::errs() << "checking leak in " << value << "\n";
-      if (exprHasSymRegion(value, true)) {
+      if (exprHasSymRegionFast(value, true)) {
             std::stringstream ss;
             ss << ii_info.file.c_str() << " " << ii_info.line << ": ";
             ss << value << "\n";
@@ -336,7 +357,14 @@ unsigned int Executor::getTimingCost(ExecutionState &state, Instruction *inst) {
 
 void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *function, 
                                                    std::vector<ref<Expr> > & args) {
-     std::string fname = function->getName().str(); 
+     std::string fname = removeDotSuffix(function->getName().str()); 
+     bool found = false;
+     for(unsigned int i=0; i<untrusted->size(); i++) 
+        if ((*untrusted)[i] == fname) {
+           found=true;
+           break;
+        }
+     if (!found) return;
      std::vector<unsigned int> highIndices;
      unsigned int sig = 0;
      unsigned int a = 0;
@@ -4862,6 +4890,7 @@ void Executor::callExternalFunction(ExecutionState &state,
   unsigned wordIndex = 2;
   ObjectPair result;
  if (!APIHandler::handles(function->getName()) && !isInfoFlowAPI(removeDotSuffix(function->getName()))) { // this check is a SYSREL extension to avoid issues with pointers to 128 bit 
+  llvm::errs() << "treating as external function: " << function->getName() << "\n";
   for (std::vector<ref<Expr> >::iterator ai = arguments.begin(),
        ae = arguments.end(); ai!=ae; ++ai) {
     if (AllowExternalSymCalls) { // don't bother checking uniqueness
@@ -5173,6 +5202,8 @@ void Executor::callExternalFunction(ExecutionState &state,
 }
 
 /* SYSREL extension */
+
+
 
 
 bool Executor::checkHighArgumentFlow(ExecutionState &state,
