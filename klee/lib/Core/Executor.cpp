@@ -736,6 +736,10 @@ void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::v
    std::string fname = removeDotSuffix(f->getName()); 
    std::vector<ref<Expr> > argsValues;
    getArgValue(state, f, args, argsValues);
+   if (argsValues.size() == 0) {
+      llvm::errs() << "no relevant args to check for info flow for " << fname << "\n";   
+      return;
+   }
    std::vector<region> rs = getHighInfoFlowRegions(fname, argsValues);
    //llvm::errs() << "will info flow into " << mo->name << "\n";
    if (rs.size() > 0) {
@@ -5435,7 +5439,12 @@ bool Executor::isSymRegionSensitive(ExecutionState &state, ref<Expr> CE, std::st
       return exprHasSymRegion(CE, true);
    else if (argsL.find(ai) != argsL.end()) 
       return exprHasSymRegion(CE, false);
-   else assert(false && "found a case of mixed sensitivity of arg at a callsite!!!");
+   else if (argsM.find(ai) != argsM.end()) { 
+     // this is expensive to check; so lets be conservative and force to set it sensitive even if it is known to be sens
+     return false;
+     //assert(false && "found a case of mixed sensitivity of arg at a callsite!!!");
+   }
+   return false;
 }
 
 void Executor::setSymRegionSensitive(ExecutionState &state,
@@ -5500,8 +5509,10 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
    }  
    else if (argsM.find(ai) != argsM.end()) {
       if (!hintFound && lowTypeRegions.find(btname) == lowTypeRegions.end() && 
-           highTypeRegions.find(btname) == highTypeRegions.end())
+           highTypeRegions.find(btname) == highTypeRegions.end()) {
+         llvm::errs() << "type=" << btname << "\n"; 
          assert(false && "Mixed sensitivity arg without type based sensitive regions!\n");
+      }
       if (lowTypeRegions.find(btname) != lowTypeRegions.end()) {
          std::vector<region> rs = lowTypeRegions[btname]; 
          setLowMemoryRegion(state, sm->getBaseExpr(), rs);
