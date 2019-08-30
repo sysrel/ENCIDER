@@ -165,6 +165,8 @@ std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Ex
         ur.size = 0; 
         for(auto ifs : fme.second) {
               std::vector<region> temp;
+              ref<Expr> &argp = args[ifs.argno];
+              if (argp.isNull()) continue;
               std::vector<region> r1 = extractRegion(args[ifs.argno],ifs.ifregion,true);
               if (r1.size() == 0) continue;
               std::vector<region> r2;
