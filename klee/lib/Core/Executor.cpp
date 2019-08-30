@@ -175,6 +175,7 @@ int maxForkMulRes = 2147483647;
 int primArraySize = 32;
 std::map<std::string, int> uniqueSym;
 std::set<std::string> highSecurityLeaksOnStack;
+std::set<std::string> codeLocHighSecurityLeaksOnStack;
 std::set<std::string> stackLeakToBeChecked;
 std::set<std::string> securitySensitiveBranches;
 std::map<std::string, int> inputFuncsSuccRetValue;
@@ -328,6 +329,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
       if (exprHasSymRegionFast(value, true)) {
             std::stringstream ss;
             ss << ii_info.file.c_str() << " " << ii_info.line << ": ";
+            codeLocHighSecurityLeaksOnStack.insert(ss.str());
             ss << value << "\n";
             highSecurityLeaksOnStack.insert(ss.str());
       } 

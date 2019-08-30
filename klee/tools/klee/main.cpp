@@ -145,6 +145,7 @@ extern std::map<std::string, std::vector<region> > lowSymRegions;
 // Stores the functions that when executed can be observed by the timing side channel attackers, e.g., ocalls
 extern std::vector<std::string> * untrusted;
 extern std::set<std::string> highSecurityLeaksOnStack;
+extern std::set<std::string> codeLocHighSecurityLeaksOnStack;
 extern std::set<std::string> stackLeakToBeChecked;
 extern std::set<std::string> securitySensitiveBranches;
 /*
@@ -2520,6 +2521,7 @@ int main(int argc, char **argv, char **envp) {
   stats << "KLEE: done: minInst = " << minInstCount << "\n";
   stats << "KLEE: done: maxInst = " << maxInstCount << "\n";
   stats << "KLEE: done: HAncestors = " << RD::numHAncestors << "\n";
+  stats << "KLEE: done: HLeaksOnStack = " <<  codeLocHighSecurityLeaksOnStack.size() << "\n";
   stats << "KLEE: done: HLMixedConstraints = " << RD::numHLMixedConstraints << "\n";
   stats << "KLEE: done: HVars= " << highLoc->size() << "\n"; 
   stats << "KLEE: done: LVars= " << lowLoc->size() << "\n"; 
