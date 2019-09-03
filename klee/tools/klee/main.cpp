@@ -148,6 +148,7 @@ extern std::set<std::string> highSecurityLeaksOnStack;
 extern std::set<std::string> codeLocHighSecurityLeaksOnStack;
 extern std::set<std::string> stackLeakToBeChecked;
 extern std::set<std::string> securitySensitiveBranches;
+extern std::map<std::string, int> inputFuncsSuccRetValue;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -1469,6 +1470,8 @@ void readSensitiveFunctionArgs(const char *name, bool inflow) {
   if (cf.is_open()) {
      std::string  line;
      while(std::getline(cf,line)) {
+         if (line.find("/") != std::string::npos)
+            continue;
          std::string marker, fname, arg;
          std::istringstream iss(line);
          std::getline(iss, marker,',');  
@@ -1481,6 +1484,15 @@ void readSensitiveFunctionArgs(const char *name, bool inflow) {
          if (inflow)
             processSensitivitySpec(fname, value, marker, highFunctionArgs, lowFunctionArgs, mixedFunctionArgs);
          else {
+            if (fname.find("[") != std::string::npos) {
+               size_t pos1 = fname.find("[");
+               size_t pos2 = fname.find("]"); 
+               std::string rstr = fname.substr(pos1+1,pos2-pos1-1); 
+               int rvalue = std::stoi(rstr);
+               fname = fname.substr(0,pos1);
+               inputFuncsSuccRetValue[fname] = rvalue;
+               llvm::errs() << " recording " << rvalue << " as success return value of " << fname << "\n";
+            }
             processSensitivitySpec(fname, value, marker, highFunctionArgsRet, lowFunctionArgsRet, mixedFunctionArgsRet);
             inputFuncs.insert(fname);
             std::set<unsigned int> args;

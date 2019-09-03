@@ -5617,7 +5617,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                      ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                      if (cexpr && mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                     llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << "\n";
+                     llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
                      setSymRegionSensitive((*tstate),op.first,fname,bt,ai,diff,false); 
                   }
                   else {
@@ -5641,7 +5641,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                   llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << "\n";
+                   llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
                    setSymRegionSensitive((*tstate),sm,fname,bt,ai,diff,false); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
