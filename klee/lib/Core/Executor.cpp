@@ -5554,7 +5554,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
           tstate = &state;
        }
        else {
-          ref<Expr> cond = EqExpr::create(ret_value, ConstantExpr::alloc(success_value,32));
+          ref<Expr> cond = EqExpr::create(ret_value, ConstantExpr::alloc(success_value,ret_value->getWidth()));
           Executor::StatePair branches = fork(state, cond, false);
           if (branches.first) {
              tstate = branches.first;
