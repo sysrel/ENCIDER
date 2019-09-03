@@ -1362,6 +1362,8 @@ void readSensitiveTypeRegions(const char *name) {
   if (cf.is_open()) {
      std::string  line;
      while(std::getline(cf,line)) {
+       if (line.find("/") != std::string::npos)
+          continue;
        std::string marker, tname, offset, size;
        std::istringstream iss(line);
        std::getline(iss, marker,',');
