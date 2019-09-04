@@ -647,8 +647,11 @@ bool isInRegion(std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
   if (klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(offset)) {
      uint64_t value = CE->getZExtValue();     
      for(unsigned int i=0; i < rs.size(); i++) {
-        if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, value*type, value*type + type-1))
+        if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, value*type, value*type + type-1)) {
+           llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+                         value*type << "," << value*type + type-1 << "\n";
            return true; 
+        }
      }
   }
   else assert(false && "Not expecting a symbolic offset "); 
@@ -2632,10 +2635,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          #endif
          ConstantExpr *re = dyn_cast<ConstantExpr>(result);
          if (re) {
-            #ifdef VB
+            //#ifdef VB
             llvm::errs() << "Recording return value for an expression of width " << re->getWidth() << ":\n";
             llvm::errs() << re->getZExtValue(re->getWidth()) << " for " << ri->getParent()->getParent()->getName() << "\n";
-            #endif
+            //#endif
             state.returnValueModel[ri->getParent()->getParent()->getName()] = re->getZExtValue(re->getWidth());
          }
          else if (state.lcmStepMovesWhenReturns(rf->getName().str())) { //  consider possibility of a success case
@@ -2675,9 +2678,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       #endif
 
       if (!state.activeThreads() && (!state.hasLCM() || state.lcmCompletesWith(rf->getName().str()))) {
-         #ifdef VB
-         llvm::outs() << "terminating state with " << rf->getName() << "\n";
-         #endif
+         //#ifdef VB
+         llvm::errs() << "terminating state with " << rf->getName() << "\n";
+         //#endif
 
          /* Side channel begin */
          RD* rdd = getrdmap(&state);
@@ -2697,7 +2700,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         if (state.hasLCM()) {
            if (state.lcmStepMovesWhenReturns(rf->getName())) {
               if (state.returnValueModel.find(rf->getName()) != state.returnValueModel.end() &&
-                            state.returnValueModel[rf->getName()] == 0) {
+                            state.returnValueModel[rf->getName()] == state.getCurrentSuccessReturnValue()) {
                  #ifdef VB
                  llvm::outs() << "lcm continues with the next sequential step\n";
                  #endif
@@ -4534,8 +4537,11 @@ void Executor::run(ExecutionState &initialState) {
                 }                                                 
              }   
 	     else {
-                if (hasHloc && hasLloc)
+                if (hasHloc && hasLloc) {
                    RD::numHLMixedConstraints++;
+                   llvm::errs() << "Mixed Branch Condition:\n";
+                   r1->dump();
+                }
 
                 if (hasLloc) {
    	           ref<Expr> proj = getProjectionOnRegion(r1, false);
@@ -6121,14 +6127,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
+  //#ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  #endif
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :

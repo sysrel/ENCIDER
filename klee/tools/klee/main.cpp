@@ -1781,6 +1781,7 @@ Sequential *readLCMConfig(const char *name) {
                getline(iss, fname, '[');  
                getline(iss, value, ']');
                success_retvalue = std::stoi(value);
+               llvm::errs() << fname  << " success value= " << success_retvalue << "\n"; 
             }
             else fname = identifier; 
             Identifier *id = new Identifier(fname);

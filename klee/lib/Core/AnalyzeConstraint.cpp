@@ -336,6 +336,8 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
   std::vector<region> r1 = extractRegion(cexpr,r,high);
   if (r1.size() == 0) return false;
   for(unsigned int i=0; i<r1.size(); i++)
+     llvm::errs() << "expr has high=" << high << " " << r1[i].offset << "," << r1[i].size << "\n";
+  for(unsigned int i=0; i<r1.size(); i++)
      if (r1[i].size > 0)
         return true;
   return false;
@@ -381,7 +383,7 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
                 region r;
                 r.offset = CE->getZExtValue() * rexpr->getWidth();
                 r.size = rexpr->getWidth();
-                //llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
+                llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
                 rs.push_back(r);
                 return rs;
              }

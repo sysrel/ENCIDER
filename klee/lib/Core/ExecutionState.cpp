@@ -746,10 +746,10 @@ void ExecutionState::updateLCMState() {
        if (curr != 0 ) {
         Identifier *id = dynamic_cast<Identifier*>(seq);
         assert(id);
-        llvm::outs() << " next step " << id->getValue() << " to execute " << "\n";
+        llvm::errs() << " next step " << id->getValue() << " to execute " << "\n";
         Function *func = moduleHandle->getFunction(id->getValue());
         //initiateAsync(func); 
-        llvm::outs() << "extending current state with " << func->getName() << " to simulate sequential composition\n";
+        llvm::errs() << "extending current state " << this << " with " << func->getName() << " to simulate sequential composition\n";
         extendExecutionWith(kmoduleExt->functionMap[func]);
        }
      }
