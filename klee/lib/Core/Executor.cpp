@@ -179,6 +179,7 @@ std::set<std::string> codeLocHighSecurityLeaksOnStack;
 std::set<std::string> stackLeakToBeChecked;
 std::set<std::string> securitySensitiveBranches;
 std::map<std::string, int> inputFuncsSuccRetValue;
+std::set<long> updatedWithSymbolic;
 /* Side channel end */
 
 //#define VBSC
@@ -314,8 +315,8 @@ bool exprHasSymRegionFast(ref<Expr> expr, bool high) {
 void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) {
   StackFrame &sf = state.stack.back();
   std::string fname = sf.kf->function->getName();
-  if (stackLeakToBeChecked.find(fname) == stackLeakToBeChecked.end())
-     return;
+  //if (stackLeakToBeChecked.find(fname) == stackLeakToBeChecked.end())
+  //   return;
   const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
   llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
@@ -626,6 +627,7 @@ void setLowSymRegion(std::string name, std::vector<region> rs) {
      assert(false && "duplicate entry for lowsymregions");
   }*/
   lowSymRegions[name] = rs; 
+  llvm::errs() << "clearing " << name << " from high\n";
   clearSymRegion(name, rs, true);
 }
 
@@ -5008,6 +5010,7 @@ void Executor::callExternalFunction(ExecutionState &state,
 
     if (progModel) {
       checkAndRecordSensitiveFlow(state,function, arguments);
+      symbolizeAndMarkSensitiveArgumentsOnCall(state, target, function, arguments);
       // check if PROSE version of the function exists, if so use that one
       std::string prosename = function->getName().str() + "_PROSE"; 
       Function *proseFn = moduleHandle->getFunction(prosename);
@@ -5317,7 +5320,9 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
           llvm::errs() << "handling arg " << ai << " " << arguments[ai] << "\n"; 
           // a local var
           Type *at = agi->getType();
+          bool pointerType = false;
           if (at->isPointerTy()) {
+                pointerType = true;
                 Type *bt = at->getPointerElementType();
                 std::string btname = getTypeName(bt);
                 std::string type_str;
@@ -5342,7 +5347,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                   }
                   solver->setTimeout(0);
                   if (asuccess) {
-                   if (state.isSymbolic(op.first)) {
+                   if (state.isSymbolic(op.first) || updatedWithSymbolic.find((long)op.first) != updatedWithSymbolic.end()) {
                       llvm::errs() << "yes!\n";
                       // check if it is already known to have a sensitive region
                       ref<Expr> cur = op.second->read(ConstantExpr::alloc(0, Expr::Int64),op.first->size*8);
@@ -5360,7 +5365,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                      if (mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                      llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
-                     setSymRegionSensitive(state,op.first,fname,bt,ai,true,diff); 
+                     setSymRegionSensitive(state,op.first,fname,bt,ai,pointerType,true,diff); 
                    }
                    else {
                       // mark the memory object symbolic and the region sensitive
@@ -5383,8 +5388,8 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                       llvm::errs() << "width: " << mob->getWidth() << "\n";
                       diff = cexpr->getZExtValue() - mob->getZExtValue();                    
                    }
-                   llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
-                   setSymRegionSensitive(state, op.first, fname, bt, ai,true, diff);
+                   llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 2" << fname  << " for arg " << ai << "\n";
+                   setSymRegionSensitive(state, op.first, fname, bt, ai, pointerType, true, diff);
                   }
                  }
               }
@@ -5416,11 +5421,12 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
             const Array *array = arrayCache.CreateArray(mo->name, mo->size);
             ObjectState *sos = bindObjectInState(state, mo, true, array);
+            state.addSymbolic(mo, array);
             ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
             bindArgument(kf, ai, state, result);
             std::string atname = getTypeName(at);
             llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
-            setSymRegionSensitive(state,mo, fname, at, ai, true);
+            setSymRegionSensitive(state,mo, fname, at, ai, pointerType, true);
          }
       }
     }
@@ -5458,6 +5464,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
                                      std::string fname, 
                                      Type *argtype, 
                                      unsigned int ai, 
+                                     bool pointerType,
                                      bool oncall,
                                      unsigned int offset)  {
    DataLayout *TD = kmodule->targetData;
@@ -5492,7 +5499,11 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
          region r;
          r.offset = offset;
          //r.size = sm->size * 8;
-         r.size = argsize * 8;
+         llvm::errs() << "setting region size of " << sm->name << " to " << argsize * 8 << " while memobj size is " << sm->size * 8 << "\n";
+         if (pointerType)
+            r.size = sm->size * 8;
+         else 
+            r.size = argsize * 8;
          rs.push_back(r); 
       }
       setHighMemoryRegion(state, sm->getBaseExpr(), rs);
@@ -5507,7 +5518,10 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
       else { // if not specified assume the whole region is  low security sensitive
          region r;
          r.offset = offset;
-         r.size = argsize * 8;
+         if (pointerType)
+            r.size = sm->size * 8;
+         else 
+            r.size = argsize * 8;
          rs.push_back(r);
       }
       setLowMemoryRegion(state, sm->getBaseExpr(), rs);
@@ -5586,7 +5600,9 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
        if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
           // a local var
           Type *at = agi->getType();
+          bool pointerType = false;
           if (at->isPointerTy()) {
+                pointerType = true;
                 Type *bt = at->getPointerElementType();
                 std::string btname = getTypeName(bt);
                 /*bool hintFound = false;
@@ -5615,7 +5631,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                 }
                 solver->setTimeout(0);
                 if (asuccess) {
-                  if (tstate->isSymbolic(op.first)) {
+                  if (tstate->isSymbolic(op.first) || updatedWithSymbolic.find((long)op.first) != updatedWithSymbolic.end()) {
                      // set high/low
                      unsigned int diff = 0;
                      ConstantExpr *cexpr = dyn_cast<ConstantExpr>(base);
@@ -5624,7 +5640,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                      if (cexpr && mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                      llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
-                     setSymRegionSensitive((*tstate),op.first,fname,bt,ai,diff,false); 
+                     setSymRegionSensitive((*tstate),op.first,fname,bt,ai,pointerType,false,diff); 
                   }
                   else {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
@@ -5648,10 +5664,11 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
                    llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
-                   setSymRegionSensitive((*tstate),sm,fname,bt,ai,diff,false); 
+                   setSymRegionSensitive((*tstate),sm,fname,bt,ai,pointerType,false,diff); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
                    ObjectState *sos = bindObjectInState((*tstate), sm, false, array);
+                   state.addSymbolic(sm, array); 
                    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
                    ObjectState *wos = (*tstate).addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr()
@@ -5670,7 +5687,8 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                       }
                    }
                    wos->write(offsetexpr, result);
-                   
+                   op.first->name = sm->name;
+                   updatedWithSymbolic.insert((long)op.first);
                }
              }
          }
@@ -5731,6 +5749,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
                    ObjectState *sos = bindObjectInState(state, sm, true, array);
+                   state.addSymbolic(sm, array);
                    ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
                    ObjectState *wos = state.addressSpace.getWriteable(op.first, op.second);
                    // compute offset: base - op.first->getBaseExpr()
@@ -5753,6 +5772,8 @@ void Executor::symbolizeArguments(ExecutionState &state,
                       }
                    }
                    wos->write(offsetexpr, result);
+                   op.first->name = sm->name;
+                   updatedWithSymbolic.insert((long)op.first);
                    #ifdef VB
                    llvm::outs() << "Wrote " << result << " to lazy init arg address " << base << " for function " << function->getName() << "\n";
                    #endif
@@ -6127,14 +6148,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -6778,6 +6799,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
         const Array *array = arrayCache.CreateArray(mo->name, mo->size);
         ObjectState *sos = bindObjectInState(state, mo, true, array);
+        state.addSymbolic(mo, array);
         ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
         bindArgument(kf, ind, state, result);
         #ifdef VB

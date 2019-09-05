@@ -178,6 +178,7 @@ public:
                                      std::string fname, 
                                      llvm::Type *argtype, 
                                      unsigned int ai, 
+                                     bool pointerType,
                                      bool oncall,
                                      unsigned int offset=0);
 
