@@ -329,10 +329,12 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
       //llvm::errs() << "checking leak in " << value << "\n";
       if (exprHasSymRegionFast(value, true)) {
             std::stringstream ss;
-            ss << ii_info.file.c_str() << " " << ii_info.line << ": ";
+            ss << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             codeLocHighSecurityLeaksOnStack.insert(ss.str());
-            ss << value << "\n";
-            highSecurityLeaksOnStack.insert(ss.str());
+            std::stringstream ss2;
+            ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
+            ss2 << value << "\n\n";
+            highSecurityLeaksOnStack.insert(ss2.str());
       } 
    }
    /*Cell *cells = state.stack.back().locals; 
@@ -2802,6 +2804,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* SYSREL side channel begin */
       branchCondition = cond;
       /* SYSREL side channel end */
+      //llvm::errs() << "PC: \n"; 
+      //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
       Executor::StatePair branches = fork(state, cond, false);
 
       // NOTE: There is a hidden dependency here, markBranchVisited
@@ -4682,13 +4686,13 @@ void Executor::continueState(ExecutionState &state){
 
 void Executor::terminateState(ExecutionState &state) {
   /* SYSREL extension */
-  if (state.instCount < minInstCount)
+  if (state.instCount < minInstCount && state.instCount != 0)
      minInstCount = state.instCount;
   if (state.instCount > maxInstCount)
      maxInstCount = state.instCount;
   RD* rdd = getrdmap(&state);
   if (rdd) {
-     if (rdd->ru < minInstCount)
+     if (rdd->ru < minInstCount && rdd->ru != 0)
         minInstCount = rdd->ru; 
      if (rdd->ru > maxInstCount)
         maxInstCount = rdd->ru; 
@@ -5425,7 +5429,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
             bindArgument(kf, ai, state, result);
             std::string atname = getTypeName(at);
-            llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
+            llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 3" << fname  << " for arg " << ai << "\n";
             setSymRegionSensitive(state,mo, fname, at, ai, pointerType, true);
          }
       }
@@ -5741,11 +5745,13 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    llvm::errs() << "base addres=" << base << "\n";
                    #endif
                    unsigned id = 0;
-                   std::string name = "shadow";
-                   std::string uniqueName = name;
-                   while (!state.arrayNames.insert(uniqueName).second) {
+                   std::string name = function->getName();
+                   name = name + "_shadow_arg_";
+                   name = name + std::to_string(ai);
+                   std::string uniqueName = getUniqueSymRegion(name);
+                   /*while (!state.arrayNames.insert(uniqueName).second) {
                        uniqueName = name + "_" + llvm::utostr(++id);
-                   }
+                   }*/
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(uniqueName, sm->size);
                    ObjectState *sos = bindObjectInState(state, sm, true, array);

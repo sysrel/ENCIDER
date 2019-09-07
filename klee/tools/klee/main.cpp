@@ -2547,6 +2547,10 @@ int main(int argc, char **argv, char **envp) {
   stats << "KLEE: done: generated tests = "
         << handler->getNumTestCases() << "\n";
 
+  llvm::errs() << " Code loc with leaks:\n";
+  for(auto ss: codeLocHighSecurityLeaksOnStack)
+     llvm::errs() << ss << "\n";
+
   bool useColors = llvm::errs().is_displayed();
   if (useColors)
     llvm::errs().changeColor(llvm::raw_ostream::GREEN,
@@ -2561,7 +2565,7 @@ int main(int argc, char **argv, char **envp) {
   handler->getInfoStream() << stats.str();
 
   writeSensitiveFlows("sensitiveFlows.txt"); 
-  writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
+  //writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
   writeSecuritySenstiveBranches("securitySensitiveBranches.txt");
 
   delete handler;
