@@ -3557,10 +3557,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       uint64_t elementSize = it->second;
       ref<Expr> index = eval(ki, it->first, state).value;
 
-      #ifdef VB
-      llvm::outs() << "index: " << index << "\n";
-      llvm::outs() << "pointer: " << Expr::createPointer(elementSize) << "\n";
-      #endif
+      //#ifdef VB
+      llvm::outs() << "gep index: " << index << "\n";
+      llvm::outs() << "gep pointer: " << Expr::createPointer(elementSize) << "\n";
+      //#endif
 
       /* SYSREL extension */ 
       /* side channel begin */
@@ -3577,9 +3577,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                              MulExpr::create(Expr::createSExtToPointerWidth(index),
                                              Expr::createPointer(elementSize)));
 
-      #ifdef VB
-      llvm::outs() << "base: " << base << "\n";
-      #endif
+      //#ifdef VB
+      llvm::errs() << "gep base: " << base << "\n";
+      //#endif
     }
     if (kgepi->offset) {
       /* SYSREL extension */ 
@@ -3594,14 +3594,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
  
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
-      #ifdef VB
-      llvm::outs() << "geptr offset: " << Expr::createPointer(kgepi->offset) << "\n";
-      llvm::outs() << "geptr base: " << base << "\n";
-      #endif
+      //#ifdef VB
+      llvm::errs() << "geptr offset: " << Expr::createPointer(kgepi->offset) << "\n";
+      llvm::errs() << "geptr base: " << base << "\n";
+      //#endif
     }
-    #ifdef VB
+    //#ifdef VB
     llvm::errs() << "geptr final base: " << base << "\n";
-    #endif
+    //#endif
     bindLocal(ki, state, base);
 
     /* side channel */
@@ -5072,7 +5072,8 @@ void Executor::callExternalFunction(ExecutionState &state,
           // check if prefix redaction works
           for(auto pr: prefixRedact) {
              if (function->getName().find(pr) == 0) {
-                std::string modelName =  pr.substr(pr.length());
+                std::string fname = function->getName();
+                std::string modelName =  fname.substr(pr.length());
                 Function *modelFn = moduleHandle->getFunction(modelName);
                 llvm::errs() << "Checking model function " << modelName << " using redacted prefix " << pr << "\n";
                 if (modelFn) {
@@ -6323,9 +6324,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            #ifdef VB
+            //#ifdef VB
             llvm::errs() << "load orig result: " << result << "\n";
-            #endif
+            //#endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -6337,10 +6338,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               #ifdef VB 
+               //#ifdef VB 
                llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               #endif
+               //#endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -6351,17 +6352,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 #ifdef VB
+                 //#ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
-                 #endif
+                 //#endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
-                  #endif
+                  //#endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -6371,17 +6372,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (abort) {
                      return true;
                   }
-                  //#ifdef VB
+                  ////#ifdef VB
                   llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
-                  //#endif
+                  ////#endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
                   } 
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
-                  #endif
+                  //#endif
                   forcedOffset = true;
                   executeMemoryOperation(state, true, address, laddr, 0);
                   forcedOffset = false;
@@ -6702,7 +6703,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
      if (at->isPointerTy()) {
         at = at->getPointerElementType();
         bool singleInstance = false;
-        int count = 0;
+        int count = 1; // force symbolic init of pointers to array types
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
         //#ifdef VB
         llvm::errs() << "arg " << ind << " type " << getTypeName(at) << " count=" << count << "\n";
@@ -6741,7 +6742,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                               count, rType, laddr, mksym, abort);
               if (abort) return;
               //#ifdef VB
-              llvm::errs() << "Symbolizing arg of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << "\n";
+              llvm::errs() << "Symbolizing arg " << argi << " of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << " size=" << mo->size << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
               llvm::errs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
               llvm::errs() << "to be made symbolic? " << mksym << "\n";
