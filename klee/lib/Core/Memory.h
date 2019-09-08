@@ -248,10 +248,12 @@ private:
   void flushRangeForRead(unsigned rangeBase, unsigned rangeSize) const;
   void flushRangeForWrite(unsigned rangeBase, unsigned rangeSize);
 
+public:
   bool isByteConcrete(unsigned offset) const;
   bool isByteFlushed(unsigned offset) const;
   bool isByteKnownSymbolic(unsigned offset) const;
 
+private: 
   void markByteConcrete(unsigned offset);
   void markByteSymbolic(unsigned offset);
   void markByteFlushed(unsigned offset);

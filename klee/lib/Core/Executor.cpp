@@ -1307,6 +1307,15 @@ void cloneLowAddresses(const ExecutionState &from, ExecutionState &to) {
 
 */
 
+bool mayBeUnitializedSymbolic(const ObjectState *obj, unsigned width) {
+   for (int b = 0; b<width/8; b++) {
+       if (!obj->isByteConcrete(b) && !obj->isByteKnownSymbolic(b)
+                   && !obj->isByteFlushed(b))
+          return true;
+   }
+   return false;
+}
+
 // for pointer type args use the expressions pointed by them
 void Executor::getArgValue(ExecutionState &state, Function *function, 
                  std::vector<ref<Expr> > &arguments, 
@@ -1331,11 +1340,22 @@ void Executor::getArgValue(ExecutionState &state, Function *function,
                base = toConstant(state, base, "resolveOne failure");
                asuccess = state.addressSpace.resolveOne(cast<ConstantExpr>(base), op);
             }
-         }
-         solver->setTimeout(0);
-         if (asuccess) {
-            ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
-            argsRes.push_back(result);
+            solver->setTimeout(0);
+            if (asuccess) {
+               if (mayBeUnitializedSymbolic(op.second,getWidthForLLVMType(bt))) { 
+                  // symbolic content without any initialization..
+                  ref<Expr> result = ConstantExpr::alloc(0, Expr::Int64);
+                  argsRes.push_back(result);
+               }
+               else {
+                  llvm::errs() << op.second->isByteConcrete(0) << " " 
+                               << op.second->isByteKnownSymbolic(0) << " "
+                               << op.second->isByteFlushed(0) << "\n";
+                  llvm::errs() << "getArgValue " << ai  << "\n";
+                  ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
+                  argsRes.push_back(result);
+               }
+            }
         }
      }
      else {
@@ -2585,6 +2605,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
   Instruction *i = ki->inst;
 
+  llvm::errs() << "next instruction: " << (*i) << "\n";
+
   /* SYSREL extension */
   /* side channel begin */
   if (!state.inEnclave && i->getParent()->getParent() && 
@@ -3674,6 +3696,15 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   }
 
   case Instruction::BitCast: {
+    DataLayout *TD = kmodule->targetData;
+    llvm::errs() << (*ki->inst) << "\n"; 
+    llvm::errs() << "bitcast to " << getTypeName(ki->inst->getType()) << " size: " << TD->getTypeAllocSize(ki->inst->getType()) << "\n";
+    if (((llvm::CastInst*)ki->inst)->getSrcTy()->isPointerTy()) {
+       Type *st = ((llvm::CastInst*)ki->inst)->getSrcTy()->getPointerElementType();
+       if (st->isPointerTy())
+          st = st->getPointerElementType();
+       llvm::errs() << "source type base element size: " << TD->getTypeAllocSize(st) << "\n";
+    }
     ref<Expr> result = eval(ki, 0, state).value;
     bindLocal(ki, state, result);
 
@@ -3692,9 +3723,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
              std::string tname = getTypeName(t);
              state.typeToAddr[t] = result;
 
-             #ifdef VB
-             llvm::outs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
-             #endif
+             //#ifdef VB
+             llvm::errs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
+             //#endif
           }
        }
     }
