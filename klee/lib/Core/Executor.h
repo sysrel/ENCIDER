@@ -150,7 +150,7 @@ private:
 public:
   TimingSolver *solver;
   MemoryManager *memory;
-
+ 
   const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
 
   unsigned int getTimingCost(ExecutionState &state, llvm::Instruction *inst);
@@ -331,6 +331,38 @@ public:
   llvm::Function* getTargetFunction(llvm::Value *calledVal,
                                     ExecutionState &state);
 
+  /* INFO FLOW */
+  void updateInfoFlowForLoad(ExecutionState &state, 
+                                    int regIndex, 
+                                int destregIndex, 
+                                const MemoryObject *mo, 
+                            KInstruction *target, 
+                            ref<Expr> offsetexpr, 
+                                   unsigned size);
+
+  void updateInfoFlowForStore(ExecutionState &state, 
+                                     int regIndex, 
+                                 int destregIndex, 
+                                 const MemoryObject *mo, 
+                             KInstruction *target, 
+                             ref<Expr> offsetexpr, 
+                                    unsigned size) ;
+
+   void updateInfoFlowForReturn(ExecutionState &state, int regIndex, KInstruction *ki);
+
+   void updateInfoFlowForPhi(ExecutionState &state, int regIndex, KInstruction *ki) ;
+
+   void updateInfoFlowForBinary(ExecutionState &state, int sourceIndex1, int sourceIndex2, KInstruction *ki);
+
+   void updateInfoFlowForCmp(ExecutionState &state, int sourceIndex1, int sourceIndex2, KInstruction *ki);
+
+   void updateInfoFlowForExtract(ExecutionState &state, int regIndex, KInstruction *ki, int offset, int size);
+
+   void updateInfoFlowForExt(ExecutionState &state, int regIndex, KInstruction *ki);
+
+   void updateInfoFlowDirectCopy(ExecutionState &state, int regIndex, KInstruction *ki);
+
+  /* INFO FLOW */
 private:  
 /* SYSREL extension */
   void executeInstruction(ExecutionState &state, KInstruction *ki);
@@ -486,6 +518,8 @@ private:
   // and perform the operation
   /* SYSREL extension */ // return value is used for abort signaling
   bool executeMemoryOperation(ExecutionState &state,
+                              int regIndex,
+                              int destregIndex,
                               bool isWrite,
                               ref<Expr> address,
                               ref<Expr> value /* undef if read */,

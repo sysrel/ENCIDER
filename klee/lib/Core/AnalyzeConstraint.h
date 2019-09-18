@@ -12,10 +12,11 @@ using namespace llvm;
 using namespace klee;
 
 struct region {
-  unsigned int offset;
-  unsigned int size;
+  int offset;
+  int size;
 };
 typedef struct region region;
+
 
 struct infoflowsource_t {
   unsigned int argno;
@@ -23,6 +24,34 @@ struct infoflowsource_t {
 };
 typedef struct infoflowsource_t infoflowsource_t ; 
 
+
+//InfoFlowSummarization
+
+/*
+class Region {
+   std::set<region> ifregion;
+  public: 
+   Region();
+   Region(const Region &);
+   virtual void addRegion(region);
+   virtual ~Region();
+};
+
+class MLRegion : Region { 
+   std::map<region, Region*> iflow;
+   public: 
+      MLRegion();
+      // adding multi layer
+      virtual void addRegion(std::vector<region>);
+      virtual ~MLRegion();
+};
+*/
+
+struct InfoFlowRegion {
+  int index;
+  std::vector<region> regions;
+};
+typedef struct InfoFlowRegion InfoFlowRegion_t; 
 
 namespace std {
   bool operator<(const region r1, const region r2);

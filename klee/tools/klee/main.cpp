@@ -149,6 +149,8 @@ extern std::set<std::string> codeLocHighSecurityLeaksOnStack;
 extern std::set<std::string> stackLeakToBeChecked;
 extern std::set<std::string> securitySensitiveBranches;
 extern std::map<std::string, int> inputFuncsSuccRetValue;
+extern bool infoFlowSummaryMode;
+extern std::string infoFlowSummarizedFuncName;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -388,6 +390,13 @@ namespace {
   cl::opt<bool>
   LazyInit("lazy-init", cl::desc("Lazy initialization of input data structures (default false)"), cl::init(false));
 
+  cl::opt<bool>
+  InfoFlowSummaryMode("infoflow-summary", cl::desc("Information flow summary mode (default false)"), 
+                                          cl::init(false));
+
+  cl::opt<std::string>
+  InfoFlowSummaryEntry("infoflow-summary-entry", cl::desc("The name of the function to be summarized"));  
+
   cl::opt<unsigned>
   LazyInitInst("lazy-init-ins", cl::desc("Number of instances for lazy initialization instances (default is 20)")); 
 
@@ -451,6 +460,8 @@ namespace {
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
                                                     to map an undefined function to its model function\n"));
+
+
 
                                              
   /* SYSREL extension */
@@ -2345,6 +2356,14 @@ int main(int argc, char **argv, char **envp) {
      cacheLineMode = true;    
   }
 
+  if (InfoFlowSummaryMode) {
+     infoFlowSummaryMode = true;
+     if (InfoFlowSummaryEntry != "")
+        infoFlowSummarizedFuncName = InfoFlowSummaryEntry;
+     else infoFlowSummarizedFuncName = entryFunctionName;
+     
+  }
+
   if (InfoFlowModels != "") {
      readInfoFlowModels(InfoFlowModels.c_str());
   }
@@ -2565,7 +2584,7 @@ int main(int argc, char **argv, char **envp) {
   handler->getInfoStream() << stats.str();
 
   writeSensitiveFlows("sensitiveFlows.txt"); 
-  //writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
+  writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
   writeSecuritySenstiveBranches("securitySensitiveBranches.txt");
 
   delete handler;

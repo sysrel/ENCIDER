@@ -1421,7 +1421,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
 
        if (tid == -1) {
           ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);
-          abort = ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, arguments[param], mo->getBaseExpr(), 0);
+          abort = ((Executor*)(theInterpreter))->executeMemoryOperation(state, -2, -2, true, arguments[param], mo->getBaseExpr(), 0);
           if (abort) return false;
        } 
        else {
@@ -1904,7 +1904,7 @@ ref<Expr> APIHandler::eval(ExecutionState &state,  const DataLayout &dl, Functio
                    if (sym) {
                       llvm::errs() << "lazy initializing, new object at " << resaddr << " while evaluating expression\n";
                       ((Executor*)(theInterpreter))->executeMakeSymbolic(state, mo, mo->name, t, true);  
-                      abort = ((Executor*)(theInterpreter))->executeMemoryOperation(state, true, cur, resaddr, 0);
+                      abort = ((Executor*)(theInterpreter))->executeMemoryOperation(state, -2, -2, true, cur, resaddr, 0);
                       if (abort) return Expr::createPointer(0);
                       addressRes = cur;
                       cur = resaddr;

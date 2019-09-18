@@ -103,6 +103,8 @@ using namespace klee;
 
 /* SYSREL extension */
 
+#define INFOFLOW 1
+
 extern std::set<std::string> voidTypeCasts;
 size_t maxVoidTypeCastSize = 8;
 std::set<std::string> reached;
@@ -180,6 +182,56 @@ std::set<std::string> stackLeakToBeChecked;
 std::set<std::string> securitySensitiveBranches;
 std::map<std::string, int> inputFuncsSuccRetValue;
 std::set<long> updatedWithSymbolic;
+
+std::string infoFlowSummarizedFuncName;
+Function *infoFlowSummarizedFunc = NULL;
+
+#ifdef INFOFLOW
+// InfoFlowSummarization
+struct infoflowdata {
+  std::map<unsigned int, const MemoryObject*> regMap;
+  std::map<unsigned int, const MemoryObject*> argMap;
+  std::map<unsigned int, std::map<region, InfoFlowRegion_t> > localIFlow;
+};
+typedef struct infoflowdata infoflowdata_t;
+std::map<ExecutionState*, std::vector<infoflowdata_t>* > infoflowstack;
+infoflowdata_t currentInfoFlowContext;
+std::map<const MemoryObject*, std::map<region, InfoFlowRegion_t> > memoryIFlow;
+// Maps info flow relevant memory objects to ids that are meaningful to the client, e.g., argument indices of a summarized function
+std::map<const MemoryObject*, int> infoFlowRelevant;
+std::map<int, std::map<int, std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > > > infoFlowSummary;
+
+/*
+bool operator<(const region r1, const region r2) {
+  if (r1.offset == r2.offset)
+     return r1.size < r2.size;
+  else if (r1.size == r2.size) 
+     return r2.offset < r2.offset;
+  else r1.offset + r1.size  < r2.offset + r2.size;
+}*/
+
+namespace std {
+bool operator<(const InfoFlowRegion_t ifr1, const InfoFlowRegion_t ifr2) {
+   if (ifr1.index < ifr2.index)
+      return true;
+   else if (ifr1.index == ifr2.index) {
+      if (ifr1.regions.size() < ifr2.regions.size())
+         return true;
+      else if (ifr1.regions.size() > ifr2.regions.size())
+         return false;
+      else {
+         for(unsigned int i=0; i<ifr1.regions.size(); i++)
+            if (ifr1.regions[i] < ifr2.regions[i])
+               return true;
+         return false; 
+      }
+   } 
+   else return false;
+}
+}
+
+#endif
+
 /* Side channel end */
 
 //#define VBSC
@@ -245,9 +297,498 @@ bool singleSuccessor = true;
 
 std::string getTypeName(Type *t);
 
-bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2) ;
+bool infoFlowSummaryMode = false;
 
 
+#ifdef INFOFLOW
+/* InfoFlowSummarization */
+
+std::map<region, InfoFlowRegion_t> slice(std::map<region, InfoFlowRegion_t> ifrmap, region rt);
+
+int getLocal(ExecutionState &state, KInstruction *ki, int index) {
+  assert(index < ki->inst->getNumOperands());
+  int vnumber = ki->operands[index];
+  return vnumber;
+}
+
+void initInfoFlowContext(ExecutionState &state) {
+   infoflowdata_t initvalue;
+   std::vector<infoflowdata_t> *ctxstack = new std::vector<infoflowdata_t>();
+   currentInfoFlowContext = initvalue;
+   ctxstack->push_back(initvalue);
+   infoflowstack[&state] = ctxstack;
+}
+
+void cloneInfoFlowContext(ExecutionState &state1, ExecutionState &state2) {
+    std::vector<infoflowdata_t>  *cpstack = new std::vector<infoflowdata_t>();
+    for(unsigned int i=0; i< infoflowstack[&state1]->size(); i++)  
+       cpstack->push_back((*infoflowstack[&state1])[i]);
+    infoflowstack[&state2] = cpstack;
+}
+
+void updateCurrentInfoFlowContext(ExecutionState &state) {
+  int last = infoflowstack[&state]->size() - 1; 
+  currentInfoFlowContext = (*infoflowstack[&state])[last];
+}
+
+void pushInfoFlowContext(ExecutionState &state) {
+   int last = infoflowstack[&state]->size() - 1;
+   (*infoflowstack[&state])[last] = currentInfoFlowContext;
+   infoflowdata_t initvalue;
+   infoflowstack[&state]->push_back(initvalue);
+   currentInfoFlowContext = initvalue;
+}
+
+void popInfoFlowContext(ExecutionState &state) {
+   infoflowstack[&state]->pop_back();
+   currentInfoFlowContext =  infoflowstack[&state]->back();
+}
+
+void saveInfoFlowContext(ExecutionState &state) {
+   int last = infoflowstack[&state]->size() - 1;
+   (*infoflowstack[&state])[last] = currentInfoFlowContext;       
+}
+
+bool operator==(region r1, region r2) {
+  return ((r1.offset == r2.offset) && (r1.size == r2.size));
+}
+
+int getRegIndexFor(const MemoryObject *mo) {
+  for(auto me : currentInfoFlowContext.regMap) {
+     if (me.second == mo)
+        return me.first;
+  }  
+  return -1;
+}
+
+InfoFlowRegion_t createInfoFlowRegion(int source, unsigned int offset, unsigned int size) { 
+    InfoFlowRegion_t ifr;
+    ifr.index = source;
+    region r;
+    r.offset = offset;
+    r.size = r.size;
+    ifr.regions.push_back(r);
+    return ifr;
+}
+
+void addLevel(InfoFlowRegion_t &dc, unsigned int offset, unsigned int size) {
+   region r;
+   r.offset = offset;
+   r.size = size;
+   dc.regions.push_back(r);
+}
+
+void partitionAndUpdateIFlow(std::map<region, InfoFlowRegion_t> &ifrmap, 
+                                          region rt, InfoFlowRegion_t ifrc, bool replace);
+
+void recordInfoFlow(InfoFlowRegion_t dest, InfoFlowRegion_t sourceif) {
+  int desti  = dest.index;
+  int srci = sourceif.index;
+  std::map<int, std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > > ifsmap; 
+  std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > ifsmaprg;
+  std::set<InfoFlowRegion_t>sources;  
+  if (infoFlowSummary.find(desti) != infoFlowSummary.end()) {
+      ifsmap = infoFlowSummary[desti];
+  }
+  if (ifsmap.find(srci) != ifsmap.end())
+      ifsmaprg = ifsmap[srci];
+  if (ifsmaprg.find(dest) != ifsmaprg.end())
+     sources = ifsmaprg[dest];
+  sources.insert(sourceif);
+  ifsmaprg[dest] = sources;
+  ifsmap[srci] = ifsmaprg;
+  infoFlowSummary[desti] = ifsmap;
+}
+
+void Executor::updateInfoFlowForLoad(ExecutionState &state, 
+                                    int regIndex, 
+                                int destregIndex, 
+                                const MemoryObject *mo, 
+                            KInstruction *target, 
+                            ref<Expr> offsetexpr, 
+                                   unsigned size) {
+   if (!infoFlowSummaryMode) return;
+   ConstantExpr *CE = dyn_cast<ConstantExpr>(offsetexpr);
+   unsigned offset;
+   if (!CE) { 
+      // conservative approximation when offset is symbolic
+      offset = 0;
+      size = mo->size;
+   }
+   else offset = CE->getZExtValue();
+   int sourceIndex = getRegIndexFor(mo);
+   region rt;
+   rt.offset = 0;
+   rt.size = size;
+   region rs;
+   rs.offset = offset;
+   rs.size = size;
+   if (infoFlowRelevant.find(mo) != infoFlowRelevant.end()) {
+         // info flow tracking relevant
+      int source = infoFlowRelevant[mo];
+      InfoFlowRegion_t ifr = createInfoFlowRegion(source, offset, size);   
+      std::map<region, InfoFlowRegion_t> ifrmap  = currentInfoFlowContext.localIFlow[target->dest];
+      partitionAndUpdateIFlow(ifrmap, rt, ifr, true);
+      currentInfoFlowContext.localIFlow[target->dest] = ifrmap;
+   }
+   else {
+      bool doublepointer = false;
+      llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(target->inst);
+      assert(li);
+      Type *t = li->getPointerOperand()->getType();
+      if (t->isPointerTy()) {
+         t = t->getPointerElementType();
+         if (t->isPointerTy())
+            doublepointer = true;
+      }
+      if (memoryIFlow.find(mo) != memoryIFlow.end()) {
+         std::map<region, InfoFlowRegion_t> ifrmaps =  slice(memoryIFlow[mo], rs);  
+         std::map<region, InfoFlowRegion_t> ifrmap = currentInfoFlowContext.localIFlow[target->dest];         
+         for(auto me : ifrmaps) {
+            InfoFlowRegion_t dc = me.second;
+            if (doublepointer)
+               addLevel(dc, offset, size);
+            partitionAndUpdateIFlow(ifrmap, me.first, dc, true);
+         }
+         currentInfoFlowContext.localIFlow[target->dest] = ifrmap;
+      }
+   }
+
+}
+
+bool regionsIntersect(region r1, region r2) {
+   if (r1.offset <= r2.offset && r1.offset + r1.size - 1 <= r2.offset + r2.size - 1)
+      return true;
+   if (r2.offset <= r1.offset && r2.offset + r2.size - 1 <= r1.offset + r1.size - 1)
+      return true;
+   return false;
+}
+
+region intersection(region r1, region r2) {
+  region r;
+  r.size = r.offset = 0;
+  if (r1.offset <= r2.offset && r1.offset + r1.size - 1 <= r2.offset + r2.size - 1) {
+     r.offset = r2.offset;
+     r.size = r1.offset + r1.size - r2.offset;
+  }
+  if (r2.offset <= r1.offset && r2.offset + r2.size - 1 <= r1.offset + r1.size - 1) {
+     r.offset = r1.offset;
+     r.size = r2.offset + r2.size - r1.offset;
+  }
+  return r;
+}
+
+region diffRegion(region r1, region r2) {
+  region r = r1;
+  if (r1.offset <= r2.offset && r1.offset + r1.size - 1 <= r2.offset + r2.size - 1) {
+     r.offset = r1.offset;
+     r.size = r2.offset - r1.offset;
+  }
+  else if (r2.offset <= r1.offset && r2.offset + r2.size - 1 <= r1.offset + r1.size - 1) {
+     r.offset = r2.offset + r2.size;
+     r.size = r1.offset + r1.size - (r2.offset + r2.size);
+  }
+  return r;       
+}
+
+region adjustment(region r1, region r2) {
+  region r;
+  r.offset = r2.offset - r1.offset;  
+  r.size = r2.size - r1.size;
+  return r;
+}
+
+region adjust(region r, region adj) {
+   region res;
+   res.offset = r.offset + adj.offset;
+   res.size = r.size + adj.size;
+   return res;
+}
+
+std::vector<region> adjust(std::vector<region> r, region adj) {
+  std::vector<region> res;
+  for(unsigned int i=0; i<r.size(); i++)
+     res.push_back(adjust(r[i], adj));
+  return res; 
+}
+
+InfoFlowRegion_t adjust(InfoFlowRegion_t ifr, region adj) {
+  InfoFlowRegion_t res;
+  res.index = ifr.index;
+  res.regions = adjust(ifr.regions, adj);
+  return res;
+}
+
+std::map<region, InfoFlowRegion_t> slice(std::map<region, InfoFlowRegion_t> ifrmap, region rt) {
+  std::map<region, InfoFlowRegion_t> res;
+  if (rt.size == 0)
+     return res;
+  region rd;
+  std::vector<region> tobesliced;
+  std::vector<InfoFlowRegion_t> tobeslicedFlow;
+  for(auto me : ifrmap) {
+     rd = diffRegion(me.first, rt);
+     region ri = intersection(me.first, rt);
+     if (rd.size == 0) {
+        res[me.first] = ifrmap[me.first];
+     }
+     else if (ri.size > 0) {
+        tobesliced.push_back(me.first);
+        tobeslicedFlow.push_back(me.second); 
+     }
+     // otherwise drop it completely
+  }
+  for(unsigned int i=0; i<tobesliced.size(); i++) {
+     region ri = intersection(tobesliced[i], rt);
+     region rd1 = diffRegion(tobesliced[i], rt);
+     region adj = adjustment(tobesliced[i], rd1);
+     InfoFlowRegion_t ifru;
+     ifru.index = tobeslicedFlow[i].index;
+     for(unsigned int j=0; j<tobeslicedFlow[i].regions.size(); j++)
+        ifru.regions.push_back(adjust(tobeslicedFlow[i].regions[j], adj));
+     res[ri] = ifru;
+  }
+  return res;
+} 
+
+void partitionAndUpdateIFlow(std::map<region, InfoFlowRegion_t> &ifrmap, 
+                                          region rt, InfoFlowRegion_t ifrc, bool replace) {
+  bool exactMatch = false;
+  InfoFlowRegion_t rgs;
+  for(auto me : ifrmap) {
+     if (me.first == rt) {
+        exactMatch = true;
+        rgs = me.second;
+        break;
+     }
+  }
+  if (exactMatch) {
+     if (replace) 
+        ifrmap[rt] = ifrc;
+     else {
+        for(unsigned int i=0; i<rgs.regions.size(); i++)
+           ifrc.regions.push_back(rgs.regions[i]);
+        ifrmap[rt] = ifrc;
+     }
+  }
+  else {
+     std::vector<region> covered;
+     std::vector<InfoFlowRegion_t> infr;
+     for(auto me : ifrmap) {
+        if (regionsIntersect(me.first, rt)) { 
+           covered.push_back(me.first);
+           infr.push_back(me.second);
+        }  
+     }
+     for(unsigned int i=0; i<covered.size(); i++) {
+        ifrmap.erase(covered[i]);
+        region rd1 = diffRegion(covered[i], rt);
+        if (rd1.size > 0)
+           ifrmap[rd1] = adjust(infr[i], adjustment(covered[i], rd1));
+        region rd2 = diffRegion(rt, covered[i]);
+        if (rd2.size > 0)    
+           ifrmap[rd2] = ifrc;
+        region rd3 = intersection(covered[i], rt);
+        if (rd3.size > 0) {
+           if (replace)
+              ifrmap[rd3] = ifrc;
+           else {
+              for(unsigned int i=0; i<infr[i].regions.size(); i++)
+                 ifrc.regions.push_back(adjust(infr[i].regions[i], adjustment(covered[i], rd3)));
+              ifrmap[rd3] = ifrc;           
+           }
+        }
+     }
+     if (covered.size() == 0)
+        ifrmap[rt] = ifrc;
+  }
+}
+
+
+void UpdateIFlow(std::map<region, InfoFlowRegion_t> &ifrmap, std::map<region, InfoFlowRegion_t> ifrmaps, int offsetAdj, bool replace) {
+    for(auto me : ifrmaps) {
+        region rt;
+        rt.offset = me.first.offset + offsetAdj;
+        rt.size = me.first.size;
+        partitionAndUpdateIFlow(ifrmap, rt, me.second, replace);
+    }
+}
+
+
+void Executor::updateInfoFlowForStore(ExecutionState &state, 
+                                     int regIndex, 
+                                 int destregIndex, 
+                                 const MemoryObject *mo, 
+                             KInstruction *target, 
+                             ref<Expr> offsetexpr, 
+                                    unsigned size) {
+   if (!infoFlowSummaryMode) return;
+   if (regIndex < 0) return; 
+   ConstantExpr *CE = dyn_cast<ConstantExpr>(offsetexpr);
+   unsigned offset;
+   if (!CE)
+      offset = 0;
+   else offset = CE->getZExtValue();
+   region rs;
+   rs.offset = 0;
+   rs.size = size;
+   region rt;
+   rt.offset = offset;
+   rt.size = size;
+   InfoFlowRegion_t destif;
+   bool record = false;
+   if (currentInfoFlowContext.localIFlow.find(destregIndex) != currentInfoFlowContext.localIFlow.end()) {
+      record = true;
+      for(auto de : currentInfoFlowContext.localIFlow[destregIndex]) {
+         destif = de.second;
+         record = true;
+         break;
+      }
+   } 
+   if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+      bool doublepointer = false;
+      llvm::StoreInst *li = dyn_cast<llvm::StoreInst>(target->inst);
+      assert(li);
+      Type *t = li->getPointerOperand()->getType();
+      if (t->isPointerTy()) {
+         t = t->getPointerElementType();
+         if (t->isPointerTy())
+            doublepointer = true;
+      }
+      std::map<region, InfoFlowRegion_t> ifrmap, ifrmaps;
+      ifrmaps = slice(currentInfoFlowContext.localIFlow[regIndex], rs);
+      if (memoryIFlow.find(mo) != memoryIFlow.end())
+         ifrmap = memoryIFlow[mo];  
+      UpdateIFlow(ifrmap, ifrmaps, rt.offset - rs.offset, true);      
+      memoryIFlow[mo] = ifrmap; 
+      if (record) {
+         InfoFlowRegion_t dc = destif;
+         for(auto se : ifrmaps) {
+            if (doublepointer)
+               addLevel(dc, se.first.offset, se.first.size);
+            recordInfoFlow(dc, se.second); 
+         }
+      }
+   }
+}
+
+int getReturnIndex(Function *f) {
+   unsigned int argi = 0;
+   for(llvm::Function::arg_iterator ai = f->arg_begin(); ai != f->arg_end(); ai++, argi++);
+   return argi;
+}
+
+void Executor::updateInfoFlowForReturn(ExecutionState &state, int regIndex, KInstruction *ki) {
+   if (!infoFlowSummaryMode) return;
+   if (regIndex < 0) return; 
+   if (ki->inst->getNumOperands() > 0) {
+      if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+         Type *rt = ki->inst->getOperand(0)->getType(); 
+         std::map<region, InfoFlowRegion_t> ifrmap = currentInfoFlowContext.localIFlow[regIndex];
+         for(auto me : ifrmap) {
+             InfoFlowRegion_t destif = createInfoFlowRegion(getReturnIndex(infoFlowSummarizedFunc), 
+                                                       me.first.offset, me.first.size);
+             recordInfoFlow(destif, me.second);
+         }      
+      }  
+   }
+}
+
+
+// Assume that regIndex refers to a valid local variable and ki has a valid dest
+void Executor::updateInfoFlowDirectCopy(ExecutionState &state, int regIndex, KInstruction *ki) {
+   Type *t = ki->inst->getType(); 
+   region rt;
+   rt.offset = 0;
+   rt.size = getWidthForLLVMType(t);
+   int destIndex = ki->dest; 
+   if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+      std::map<region, InfoFlowRegion_t> ifrmap, ifrmaps;
+      // should not happen due to SSA naming..
+      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
+         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
+      ifrmaps = slice(currentInfoFlowContext.localIFlow[regIndex], rt);
+      UpdateIFlow(ifrmap, ifrmaps, 0, true);
+      currentInfoFlowContext.localIFlow[destIndex] = ifrmap;
+   }
+}
+
+
+void Executor::updateInfoFlowForPhi(ExecutionState &state, int regIndex, KInstruction *ki) {
+   if (!infoFlowSummaryMode) return;
+   if (regIndex < 0) return; 
+   updateInfoFlowDirectCopy(state, regIndex, ki);  
+}
+
+void Executor::updateInfoFlowForBinary(ExecutionState &state, int sourceIndex1, int sourceIndex2, KInstruction *ki) {
+   if (!infoFlowSummaryMode) return;
+   if (sourceIndex1 < 0 && sourceIndex2 < 0) return; 
+   Type *t = ki->inst->getType(); 
+   region rs;
+   rs.offset = 0;
+   rs.size = getWidthForLLVMType(t);
+   region rt;
+   rt.offset = 0;
+   rt.size = rs.size;
+   int destIndex = ki->dest; 
+   std::map<region, InfoFlowRegion_t> ifrmap, ifrmaps;
+   if (sourceIndex1 >= 0 && currentInfoFlowContext.localIFlow.find(sourceIndex1) != currentInfoFlowContext.localIFlow.end()) {
+      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
+         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
+      ifrmaps = slice(currentInfoFlowContext.localIFlow[sourceIndex1], rs);
+      UpdateIFlow(ifrmap, ifrmaps, 0, true);
+      currentInfoFlowContext.localIFlow[destIndex] = ifrmap; 
+   }
+   if (sourceIndex2 >= 0 && currentInfoFlowContext.localIFlow.find(sourceIndex2) != currentInfoFlowContext.localIFlow.end()) {
+      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
+         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
+      // we are over-approximating as we assume the cond holds both ways; so we force union via the false flag
+      ifrmaps = slice(currentInfoFlowContext.localIFlow[sourceIndex2], rs);
+      UpdateIFlow(ifrmap, ifrmaps, 0, false);
+      currentInfoFlowContext.localIFlow[destIndex] = ifrmap;
+   }
+}
+
+void Executor::updateInfoFlowForCmp(ExecutionState &state, int sourceIndex1, int sourceIndex2, KInstruction *ki) {
+   if (!infoFlowSummaryMode) return;
+   if (sourceIndex1 < 0 && sourceIndex2 < 0) return; 
+   // we may want to record these as branch relevant info flow..
+}
+
+void Executor::updateInfoFlowForExtract(ExecutionState &state, int regIndex, KInstruction *ki, int offset, int size) {
+   if (!infoFlowSummaryMode) return;
+   if (regIndex < 0) return; 
+   Type *t = ki->inst->getType(); 
+   region rs;
+   rs.offset = 0;
+   rs.size = getWidthForLLVMType(t);
+   region rt;
+   rt.offset = 0;
+   rt.size = rs.size;
+   int destIndex = ki->dest; 
+   if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+      std::map<region, InfoFlowRegion_t> ifrmap, ifrmaps;
+      region radj; radj.offset=offset; radj.size = size;
+      ifrmaps = slice(currentInfoFlowContext.localIFlow[regIndex], radj);  
+      // should not happen due to SSA naming..
+      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
+         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
+      UpdateIFlow(ifrmap, ifrmaps, 0, true);
+      currentInfoFlowContext.localIFlow[destIndex] = ifrmap;
+   }
+   
+}
+
+void Executor::updateInfoFlowForExt(ExecutionState &state, int regIndex, KInstruction *ki) {
+   if (!infoFlowSummaryMode) return;
+   if (regIndex < 0) return; 
+   updateInfoFlowDirectCopy(state, regIndex, ki);  
+}
+
+
+#endif
+
+bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2);
 
 std::string removeDotSuffix(std::string name) {
   size_t pos = name.find(".");
@@ -318,9 +859,10 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
   //if (stackLeakToBeChecked.find(fname) == stackLeakToBeChecked.end())
   //   return;
   const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
-  llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n"; 
+  llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n";
+  unsigned int localVar = 0; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
-         ie = sf.allocas.end(); it != ie; ++it) {
+         ie = sf.allocas.end(); it != ie; ++it, localVar++) {
       //llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
       const ObjectState *os = state.addressSpace.findObject((*it));
       ref<Expr> value = os->read(ConstantExpr::alloc(0, Expr::Int64),(*it)->size*8);
@@ -335,6 +877,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
             ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             ss2 << value << "\n\n";
             highSecurityLeaksOnStack.insert(ss2.str());
+            llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << "\n"; 
       } 
    }
    /*Cell *cells = state.stack.back().locals; 
@@ -2084,6 +2627,15 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
       return StatePair(0, 0);
     }
 
+
+   // clone state specific data here!!!
+
+   // info flow make a copy of the infoflowcontext!!! 
+   if (&current == trueState)
+      cloneInfoFlowContext(current, *falseState);
+   else 
+      cloneInfoFlowContext(current, *trueState);
+
     return StatePair(trueState, falseState);
   }
 }
@@ -2320,7 +2872,7 @@ void Executor::executeCall(ExecutionState &state,
       // size. This happens to work for x86-32 and x86-64, however.
       Expr::Width WordSize = Context::get().getPointerWidth();
       if (WordSize == Expr::Int32) {
-        executeMemoryOperation(state, true, arguments[0],
+        executeMemoryOperation(state, -2, -2, true, arguments[0],
                                sf.varargs->getBaseExpr(), 0);
       } else {
         assert(WordSize == Expr::Int64 && "Unknown word size!");
@@ -2328,17 +2880,17 @@ void Executor::executeCall(ExecutionState &state,
         // x86-64 has quite complicated calling convention. However,
         // instead of implementing it, we can do a simple hack: just
         // make a function believe that all varargs are on stack.
-        executeMemoryOperation(state, true, arguments[0],
+        executeMemoryOperation(state, -2, -2, true, arguments[0],
                                ConstantExpr::create(48, 32), 0); // gp_offset
-        executeMemoryOperation(state, true,
+        executeMemoryOperation(state, -2, -2, true,
                                AddExpr::create(arguments[0],
                                                ConstantExpr::create(4, 64)),
                                ConstantExpr::create(304, 32), 0); // fp_offset
-        executeMemoryOperation(state, true,
+        executeMemoryOperation(state, -2, -2, true,
                                AddExpr::create(arguments[0],
                                                ConstantExpr::create(8, 64)),
                                sf.varargs->getBaseExpr(), 0); // overflow_arg_area
-        executeMemoryOperation(state, true,
+        executeMemoryOperation(state, -2, -2, true,
                                AddExpr::create(arguments[0],
                                                ConstantExpr::create(16, 64)),
                                ConstantExpr::create(0, 64), 0); // reg_save_area
@@ -2397,7 +2949,9 @@ void Executor::executeCall(ExecutionState &state,
     KFunction *kf = kmodule->functionMap[f];
     state.pushFrame(state.prevPC, kf);
     state.pc = kf->instructions;
-
+    #ifdef INFOFLOW
+    pushInfoFlowContext(state);
+    #endif
     if (statsTracker)
       statsTracker->framePushed(state, &state.stack[state.stack.size()-2]);
 
@@ -2754,11 +3308,15 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* SYSREL extension */
     } else {
       /* SYSREL extension */
-      if (!terminating)
+      if (!terminating) {
          checkHighSensitiveLocals(state,i);
+         updateInfoFlowForReturn(state, getLocal(state, ki, 0), ki);
+      }
       /* SYSREL extension */
       state.popFrame();
-
+      #ifdef INFOFLOW
+      popInfoFlowContext(state);
+      #endif
       if (statsTracker)
         statsTracker->framePopped(state);
 
@@ -3264,6 +3822,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   case Instruction::PHI: {
     ref<Expr> result = eval(ki, state.incomingBBIndex, state).value;
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForPhi(state, getLocal(state,ki,state.incomingBBIndex), ki);
+    #endif
     break;
   }
 
@@ -3275,6 +3836,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> fExpr = eval(ki, 2, state).value;
     ref<Expr> result = SelectExpr::create(cond, tExpr, fExpr);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 1), getLocal(state, ki, 2), ki);
+    #endif
     break;
   }
 
@@ -3288,6 +3852,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> left = eval(ki, 0, state).value;
     ref<Expr> right = eval(ki, 1, state).value;
     bindLocal(ki, state, AddExpr::create(left, right));
+    #ifdef INFOFLOW 
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3295,6 +3862,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> left = eval(ki, 0, state).value;
     ref<Expr> right = eval(ki, 1, state).value;
     bindLocal(ki, state, SubExpr::create(left, right));
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3302,6 +3872,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> left = eval(ki, 0, state).value;
     ref<Expr> right = eval(ki, 1, state).value;
     bindLocal(ki, state, MulExpr::create(left, right));
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3310,6 +3883,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = UDivExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3318,6 +3894,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = SDivExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3326,6 +3905,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = URemExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3334,6 +3916,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = SRemExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3342,6 +3927,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = AndExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW 
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3350,6 +3938,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = OrExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3358,6 +3949,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = XorExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3366,6 +3960,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = ShlExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3374,6 +3971,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = LShrExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3382,6 +3982,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> right = eval(ki, 1, state).value;
     ref<Expr> result = AShrExpr::create(left, right);
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW 
+    updateInfoFlowForBinary(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+    #endif
     break;
   }
 
@@ -3397,6 +4000,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = EqExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3405,6 +4011,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = NeExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3413,6 +4022,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = UgtExpr::create(left, right);
       bindLocal(ki, state,result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3421,6 +4033,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = UgeExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3429,6 +4044,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = UltExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3437,6 +4055,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = UleExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3445,6 +4066,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = SgtExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3453,6 +4077,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = SgeExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3461,6 +4088,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = SltExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3469,6 +4099,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> right = eval(ki, 1, state).value;
       ref<Expr> result = SleExpr::create(left, right);
       bindLocal(ki, state, result);
+      #ifdef INFOFLOW
+      updateInfoFlowForCmp(state, getLocal(state, ki, 0), getLocal(state, ki, 1), ki);
+      #endif
       break;
     }
 
@@ -3525,19 +4158,20 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
   case Instruction::Load: {
     ref<Expr> base = eval(ki, 0, state).value;
-    executeMemoryOperation(state, false, base, 0, ki);
+    executeMemoryOperation(state, getLocal(state, ki, 0), ki->dest, false, base, 0, ki);
     break;
   }
   case Instruction::Store: {
     ref<Expr> base = eval(ki, 1, state).value;
-    ref<Expr> value = eval(ki, 0, state).value;
-    executeMemoryOperation(state, true, base, value, 0);
+    ref<Expr> value = eval(ki, 0, state).value; 
+    executeMemoryOperation(state, getLocal(state, ki, 0), getLocal(state, ki, 1), true, base, value, 0);
     break;
   }
 
   case Instruction::GetElementPtr: {
     KGEPInstruction *kgepi = static_cast<KGEPInstruction*>(ki);
     ref<Expr> base = eval(ki, 0, state).value;
+    ref<Expr> origbase = base;
     /* side channel */
     //bool high = false;
     //bool low = false;
@@ -3557,10 +4191,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       uint64_t elementSize = it->second;
       ref<Expr> index = eval(ki, it->first, state).value;
 
-      //#ifdef VB
+      #ifdef VB
       llvm::outs() << "gep index: " << index << "\n";
       llvm::outs() << "gep pointer: " << Expr::createPointer(elementSize) << "\n";
-      //#endif
+      #endif
 
       /* SYSREL extension */ 
       /* side channel begin */
@@ -3577,9 +4211,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                              MulExpr::create(Expr::createSExtToPointerWidth(index),
                                              Expr::createPointer(elementSize)));
 
-      //#ifdef VB
+      #ifdef VB
       llvm::errs() << "gep base: " << base << "\n";
-      //#endif
+      #endif
     }
     if (kgepi->offset) {
       /* SYSREL extension */ 
@@ -3594,14 +4228,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
  
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
-      //#ifdef VB
+      #ifdef VB
       llvm::errs() << "geptr offset: " << Expr::createPointer(kgepi->offset) << "\n";
       llvm::errs() << "geptr base: " << base << "\n";
-      //#endif
+      #endif
     }
-    //#ifdef VB
+    #ifdef VB
     llvm::errs() << "geptr final base: " << base << "\n";
-    //#endif
+    #endif
     bindLocal(ki, state, base);
 
     /* side channel */
@@ -3640,6 +4274,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           cachelocs.insert(p);
        }
     }
+    #ifdef INFOFLOW
+    // handled in the info flow for load by adding a level of dereferencing if a double pointer
+    //updateInfoFlowForGeptr(state, getLocal(state, ki, 0), ki, origbase, base);
+    #endif
     /*if (high) {
        addHighAddress(state,base);
        #ifdef VB 
@@ -3663,6 +4301,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                                            0,
                                            getWidthForLLVMType(ci->getType()));
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForExtract(state, getLocal(state, ki, 0), ki, 0, getWidthForLLVMType(ci->getType()));
+    #endif
     break;
   }
   case Instruction::ZExt: {
@@ -3670,6 +4311,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> result = ZExtExpr::create(eval(ki, 0, state).value,
                                         getWidthForLLVMType(ci->getType()));
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForExt(state, getLocal(state, ki, 0), ki);
+    #endif
     break;
   }
   case Instruction::SExt: {
@@ -3677,6 +4321,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> result = SExtExpr::create(eval(ki, 0, state).value,
                                         getWidthForLLVMType(ci->getType()));
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForExt(state, getLocal(state, ki, 0), ki);
+    #endif
     break;
   }
 
@@ -3685,6 +4332,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Expr::Width pType = getWidthForLLVMType(ci->getType());
     ref<Expr> arg = eval(ki, 0, state).value;
     bindLocal(ki, state, ZExtExpr::create(arg, pType));
+    #ifdef INFOFLOW
+    updateInfoFlowForExt(state, getLocal(state, ki, 0), ki);
+    #endif
     break;
   }
   case Instruction::PtrToInt: {
@@ -3692,22 +4342,27 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Expr::Width iType = getWidthForLLVMType(ci->getType());
     ref<Expr> arg = eval(ki, 0, state).value;
     bindLocal(ki, state, ZExtExpr::create(arg, iType));
+    #ifdef INFOFLOW
+    updateInfoFlowForExt(state, getLocal(state, ki, 0), ki);
+    #endif
     break;
   }
 
   case Instruction::BitCast: {
     DataLayout *TD = kmodule->targetData;
-    llvm::errs() << (*ki->inst) << "\n"; 
-    llvm::errs() << "bitcast to " << getTypeName(ki->inst->getType()) << " size: " << TD->getTypeAllocSize(ki->inst->getType()) << "\n";
+    //llvm::errs() << (*ki->inst) << "\n"; 
+    //llvm::errs() << "bitcast to " << getTypeName(ki->inst->getType()) << " size: " << TD->getTypeAllocSize(ki->inst->getType()) << "\n";
     if (((llvm::CastInst*)ki->inst)->getSrcTy()->isPointerTy()) {
        Type *st = ((llvm::CastInst*)ki->inst)->getSrcTy()->getPointerElementType();
        if (st->isPointerTy())
           st = st->getPointerElementType();
-       llvm::errs() << "source type base element size: " << TD->getTypeAllocSize(st) << "\n";
+       //llvm::errs() << "source type base element size: " << TD->getTypeAllocSize(st) << "\n";
     }
     ref<Expr> result = eval(ki, 0, state).value;
     bindLocal(ki, state, result);
-
+    #ifdef INFOFLOW
+    updateInfoFlowForExt(state, getLocal(state, ki, 0), ki);
+    #endif
     /* SYSREL EXTENSION */
    if (lazyInit) {
     #ifdef VB
@@ -3723,9 +4378,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
              std::string tname = getTypeName(t);
              state.typeToAddr[t] = result;
 
-             //#ifdef VB
+             #ifdef VB
              llvm::errs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
-             //#endif
+             #endif
           }
        }
     }
@@ -4033,6 +4688,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     ref<Expr> result = ExtractExpr::create(agg, kgepi->offset*8, getWidthForLLVMType(i->getType()));
 
     bindLocal(ki, state, result);
+    #ifdef INFOFLOW
+    updateInfoFlowForExtract(state, getLocal(state, ki, 0), ki, kgepi->offset*8, getWidthForLLVMType(i->getType()));
+    #endif
     break;
   }
   case Instruction::Fence: {
@@ -4104,6 +4762,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     unsigned bitOffset = EltBits * iIdx;
     ref<Expr> Result = ExtractExpr::create(vec, bitOffset, EltBits);
     bindLocal(ki, state, Result);
+    #ifdef INFOFLOW
+    updateInfoFlowForExtract(state, getLocal(state, ki, 0), ki, bitOffset, EltBits);
+    #endif
     break;
   }
   case Instruction::ShuffleVector:
@@ -4319,6 +4980,9 @@ void Executor::run(ExecutionState &initialState) {
       lastState = it->first;
       unsigned numSeeds = it->second.size();
       ExecutionState &state = *lastState;
+      #ifdef INFOFLOW
+      updateCurrentInfoFlowContext(state);
+      #endif
       KInstruction *ki = state.pc;
       stepInstruction(state);
       /* SYSREL extension */
@@ -4383,10 +5047,13 @@ void Executor::run(ExecutionState &initialState) {
   searcher->update(0, newStates, std::vector<ExecutionState *>());
   /* SYSREL side channel begin */
   bool isbranch = false;
+   ExecutionState *lastState = NULL;
   /* SYSREL side channel end */
   while (!states.empty() && !haltExecution) {
+    if (lastState)
+       saveInfoFlowContext(*lastState);
     ExecutionState &state = searcher->selectState();
-
+    lastState = &state;
      /* Side channel begin */
      #ifdef VBSC
       std::cerr << "Number of states=" << states.size() << "\n";
@@ -5866,7 +6533,7 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
        executeMakeSymbolic(state, mo, mo->name, allocType, true);
     }
     if (allocType == retType)
-       executeMemoryOperation(state, false, laddr, 0, target);
+       executeMemoryOperation(state, -2, -2, false, laddr, 0, target);
     else
        bindLocal(target, state, laddr);
 
@@ -6169,8 +6836,26 @@ void Executor::resolveExact(ExecutionState &state,
 }
 
 /* SYSREL EXTENSION */
+
+int getLocalIndex(ExecutionState &state, KInstruction *ki, int index) {
+
+  int vnumber = ki->operands[index];
+
+  assert(vnumber != -1 &&
+         "Invalid operand to eval(), not a value or constant!");
+
+  // Determine if this is a constant or not.
+  if (vnumber < 0) {
+    return -1;
+  } else {
+    return vnumber;
+  }
+}
+
 // return true if abort
 bool Executor::executeMemoryOperation(ExecutionState &state,
+                                      int regIndex,
+                                      int destregIndex,
                                       bool isWrite,
                                       ref<Expr> address,
                                       ref<Expr> value /* undef if read */,
@@ -6310,12 +6995,24 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                 }
              }*/
              wos->write(offset, value);
+
+            #ifdef INFOFLOW
+            // info flow write case 1
+            updateInfoFlowForStore(state, regIndex, destregIndex, mo, target, offset, type);
+            #endif
+
           #ifdef VB
           llvm::outs() << "just wrote:\n";
           #endif
         }
       } else {
         ref<Expr> result = os->read(offset, type);
+
+        #ifdef INFOFLOW
+        // info flow load case 1
+        updateInfoFlowForLoad(state, regIndex, destregIndex, mo, target, offset, type);  
+        #endif
+
 
         if (interpreterOpts.MakeConcreteSymbolic)
           result = replaceReadWithSymbolic(state, result);
@@ -6324,9 +7021,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            //#ifdef VB
+            #ifdef VB
             llvm::errs() << "load orig result: " << result << "\n";
-            //#endif
+            #endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -6338,10 +7035,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               //#ifdef VB 
+               #ifdef VB 
                llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               //#endif
+               #endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -6352,17 +7049,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 //#ifdef VB
+                 #ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
-                 //#endif
+                 #endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
-                  //#endif
+                  #endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -6372,19 +7069,21 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (abort) {
                      return true;
                   }
-                  ////#ifdef VB
+                  
+
+                  #ifdef VB
                   llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
-                  ////#endif
+                  #endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
                   } 
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
-                  //#endif
+                  #endif
                   forcedOffset = true;
-                  executeMemoryOperation(state, true, address, laddr, 0);
+                  executeMemoryOperation(state, -2, -2, true, address, laddr, 0);
                   forcedOffset = false;
                   result = laddr;
                   /* side channel */
@@ -6428,6 +7127,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                      #endif
                   }
 
+
                   /* side channel */
               }
             }
@@ -6441,6 +7141,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         #endif
 
         bindLocal(target, state, result);
+
 
        #ifdef VB
        llvm::errs() << " load result: " << result << "\n";
@@ -6504,8 +7205,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
           ObjectState *wos = bound->addressSpace.getWriteable(mo, os);
           if (forcedOffset)
              wos->write(ConstantExpr::alloc(0, Expr::Int64), value);
-          else
+          else {
              wos->write(mo->getOffsetExpr(address), value);
+             #ifdef INFOFLOW
+             // info flow write case 2
+             ref<Expr> oe = mo->getOffsetExpr(address);
+             updateInfoFlowForStore(*bound, regIndex, destregIndex, mo, target, oe, type);
+             #endif
+          }
           #ifdef VB
           llvm::outs() << "just wrote:\n";
           #endif
@@ -6515,8 +7222,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         //llvm::errs() << "on an error path in executeMem, going to read!\n";
         if (forcedOffset)
            result = os->read(ConstantExpr::alloc(0, Expr::Int64), type);
-        else
+        else {
            result = os->read(mo->getOffsetExpr(address), type);
+           #ifdef INFOFLOW
+           // info flow load case 2
+           ref<Expr> oe = mo->getOffsetExpr(address);
+           updateInfoFlowForLoad(*bound, regIndex, destregIndex, mo, target, oe, type); 
+           #endif 
+        }
         bindLocal(target, *bound, result);
         #ifdef VB
         llvm::outs() << " load result: " << result << "\n";
@@ -6945,6 +7658,11 @@ void Executor::runFunctionAsMain(Function *f,
         ff=f;
         fset = true;
   }
+  #ifdef INFOFLOW
+    infoFlowSummarizedFunc = moduleHandle->getFunction(infoFlowSummarizedFuncName);
+    if (!infoFlowSummarizedFunc) 
+       assert(false && "info flow summary cannot be computed for an unexisting function!");
+  #endif
   /* SYSREL side channel end */
   assert(kf);
   Function::arg_iterator ai = f->arg_begin(), ae = f->arg_end();
@@ -6976,7 +7694,9 @@ void Executor::runFunctionAsMain(Function *f,
  }
 
   ExecutionState *state = new ExecutionState(kmodule->functionMap[f]);
-
+  #ifdef INFOFLOW
+  initInfoFlowContext(*state);
+  #endif
   if (pathWriter)
     state->pathOS = pathWriter->open();
   if (symPathWriter)
