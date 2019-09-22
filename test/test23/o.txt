@@ -1,0 +1,207 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test23/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=758
+Couldn't open file 
+Using cache line mode (as default)!
+recording arg 0 and the register 0 as info flow relevant in foo
+recording arg 1 and the register 1 as info flow relevant in foo
+recording arg 2 and the register 2 as info flow relevant in foo
+recording arg 3 and the register 3 as info flow relevant in foo
+lazy init arg foo_arg_0_0
+arg 1 type i32 count=32
+Symbolizing arg 1 of foo, address 67521152 size=128
+is arg 1 type i32* single instance? 0
+to be made symbolic? 1
+lazy init arg foo_arg_2_0
+arg 3 type i32 count=32
+Symbolizing arg 3 of foo, address 67521408 size=128
+is arg 3 type i32* single instance? 0
+to be made symbolic? 1
+High symbolic regions:
+Low symbolic regions:
+Registering publicOutputReturningFName as foo
+clearing return_value from high
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %2 = alloca i32*, align 8
+next instruction:   %3 = alloca i32, align 4
+next instruction:   %4 = alloca i32*, align 8
+next instruction:   %E = alloca i32*, align 8
+next instruction:   store i32 %A, i32* %1, align 4
+reached foo
+case 1: 0x4022720
+Info Flow For STORE register=0
+Adding info flow relevant source in STORE: 0x3f56030
+info flow source =0 regions:
+[0:32]
+setting target region 0:32to:
+info flow source =0 regions:
+[0:32]
+next instruction:   store i32* %B, i32** %2, align 8
+case 1: 0x40258d0
+Info Flow For STORE register=1
+Adding info flow relevant source in STORE: 0x3f560a0
+info flow source =1 regions:
+[0:64]
+setting target region 0:64to:
+info flow source =1 regions:
+[0:64]
+next instruction:   store i32 %C, i32* %3, align 4
+case 1: 0x4025870
+Info Flow For STORE register=2
+Adding info flow relevant source in STORE: 0x3f56110
+info flow source =2 regions:
+[0:32]
+setting target region 0:32to:
+info flow source =2 regions:
+[0:32]
+next instruction:   store i32* %D, i32** %4, align 8
+case 1: 0x4024ca0
+Info Flow For STORE register=3
+Adding info flow relevant source in STORE: 0x3f56180
+info flow source =3 regions:
+[0:64]
+setting target region 0:64to:
+info flow source =3 regions:
+[0:64]
+next instruction:   %5 = load i32, i32* %1, align 4, !dbg !119
+Info Flow For LOAD register=4
+Transferring info in LOAD: 0x3f949d8
+setting target region 0:32to:
+info flow source =0 regions:
+[0:32]
+next instruction:   %6 = load i32, i32* %3, align 4, !dbg !121
+Info Flow For LOAD register=6
+Transferring info in LOAD: 0x3f94978
+setting target region 0:32to:
+info flow source =2 regions:
+[0:32]
+next instruction:   %7 = add nsw i32 %5, %6, !dbg !122
+setting target region 0:32to:
+info flow source =0 regions:
+[0:32]
+exact match, expanding info flow:
+info flow source =2 regions:
+[0:32]
+into:
+info flow source =2 regions:
+[0:32][0:32]
+next instruction:   %8 = icmp sgt i32 %7, 0, !dbg !123
+next instruction:   br i1 %8, label %9, label %11, !dbg !124
+next instruction:   %10 = load i32*, i32** %2, align 8, !dbg !125
+Info Flow For LOAD register=5
+Transferring info in LOAD: 0x3f94918
+setting target region 0:64to:
+info flow source =1 regions:
+[0:64]
+next instruction:   %12 = load i32*, i32** %4, align 8, !dbg !128
+Info Flow For LOAD register=7
+Transferring info in LOAD: 0x3f94858
+setting target region 0:64to:
+info flow source =3 regions:
+[0:64]
+next instruction:   store i32* %10, i32** %E, align 8, !dbg !126
+case 1: 0x4022690
+Info Flow For STORE register=18
+setting target region 0:64to:
+info flow source =1 regions:
+[0:64]
+next instruction:   br label %13, !dbg !127
+next instruction:   store i32* %12, i32** %E, align 8, !dbg !129
+case 1: 0x4022420
+Info Flow For STORE register=21
+exact match, setting region 0:64to:
+info flow source =3 regions:
+[0:64]
+next instruction:   %14 = load i32, i32* %1, align 4, !dbg !130
+Info Flow For LOAD register=4
+Transferring info in LOAD: 0x3f94378
+setting target region 0:32to:
+info flow source =0 regions:
+[0:32]
+next instruction:   %15 = load i32*, i32** %E, align 8, !dbg !131
+Info Flow For LOAD register=8
+Transferring info in LOAD: 0x3f94318
+setting target region 0:64to:
+info flow source =3 regions:
+[0:64]
+next instruction:   br label %13
+next instruction:   %14 = load i32, i32* %1, align 4, !dbg !130
+Info Flow For LOAD register=4
+Transferring info in LOAD: 0x3f94378
+exact match, setting region 0:32to:
+info flow source =0 regions:
+[0:32]
+next instruction:   %15 = load i32*, i32** %E, align 8, !dbg !131
+Info Flow For LOAD register=8
+Transferring info in LOAD: 0x3f94318
+exact match, setting region 0:64to:
+info flow source =3 regions:
+[0:64]
+next instruction:   store i32 %14, i32* %15, align 4, !dbg !132
+case 1: 0x40255a0
+Info Flow For STORE register=24
+Adding info flow relevant destination from register in STORE: 0x3f563b0
+info flow source =3 regions:
+[0:64]
+setting target region 0:32to:
+info flow source =0 regions:
+[0:32]
+next instruction:   %16 = load i32, i32* %3, align 4, !dbg !133
+Info Flow For LOAD register=6
+Transferring info in LOAD: 0x3f94a98
+setting target region 0:32to:
+info flow source =2 regions:
+[0:32]
+next instruction:   ret i32 %16, !dbg !134
+state :0x402a500 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 8locals 
+checking done
+next instruction:   store i32 %14, i32* %15, align 4, !dbg !132
+case 1: 0x40255a0
+Info Flow For STORE register=24
+Adding info flow relevant destination from register in STORE: 0x3f563b0
+info flow source =3 regions:
+[0:64]
+setting target region 0:32to:
+info flow source =0 regions:
+[0:32]
+next instruction:   %16 = load i32, i32* %3, align 4, !dbg !133
+Info Flow For LOAD register=6
+Transferring info in LOAD: 0x3f94a98
+exact match, setting region 0:32to:
+info flow source =2 regions:
+[0:32]
+next instruction:   ret i32 %16, !dbg !134
+state :0x402a000 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 8locals 
+checking done
+Size of rdmap : 3
+
+
+
+
+>>>> Listing violations :  
+
+>>>> Found violations at  : 0 locations.
+all high sym regions: 
+all low sym regions: 
+return_value
+offset=0, size=32
+ Code loc with leaks:
+
+KLEE: done: #Timing Side Channel  Locs = 0
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 21
+KLEE: done: maxInst = 22
+KLEE: done: HAncestors = 0
+KLEE: done: HLeaksOnStack = 0
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 30
+KLEE: done: completed paths = 2
+KLEE: done: generated tests = 2
+Lazy initialization is ON 
+lazy single spec file? 

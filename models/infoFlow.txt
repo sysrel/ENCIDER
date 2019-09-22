@@ -29,6 +29,7 @@ _mm_and_ps,0,128,UNION(arg0,0,128,arg1,0,128)
 _mm_and_si64,0,64,UNION(arg0,0,64,arg1,0,64)
 _mm_andnot_ps,0,128,UNION(arg0,0,128,arg1,0,128)
 _mm_andnot_si64,0,64,UNION(arg0,0,64,arg1,0,64)
+_mm_castsi128_pd,0,128,arg0,0,128
 _mm_cmpeq_pi8,0,64,UNION(arg0,0,64,arg1,0,64)
 _mm_cmpeq_pi16,0,64,UNION(arg0,0,64,arg1,0,64)
 _mm_cmpeq_pi32,0,64,UNION(arg0,0,64,arg1,0,64)
@@ -105,6 +106,8 @@ _mm_div_ps,0,128,UNION(arg0,0,128,arg1,0,128)
 _mm_div_ss,0,32,arg0,0,32,arg1,0,32
 _mm_div_ss,32,96,arg0,32,96
 _mm_empty,0,0,NONE
+// the region refers to *arg0
+_mm_loadu_si128,0,128,arg0,0,128
 _mm_madd_pi16,0,64,UNION(arg0,0,64,arg1,0,64)
 _mm_max_ps,0,128,UNION(arg0,0,128,arg1,0,128)
 _mm_max_ss,0,32,UNION(arg0,0,32,arg1,0,32)
@@ -238,3 +241,22 @@ _mm_unpackhi_pi32,32,32,arg1,32,32
 _mm_xor_ps,0,128,arg0,0,128
 _mm_xor_si64,0,128,UNION(arg0,0,128,arg1,0,128)
 _mm_xor_si128,0,128,UNION(arg0,0,128,arg1,0,128)
+mock_aesni_aesdec,0,128,UNION(arg0,0,128,arg1,0,128)
+mock_aesni_aesdeclast,0,128,UNION(arg0,0,128,arg1,0,128)
+mock_aesni_aesenc,0,128,UNION(arg0,0,128,arg1,0,128)
+mock_aesni_aesenclast,0,128,UNION(arg0,0,128,arg1,0,128)
+mock_aesni_aeskeygenassist,0,32,arg0,32,32
+mock_aesni_aeskeygenassist,32,32,UNION(arg0,32,32,arg1,0,32)
+mock_aesni_aeskeygenassist,64,32,arg0,96,32
+mock_aesni_aeskeygenassist,96,32,UNION(arg0,96,32,arg1,0,32)
+mock_aesni_aesimc,0,128,arg0,0,128
+mock_avx_blendv.pd.256,0,256,UNION(arg0,0,256,arg1,0,256)
+// under-approximating
+mock_avx_movmsk.pd.256,0,128,NONE
+mock_avx_vtestz.pd.256,0,32,NONE
+mock_pclmulqdq,0,128,UNION(arg0,0,128,arg1,0,128)
+mock_rdrand_64,0,32,NONE
+// over-approximating
+mock_sse2_pslli.q,0,64,arg0,0,64
+mock_sse2_psrli.q,0,64,arg0,0,64
+mock_ssse3_pshuf.b.128,0,128,arg0,0,128

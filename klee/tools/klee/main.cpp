@@ -2358,11 +2358,15 @@ int main(int argc, char **argv, char **envp) {
 
   if (InfoFlowSummaryMode) {
      infoFlowSummaryMode = true;
-     if (InfoFlowSummaryEntry != "")
-        infoFlowSummarizedFuncName = InfoFlowSummaryEntry;
-     else infoFlowSummarizedFuncName = entryFunctionName;
-     
   }
+
+  if (InfoFlowSummaryEntry != "") {
+     infoFlowSummarizedFuncName = InfoFlowSummaryEntry;
+     infoFlowSummaryMode = true;
+  }
+  else if (InfoFlowSummaryMode) 
+     infoFlowSummarizedFuncName = entryFunctionName;     
+
 
   if (InfoFlowModels != "") {
      readInfoFlowModels(InfoFlowModels.c_str());

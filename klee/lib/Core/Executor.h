@@ -332,6 +332,13 @@ public:
                                     ExecutionState &state);
 
   /* INFO FLOW */
+  void recordArgRegisters(llvm::Function *f) ;
+
+  void updateInfoFlowForGeptr(ExecutionState &state,
+                                       int regIndex, 
+                               KInstruction *target,
+                                         int offset); 
+
   void updateInfoFlowForLoad(ExecutionState &state, 
                                     int regIndex, 
                                 int destregIndex, 
