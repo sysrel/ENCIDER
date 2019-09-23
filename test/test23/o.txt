@@ -1,21 +1,27 @@
 KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test23/klee-out-0"
 KLEE: Using STP solver backend
-Uncov init=758
+Uncov init=768
 Couldn't open file 
 Using cache line mode (as default)!
+init info flow context for 0x41ce000
 recording arg 0 and the register 0 as info flow relevant in foo
 recording arg 1 and the register 1 as info flow relevant in foo
 recording arg 2 and the register 2 as info flow relevant in foo
 recording arg 3 and the register 3 as info flow relevant in foo
+recording arg 4 and the register 4 as info flow relevant in foo
 lazy init arg foo_arg_0_0
 arg 1 type i32 count=32
-Symbolizing arg 1 of foo, address 67521152 size=128
+Symbolizing arg 1 of foo, address 69372800 size=128
 is arg 1 type i32* single instance? 0
 to be made symbolic? 1
 lazy init arg foo_arg_2_0
 arg 3 type i32 count=32
-Symbolizing arg 3 of foo, address 67521408 size=128
+Symbolizing arg 3 of foo, address 69373056 size=128
 is arg 3 type i32* single instance? 0
+to be made symbolic? 1
+arg 4 type i32 count=32
+Symbolizing arg 4 of foo, address 69373312 size=128
+is arg 4 type i32* single instance? 0
 to be made symbolic? 1
 High symbolic regions:
 Low symbolic regions:
@@ -25,158 +31,226 @@ next instruction:   %1 = alloca i32, align 4
 next instruction:   %2 = alloca i32*, align 8
 next instruction:   %3 = alloca i32, align 4
 next instruction:   %4 = alloca i32*, align 8
+next instruction:   %5 = alloca i32*, align 8
 next instruction:   %E = alloca i32*, align 8
+next instruction:   %F = alloca i32*, align 8
 next instruction:   store i32 %A, i32* %1, align 4
 reached foo
-case 1: 0x4022720
+case 1: 0x41c5de0
 Info Flow For STORE register=0
-Adding info flow relevant source in STORE: 0x3f56030
-info flow source =0 regions:
-[0:32]
+Adding info flow relevant source in STORE: 0x40f6030
+{0,[0:32]}
 setting target region 0:32to:
-info flow source =0 regions:
-[0:32]
+{0,[0:32]}
 next instruction:   store i32* %B, i32** %2, align 8
-case 1: 0x40258d0
+case 1: 0x41c5d80
 Info Flow For STORE register=1
-Adding info flow relevant source in STORE: 0x3f560a0
-info flow source =1 regions:
-[0:64]
+Adding info flow relevant source in STORE: 0x40f60a0
+{1,[0:64]}
 setting target region 0:64to:
-info flow source =1 regions:
-[0:64]
+{1,[0:64]}
 next instruction:   store i32 %C, i32* %3, align 4
-case 1: 0x4025870
+case 1: 0x41c5b70
 Info Flow For STORE register=2
-Adding info flow relevant source in STORE: 0x3f56110
-info flow source =2 regions:
-[0:32]
+Adding info flow relevant source in STORE: 0x40f6110
+{2,[0:32]}
 setting target region 0:32to:
-info flow source =2 regions:
-[0:32]
+{2,[0:32]}
 next instruction:   store i32* %D, i32** %4, align 8
-case 1: 0x4024ca0
+case 1: 0x41c5ba0
 Info Flow For STORE register=3
-Adding info flow relevant source in STORE: 0x3f56180
-info flow source =3 regions:
-[0:64]
+Adding info flow relevant source in STORE: 0x40f6180
+{3,[0:64]}
 setting target region 0:64to:
-info flow source =3 regions:
-[0:64]
-next instruction:   %5 = load i32, i32* %1, align 4, !dbg !119
-Info Flow For LOAD register=4
-Transferring info in LOAD: 0x3f949d8
-setting target region 0:32to:
-info flow source =0 regions:
-[0:32]
-next instruction:   %6 = load i32, i32* %3, align 4, !dbg !121
-Info Flow For LOAD register=6
-Transferring info in LOAD: 0x3f94978
-setting target region 0:32to:
-info flow source =2 regions:
-[0:32]
-next instruction:   %7 = add nsw i32 %5, %6, !dbg !122
-setting target region 0:32to:
-info flow source =0 regions:
-[0:32]
-exact match, expanding info flow:
-info flow source =2 regions:
-[0:32]
-into:
-info flow source =2 regions:
-[0:32][0:32]
-next instruction:   %8 = icmp sgt i32 %7, 0, !dbg !123
-next instruction:   br i1 %8, label %9, label %11, !dbg !124
-next instruction:   %10 = load i32*, i32** %2, align 8, !dbg !125
+{3,[0:64]}
+next instruction:   store i32* %G, i32** %5, align 8
+case 1: 0x41c5bd0
+Info Flow For STORE register=4
+Adding info flow relevant source in STORE: 0x40f61f0
+{4,[0:64]}
+setting target region 0:64to:
+{4,[0:64]}
+next instruction:   %6 = load i32*, i32** %5, align 8, !dbg !119
+Info Flow For LOAD register=9
+Transferring info in LOAD: 0x4134918
+setting target region 0:64to:
+{4,[0:64]}
+next instruction:   store i32* %6, i32** %F, align 8, !dbg !120
+case 1: 0x41c4a90
+Info Flow For STORE register=17
+setting target region 0:64to:
+{4,[0:64]}
+next instruction:   %7 = load i32, i32* %1, align 4, !dbg !121
 Info Flow For LOAD register=5
-Transferring info in LOAD: 0x3f94918
-setting target region 0:64to:
-info flow source =1 regions:
-[0:64]
-next instruction:   %12 = load i32*, i32** %4, align 8, !dbg !128
+Transferring info in LOAD: 0x41348b8
+setting target region 0:32to:
+{0,[0:32]}
+next instruction:   %8 = load i32, i32* %3, align 4, !dbg !123
 Info Flow For LOAD register=7
-Transferring info in LOAD: 0x3f94858
+Transferring info in LOAD: 0x4134858
+setting target region 0:32to:
+{2,[0:32]}
+next instruction:   %9 = add nsw i32 %7, %8, !dbg !124
+setting target region 0:32to:
+{0,[0:32]}
+exact match, expanding info flow:
+{2,[0:32]}
+into:
+{0,[0:32]
+2,[0:32]
+}
+next instruction:   %10 = icmp sgt i32 %9, 0, !dbg !125
+next instruction:   br i1 %10, label %11, label %15, !dbg !126
+cloning info flow context from 0x41ce000 to 0x41ce500
+next instruction:   %12 = load i32*, i32** %2, align 8, !dbg !127
+Info Flow For LOAD register=6
+Transferring info in LOAD: 0x41343d8
 setting target region 0:64to:
-info flow source =3 regions:
-[0:64]
-next instruction:   store i32* %10, i32** %E, align 8, !dbg !126
-case 1: 0x4022690
-Info Flow For STORE register=18
-setting target region 0:64to:
-info flow source =1 regions:
-[0:64]
-next instruction:   br label %13, !dbg !127
+{1,[0:64]}
 next instruction:   store i32* %12, i32** %E, align 8, !dbg !129
-case 1: 0x4022420
-Info Flow For STORE register=21
-exact match, setting region 0:64to:
-info flow source =3 regions:
-[0:64]
-next instruction:   %14 = load i32, i32* %1, align 4, !dbg !130
-Info Flow For LOAD register=4
-Transferring info in LOAD: 0x3f94378
-setting target region 0:32to:
-info flow source =0 regions:
-[0:32]
-next instruction:   %15 = load i32*, i32** %E, align 8, !dbg !131
-Info Flow For LOAD register=8
-Transferring info in LOAD: 0x3f94318
+case 1: 0x41c2540
+Info Flow For STORE register=24
 setting target region 0:64to:
-info flow source =3 regions:
-[0:64]
-next instruction:   br label %13
-next instruction:   %14 = load i32, i32* %1, align 4, !dbg !130
-Info Flow For LOAD register=4
-Transferring info in LOAD: 0x3f94378
-exact match, setting region 0:32to:
-info flow source =0 regions:
-[0:32]
-next instruction:   %15 = load i32*, i32** %E, align 8, !dbg !131
+{1,[0:64]}
+saving info flow context for 0x41ce000
+switching to state 0x41ce500
+next instruction:   %16 = load i32*, i32** %4, align 8, !dbg !134
 Info Flow For LOAD register=8
-Transferring info in LOAD: 0x3f94318
-exact match, setting region 0:64to:
-info flow source =3 regions:
-[0:64]
-next instruction:   store i32 %14, i32* %15, align 4, !dbg !132
-case 1: 0x40255a0
-Info Flow For STORE register=24
-Adding info flow relevant destination from register in STORE: 0x3f563b0
-info flow source =3 regions:
-[0:64]
+Transferring info in LOAD: 0x4134af8
+setting target region 0:64to:
+{3,[0:64]}
+saving info flow context for 0x41ce500
+switching to state 0x41ce000
+next instruction:   %13 = load i32, i32* %3, align 4, !dbg !130
+Info Flow For LOAD register=7
+Transferring info in LOAD: 0x4134378
 setting target region 0:32to:
-info flow source =0 regions:
-[0:32]
-next instruction:   %16 = load i32, i32* %3, align 4, !dbg !133
-Info Flow For LOAD register=6
-Transferring info in LOAD: 0x3f94a98
+{2,[0:32]}
+next instruction:   %14 = load i32*, i32** %5, align 8, !dbg !131
+Info Flow For LOAD register=9
+Transferring info in LOAD: 0x4134318
+setting target region 0:64to:
+{4,[0:64]}
+saving info flow context for 0x41ce000
+switching to state 0x41ce500
+next instruction:   store i32* %16, i32** %E, align 8, !dbg !136
+case 1: 0x41c4940
+Info Flow For STORE register=30
+setting target region 0:64to:
+{3,[0:64]}
+next instruction:   br label %17
+next instruction:   %18 = load i32, i32* %1, align 4, !dbg !137
+Info Flow For LOAD register=5
+Transferring info in LOAD: 0x4134bb8
 setting target region 0:32to:
-info flow source =2 regions:
-[0:32]
-next instruction:   ret i32 %16, !dbg !134
-state :0x402a500 checking foo to see if an input function
+{0,[0:32]}
+next instruction:   %19 = load i32*, i32** %E, align 8, !dbg !138
+Info Flow For LOAD register=10
+Transferring info in LOAD: 0x4134c18
+setting target region 0:64to:
+{3,[0:64]}
+next instruction:   store i32 %18, i32* %19, align 4, !dbg !139
+case 1: 0x41c3c50
+Info Flow For STORE register=33
+Adding info flow relevant destination from register in STORE: 0x40f6500
+{3,[0:64][0:32]}
+setting target region 0:32to:
+{0,[0:32]}
+RECORDING info flow to destination=3
+{0,[0:32]}
+===>
+3,[0:64][0:32]
+next instruction:   %20 = load i32*, i32** %F, align 8, !dbg !140
+Info Flow For LOAD register=11
+Transferring info in LOAD: 0x4134c78
+setting target region 0:64to:
+{4,[0:64]}
+saving info flow context for 0x41ce500
+switching to state 0x41ce000
+next instruction:   store i32 %13, i32* %14, align 4, !dbg !132
+case 1: 0x41c47f0
+Info Flow For STORE register=26
+Adding info flow relevant destination from register in STORE: 0x40f6420
+{4,[0:64][0:32]}
+setting target region 0:32to:
+{2,[0:32]}
+RECORDING info flow to destination=4
+{2,[0:32]}
+===>
+4,[0:64][0:32]
+saving info flow context for 0x41ce000
+switching to state 0x41ce500
+next instruction:   store i32 0, i32* %20, align 4, !dbg !141
+case 1: 0x41c3f80
+Info Flow For STORE register=-3
+Adding info flow relevant destination from register in STORE: 0x40f6570
+{4,[0:64][0:32]}
+CLEARING INFO FLOW
+next instruction:   %21 = load i32, i32* %3, align 4, !dbg !142
+Info Flow For LOAD register=7
+Transferring info in LOAD: 0x4134cd8
+setting target region 0:32to:
+{2,[0:32]}
+next instruction:   ret i32 %21, !dbg !143
+state :0x41ce500 checking foo to see if an input function
 terminating state with foo
-checking leak in foo with 8locals 
+checking leak in foo with 10locals 
 checking done
-next instruction:   store i32 %14, i32* %15, align 4, !dbg !132
-case 1: 0x40255a0
-Info Flow For STORE register=24
-Adding info flow relevant destination from register in STORE: 0x3f563b0
-info flow source =3 regions:
-[0:64]
+Info Flow for RETURN
+RECORDING info flow to destination=5
+{2,[0:32]}
+===>
+5,[0:32]
+saving info flow context for 0x41ce500
+switching to state 0x41ce000
+next instruction:   br label %17, !dbg !133
+next instruction:   %18 = load i32, i32* %1, align 4, !dbg !137
+Info Flow For LOAD register=5
+Transferring info in LOAD: 0x4134bb8
 setting target region 0:32to:
-info flow source =0 regions:
-[0:32]
-next instruction:   %16 = load i32, i32* %3, align 4, !dbg !133
-Info Flow For LOAD register=6
-Transferring info in LOAD: 0x3f94a98
-exact match, setting region 0:32to:
-info flow source =2 regions:
-[0:32]
-next instruction:   ret i32 %16, !dbg !134
-state :0x402a000 checking foo to see if an input function
+{0,[0:32]}
+next instruction:   %19 = load i32*, i32** %E, align 8, !dbg !138
+Info Flow For LOAD register=10
+Transferring info in LOAD: 0x4134c18
+setting target region 0:64to:
+{1,[0:64]}
+next instruction:   store i32 %18, i32* %19, align 4, !dbg !139
+case 1: 0x41c3c50
+Info Flow For STORE register=33
+Adding info flow relevant destination from register in STORE: 0x40f6500
+{1,[0:64][0:32]}
+setting target region 0:32to:
+{0,[0:32]}
+RECORDING info flow to destination=1
+{0,[0:32]}
+===>
+1,[0:64][0:32]
+next instruction:   %20 = load i32*, i32** %F, align 8, !dbg !140
+Info Flow For LOAD register=11
+Transferring info in LOAD: 0x4134c78
+setting target region 0:64to:
+{4,[0:64]}
+next instruction:   store i32 0, i32* %20, align 4, !dbg !141
+case 1: 0x41c3f80
+Info Flow For STORE register=-3
+Adding info flow relevant destination from register in STORE: 0x40f6570
+{4,[0:64][0:32]}
+CLEARING INFO FLOW
+next instruction:   %21 = load i32, i32* %3, align 4, !dbg !142
+Info Flow For LOAD register=7
+Transferring info in LOAD: 0x4134cd8
+setting target region 0:32to:
+{2,[0:32]}
+next instruction:   ret i32 %21, !dbg !143
+state :0x41ce000 checking foo to see if an input function
 terminating state with foo
-checking leak in foo with 8locals 
+checking leak in foo with 10locals 
 checking done
+Info Flow for RETURN
+RECORDING info flow to destination=5
+{2,[0:32]}
+===>
+5,[0:32]
 Size of rdmap : 3
 
 
@@ -185,6 +259,19 @@ Size of rdmap : 3
 >>>> Listing violations :  
 
 >>>> Found violations at  : 0 locations.
+Info Flow Summary for function foo
+{0,[0:32]}
+	===>
+1,[0:64][0:32]
+
+{0,[0:32]}
+	===>
+3,[0:64][0:32]
+
+{2,[0:32]}
+	===>
+5,[0:32]
+
 all high sym regions: 
 all low sym regions: 
 return_value
@@ -193,14 +280,14 @@ offset=0, size=32
 
 KLEE: done: #Timing Side Channel  Locs = 0
 KLEE: done: #Cache Side Channel  Locs = 0
-KLEE: done: minInst = 21
-KLEE: done: maxInst = 22
+KLEE: done: minInst = 28
+KLEE: done: maxInst = 32
 KLEE: done: HAncestors = 0
 KLEE: done: HLeaksOnStack = 0
 KLEE: done: HLMixedConstraints = 0
 KLEE: done: HVars= 0
 KLEE: done: LVars= 0
-KLEE: done: total instructions = 30
+KLEE: done: total instructions = 42
 KLEE: done: completed paths = 2
 KLEE: done: generated tests = 2
 Lazy initialization is ON 
