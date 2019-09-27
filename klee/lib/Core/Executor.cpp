@@ -189,10 +189,8 @@ Function *infoFlowSummarizedFunc = NULL;
 #ifdef INFOFLOW
 // InfoFlowSummarization
 struct infoflowdata {
-  std::map<unsigned int, const MemoryObject*> regMap;
-  std::map<unsigned int, const MemoryObject*> argMap;
-  std::set<unsigned int> pointerRegs;
-  std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > > localIFlow;
+  std::map<unsigned int, const MemoryObject*> *regMap;
+  std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > > *localIFlow;
 };
 typedef struct infoflowdata infoflowdata_t;
 std::map<ExecutionState*, std::vector<infoflowdata_t>* > infoflowstack;
@@ -308,6 +306,11 @@ bool infoFlowSummaryMode = false;
 #ifdef INFOFLOW
 /* InfoFlowSummarization */
 
+region adjustment(region r1, region r2);
+
+std::set<InfoFlowRegion_t> adjust(std::set<InfoFlowRegion_t> ifrs, region adj);
+
+std::vector<region> diffPartitionRegion(region r1, std::vector<region> rgs);
 
 std::map<region, std::set<InfoFlowRegion_t> > slice(std::map<region, std::set<InfoFlowRegion_t> > ifrmap, region rt);
 
@@ -350,8 +353,9 @@ void dumpInfoFlow() {
   }
 }
 
-bool isPointerReg(int reg) {
-   return (currentInfoFlowContext.pointerRegs.find(reg) !=  currentInfoFlowContext.pointerRegs.end());
+
+bool isLocal(int reg) {
+   return (currentInfoFlowContext.regMap->find(reg) != currentInfoFlowContext.regMap->end());
 }
 
 void Executor::recordArgRegisters(Function *f) {
@@ -381,6 +385,8 @@ int getLocal(ExecutionState &state, KInstruction *ki, int index) {
 
 void initInfoFlowContext(ExecutionState &state) {
    infoflowdata_t initvalue;
+   initvalue.regMap = new std::map<unsigned int, const MemoryObject*>();
+   initvalue.localIFlow = new std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > >();
    std::vector<infoflowdata_t> *ctxstack = new std::vector<infoflowdata_t>();
    currentInfoFlowContext = initvalue;
    ctxstack->push_back(initvalue);
@@ -407,6 +413,8 @@ void pushInfoFlowContext(ExecutionState &state) {
    int last = infoflowstack[&state]->size() - 1;
    (*infoflowstack[&state])[last] = currentInfoFlowContext;
    infoflowdata_t initvalue;
+   initvalue.regMap = new std::map<unsigned int, const MemoryObject*>();
+   initvalue.localIFlow = new std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > >();
    infoflowstack[&state]->push_back(initvalue);
    currentInfoFlowContext = initvalue;
    llvm::errs() << "pushing info flow context for " << &state << "\n";
@@ -429,7 +437,7 @@ bool operator==(region r1, region r2) {
 }
 
 int getRegIndexFor(const MemoryObject *mo) {
-  for(auto me : currentInfoFlowContext.regMap) {
+  for(auto me : (*currentInfoFlowContext.regMap)) {
      if (me.second == mo)
         return me.first;
   }  
@@ -447,6 +455,9 @@ InfoFlowRegion_t createInfoFlowRegion(int source, unsigned int offset, unsigned 
 }
 
 void addLevel(InfoFlowRegion_t &dc, unsigned int offset, unsigned int size) {
+   llvm::errs() << "adding a point of indirection to ";
+   print(dc);
+   llvm::errs() << "\n";
    region r;
    r.offset = offset;
    r.size = size;
@@ -456,9 +467,17 @@ void addLevel(InfoFlowRegion_t &dc, unsigned int offset, unsigned int size) {
 std::set<InfoFlowRegion_t> addLevel(std::set<InfoFlowRegion_t> dcs, unsigned int offset, unsigned int size) {
     std::set<InfoFlowRegion_t> res;
     for(auto dc : dcs) {
-       addLevel(dc, offset, size);
-       res.insert(dc);
+       InfoFlowRegion_t dci;
+       dci.index = dc.index;
+       for(unsigned int i=0; i<dc.regions.size(); i++)
+          dci.regions.push_back(dc.regions[i]);
+       addLevel(dci, offset, size);
+       llvm::errs() << " after addLevel on set: \n";
+       print(dci);
+       llvm::errs() << "\n";
+       res.insert(dci);
     } 
+    print(res);
     return res;
 }
 
@@ -531,7 +550,7 @@ void recordInfoFlow(ExecutionState &state, InfoFlowRegion_t dest, InfoFlowRegion
   llvm::errs() << "\n";
 }
 
-void checkAndMarkPointerRegForLoad(ExecutionState &state, KInstruction *target, int destregIndex) {
+/*void checkAndMarkPointerRegForLoad(ExecutionState &state, KInstruction *target, int destregIndex) {
    bool doublepointer = false;
    llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(target->inst);
    assert(li);
@@ -551,20 +570,24 @@ void checkAndMarkPointerRegForLoad(ExecutionState &state, KInstruction *target, 
 void checkAndMarkPointerRegForStore(ExecutionState &state, KInstruction *target, int destregIndex) {
    bool doublepointer = false;
    llvm::StoreInst *li = dyn_cast<llvm::StoreInst>(target->inst);
-   assert(li);
-   Type *t = li->getPointerOperand()->getType();
-   if (t->isPointerTy()) {
-      t = t->getPointerElementType();
-      if (t->isPointerTy())
+   if (li) {
+      Type *t = li->getPointerOperand()->getType();
+      if (t->isPointerTy()) {
+         t = t->getPointerElementType();
+         if (t->isPointerTy())
             doublepointer = true;
-   }
-   if (doublepointer) {
-      std::set<unsigned int> prs = currentInfoFlowContext.pointerRegs;
-      prs.insert(destregIndex);
-      currentInfoFlowContext.pointerRegs = prs;
-   }
-}
+      }
+      if (doublepointer) {
+         std::set<unsigned int> prs = currentInfoFlowContext.pointerRegs;
+         prs.insert(destregIndex);
+         currentInfoFlowContext.pointerRegs = prs;
+      }
+  }
+}*/
 
+
+/* Information may flow the memory location that is read or 
+   from the information source represented by the address stored on the register that holds the address*/
 void Executor::updateInfoFlowForLoad(ExecutionState &state, 
                                     int regIndex, 
                                 int destregIndex, 
@@ -573,13 +596,13 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
                             ref<Expr> offsetexpr, 
                                    unsigned size) {
    if (!infoFlowSummaryMode) return;
-   checkAndMarkPointerRegForLoad(state, target, destregIndex);
    ConstantExpr *CE = dyn_cast<ConstantExpr>(offsetexpr);
    unsigned offset;
    if (!CE) { 
       // conservative approximation when offset is symbolic
       offset = 0;
       size = mo->size;
+      llvm::errs() << "handling symbolic offset by conservatively using 0 and " << mo->size << "for size\n"; 
    }
    else offset = CE->getZExtValue();
    int sourceIndex = getRegIndexFor(mo);
@@ -599,45 +622,66 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
       if (t->isPointerTy())
             doublepointer = true;
    }
-   llvm::errs() << "Info Flow For LOAD register=" << regIndex << "\n";
-   int source = isInfoFlowRelevant(target, regIndex); 
-   if (source >= 0) {
-      // info flow tracking relevant
-      InfoFlowRegion_t ifr;
-      /*if (doublepointer) {
-         ifr = createInfoFlowRegion(source, 0, offsetexpr->getWidth());
-         addLevel(ifr, offset, size);
-      }    
-      else */
-      ifr = createInfoFlowRegion(source, offset, size);   
-      if (!doublepointer && isPointerReg(regIndex)) 
-         addLevel(ifr, offset, size); 
-      llvm::errs() << "Adding info flow source in LOAD: " << target->inst << "\n";
-      print(ifr);
-      std::set<InfoFlowRegion_t> ifrs;
-      ifrs.insert(ifr);
-      std::map<region, std::set<InfoFlowRegion_t> > ifrmap  = currentInfoFlowContext.localIFlow[target->dest];
-      partitionAndUpdateIFlow(ifrmap, rt, ifrs, true);
-      currentInfoFlowContext.localIFlow[target->dest] = ifrmap;
-   }
-   else {
-      std::map<const MemoryObject*, 
+   llvm::errs() << "Info Flow For LOAD register=" << regIndex << " offset=" << offset << " size=" << size << "\n";
+   std::map<const MemoryObject*, 
                   std::map<region, 
                            std::set<InfoFlowRegion_t> > > memoryIFlow = memoryInfoFlow[&state];
-      if (memoryIFlow.find(mo) != memoryIFlow.end()) {
-         llvm::errs() << "Transferring info in LOAD: " << target->inst << "\n"; 
+   bool update = false;
+   std::vector<region> updated;
+   if (memoryIFlow.find(mo) != memoryIFlow.end()) {
+         llvm::errs() << "Transferring info in LOAD: " << target->inst << "\n";
+         llvm::errs() << "source register=" << regIndex << "\n"; 
          std::map<region, std::set<InfoFlowRegion_t> > ifrmaps =  slice(memoryIFlow[mo], rs);  
-         std::map<region, std::set<InfoFlowRegion_t> > ifrmap = currentInfoFlowContext.localIFlow[target->dest];         
+         std::map<region, std::set<InfoFlowRegion_t> > ifrmap = (*currentInfoFlowContext.localIFlow)[target->dest];         
          for(auto me : ifrmaps) {
             std::set<InfoFlowRegion_t> dc = me.second;
-            if (!doublepointer && isPointerReg(regIndex))
+            if (!isLocal(regIndex))
                dc = addLevel(dc, offset, size);
             partitionAndUpdateIFlow(ifrmap, me.first, dc, true);
+            updated.push_back(me.first);
          }
-         currentInfoFlowContext.localIFlow[target->dest] = ifrmap;
+         (*currentInfoFlowContext.localIFlow)[target->dest] = ifrmap;
+   }
+   std::vector<region> notupdated = diffPartitionRegion(rt, updated);
+   if (notupdated.size() > 0) {
+      llvm::errs() << "Trying to fill uncovered " << notupdated.size() << " regions in LOAD after handling flow from memory\n";
+      int source = isInfoFlowRelevant(target, regIndex);    
+      if (source >= 0) {
+         // info flow tracking relevant
+         InfoFlowRegion_t ifr;
+         ifr = createInfoFlowRegion(source, offset, size);   
+         if (!isLocal(regIndex)) 
+            addLevel(ifr, offset, size); 
+         llvm::errs() << "Adding info flow source in LOAD: " << target->inst << "\n";
+         print(ifr);
+         std::set<InfoFlowRegion_t> ifrs;
+         ifrs.insert(ifr);
+         std::map<region, std::set<InfoFlowRegion_t> > ifrmap  = (*currentInfoFlowContext.localIFlow)[target->dest];
+         for(auto rtp : notupdated) 
+            partitionAndUpdateIFlow(ifrmap, rtp, adjust(ifrs, adjustment(rt, rtp)), true);
+         (*currentInfoFlowContext.localIFlow)[target->dest] = ifrmap;
+      }
+      else if (currentInfoFlowContext.localIFlow->find(regIndex) != currentInfoFlowContext.localIFlow->end()) {
+         // not updated yet with any infoflow so let's see if this refers to an inforelevant address
+         std::map<region, std::set<InfoFlowRegion_t> > ifrmap  = (*currentInfoFlowContext.localIFlow)[target->dest];
+         for(auto rtp : notupdated) {
+            llvm::errs() << "region " << rtp.offset << ":" << rtp.size << "\n";
+            //std::map<region, std::set<InfoFlowRegion_t> > ifrmaps2 = slice(currentInfoFlowContext.localIFlow[regIndex], rtp);
+            std::map<region, std::set<InfoFlowRegion_t> > ifrmaps2 = (*currentInfoFlowContext.localIFlow)[regIndex];
+            std::map<region, std::set<InfoFlowRegion_t> > ifrmaps;
+            if (!isLocal(regIndex)) {
+               for(auto me : ifrmaps2) {
+                  ifrmaps[rtp] = addLevel(me.second, rtp.offset, rtp.size); 
+               }
+            }
+            else ifrmaps = ifrmaps2;
+            for(auto me : ifrmaps)  {
+               partitionAndUpdateIFlow(ifrmap, rtp, adjust(me.second, adjustment(me.first, rtp)), true);
+            }
+         }
+         (*currentInfoFlowContext.localIFlow)[target->dest] = ifrmap;
       }
    }
-
 }
 
 bool regionsIntersect(region r1, region r2) {
@@ -727,22 +771,30 @@ region adjust(region r, region adj) {
 
 std::vector<region> adjust(std::vector<region> r, region adj) {
   std::vector<region> res;
-  for(unsigned int i=0; i<r.size(); i++)
+  for(unsigned int i=0; i<r.size(); i++) {
      res.push_back(adjust(r[i], adj));
+  }
   return res; 
 }
 
 InfoFlowRegion_t adjust(InfoFlowRegion_t ifr, region adj) {
+  llvm::errs() << "adj = " << adj.offset << "," << adj.size << "\n";
   InfoFlowRegion_t res;
   res.index = ifr.index;
-  res.regions = adjust(ifr.regions, adj);
+  for(unsigned int i=0; i<ifr.regions.size(); i++)
+     res.regions.push_back(adjust(ifr.regions[i], adj));
+  print(res);
+  llvm::errs() << "\n"; 
   return res;
 }
 
 std::set<InfoFlowRegion_t> adjust(std::set<InfoFlowRegion_t> ifrs, region adj) {
   std::set<InfoFlowRegion_t> res;
-  for(auto ifr: ifrs) 
-     res.insert(adjust(ifr,adj));
+  for(auto ifr: ifrs) { 
+     InfoFlowRegion_t ifr2 = ifr;
+     res.insert(adjust(ifr2,adj));
+  }
+  print(res);
   return res;
 }
 
@@ -784,6 +836,9 @@ std::map<region, std::set<InfoFlowRegion_t> > slice(std::map<region, std::set<In
 
 void partitionAndUpdateIFlow(std::map<region, std::set<InfoFlowRegion_t> > &ifrmap, 
                                           region rt, std::set<InfoFlowRegion_t> ifrcs, bool replace) {
+
+  llvm::errs() << "in partition..\n";
+  print(ifrcs);
   bool exactMatch = false;
   std::set<InfoFlowRegion_t> rgs;
   for(auto me : ifrmap) {
@@ -881,9 +936,11 @@ void Executor::updateInfoFlowForGeptr(ExecutionState &state,
                                              int offset) {
    if (!infoFlowSummaryMode) return;
    if (regIndex < 0) return; 
-   if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+   updateInfoFlowDirectCopy(state, regIndex, target);
+   /*
+   if (currentInfoFlowContext.localIFlow->find(regIndex) != currentInfoFlowContext.localIFlow->end()) {
       std::set<InfoFlowRegion_t> ifrs, ifrs2;
-      for(auto me : currentInfoFlowContext.localIFlow[regIndex]) {
+      for(auto me : (*currentInfoFlowContext.localIFlow)[regIndex]) {
          ifrs = me.second;
          break;
       }
@@ -892,8 +949,8 @@ void Executor::updateInfoFlowForGeptr(ExecutionState &state,
       std::map<region, std::set<InfoFlowRegion_t> > ifrmap;
       region rt; rt.offset = 0; rt.size = size;
       ifrmap[rt] = ifrs2;
-      currentInfoFlowContext.localIFlow[target->dest] = ifrmap;
-   }
+      (*currentInfoFlowContext.localIFlow)[target->dest] = ifrmap;
+   }*/
 }
  
 void Executor::updateInfoFlowForStore(ExecutionState &state, 
@@ -904,7 +961,6 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
                              ref<Expr> offsetexpr, 
                                     unsigned size) {
    if (!infoFlowSummaryMode) return;
-   checkAndMarkPointerRegForStore(state, target, destregIndex);
    //if (regIndex < 0) return; 
    ConstantExpr *CE = dyn_cast<ConstantExpr>(offsetexpr);
    unsigned offset;
@@ -922,7 +978,7 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
    bool record = false;
    bool doublepointer = false;
    llvm::StoreInst *li = dyn_cast<llvm::StoreInst>(target->inst);
-   assert(li);
+   if (!li) return;
    Type *t = li->getPointerOperand()->getType();
    if (t->isPointerTy()) {
       t = t->getPointerElementType();
@@ -933,24 +989,17 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
    int dest = isInfoFlowRelevant(target, destregIndex); 
    if (dest >= 0) {
       // info flow tracking relevant
-      /*if (doublepointer) {
-         destif = createInfoFlowRegion(dest, 0, offsetexpr->getWidth());
-         addLevel(destif, offset, size);
-      }    
-      else */
       destif = createInfoFlowRegion(dest, offset, size);  
-      if (!doublepointer && isPointerReg(destregIndex))
-         addLevel(destif, offset, size); 
       llvm::errs() << "Adding info flow relevant destination in STORE: " << target->inst << "\n";
       destifs = setIF(destif);
       print(destifs);
       record = true;
    }
-   else if (currentInfoFlowContext.localIFlow.find(destregIndex) != currentInfoFlowContext.localIFlow.end()) {
+   else if (currentInfoFlowContext.localIFlow->find(destregIndex) != currentInfoFlowContext.localIFlow->end()) {
       record = true;
-      for(auto de : currentInfoFlowContext.localIFlow[destregIndex]) {
+      for(auto de : (*currentInfoFlowContext.localIFlow)[destregIndex]) {
          destifs = de.second;
-         if (!doublepointer && isPointerReg(destregIndex))
+         if (!isLocal(destregIndex))
             destifs = addLevel(destifs, offset, size);
          record = true;
          llvm::errs() << "Adding info flow relevant destination from register in STORE: " << target->inst << "\n";
@@ -959,14 +1008,9 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
       }
    } 
    int source = isInfoFlowRelevant(target, regIndex); 
-   if (source >= 0  || currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+   if (source >= 0  || currentInfoFlowContext.localIFlow->find(regIndex) != currentInfoFlowContext.localIFlow->end()) {
       std::map<region, std::set<InfoFlowRegion_t> > ifrmap, ifrmaps;
       if (source >= 0) {
-         /*if (doublepointer) {
-            sourceif = createInfoFlowRegion(source, 0, offsetexpr->getWidth());
-            addLevel(sourceif, offset, size);
-         }     
-         else */
          sourceif = createInfoFlowRegion(source, offset, size);   
          llvm::errs() << "Adding info flow relevant source in STORE: " << target->inst << "\n";
          sourceifs = setIF(sourceif);
@@ -974,7 +1018,7 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
          ifrmaps[rs] = sourceifs;
       }
       else {
-         ifrmaps = slice(currentInfoFlowContext.localIFlow[regIndex], rs);
+         ifrmaps = slice((*currentInfoFlowContext.localIFlow)[regIndex], rs);
       }
       std::map<const MemoryObject*, 
                   std::map<region, 
@@ -1014,7 +1058,7 @@ void Executor::updateInfoFlowForReturn(ExecutionState &state, int regIndex, KIns
    if (regIndex < 0) return; 
    if (ki->inst->getNumOperands() > 0) {
       int source = isInfoFlowRelevant(ki, regIndex);
-      if (source >=0 || currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+      if (source >=0 || currentInfoFlowContext.localIFlow->find(regIndex) != currentInfoFlowContext.localIFlow->end()) {
          Type *rt = ki->inst->getOperand(0)->getType(); 
          if (source >=0) {
              InfoFlowRegion_t  destif = createInfoFlowRegion(getReturnIndex(infoFlowSummarizedFunc), 
@@ -1023,7 +1067,7 @@ void Executor::updateInfoFlowForReturn(ExecutionState &state, int regIndex, KIns
              recordInfoFlow(state, destif, sourceif);
          }
          else {
-            std::map<region, std::set<InfoFlowRegion_t> > ifrmap = currentInfoFlowContext.localIFlow[regIndex];
+            std::map<region, std::set<InfoFlowRegion_t> > ifrmap = (*currentInfoFlowContext.localIFlow)[regIndex];
             for(auto me : ifrmap) {
                InfoFlowRegion_t destif = createInfoFlowRegion(getReturnIndex(infoFlowSummarizedFunc), 
                                                        me.first.offset, me.first.size);
@@ -1044,14 +1088,14 @@ void Executor::updateInfoFlowDirectCopy(ExecutionState &state, int regIndex, KIn
    rt.offset = 0;
    rt.size = getWidthForLLVMType(t);
    int destIndex = ki->dest; 
-   if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+   if (currentInfoFlowContext.localIFlow->find(regIndex) != currentInfoFlowContext.localIFlow->end()) {
       std::map<region, std::set<InfoFlowRegion_t> > ifrmap, ifrmaps;
       // should not happen due to SSA naming..
-      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
-         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
-      ifrmaps = slice(currentInfoFlowContext.localIFlow[regIndex], rt);
+      if (currentInfoFlowContext.localIFlow->find(destIndex) != currentInfoFlowContext.localIFlow->end())
+         ifrmap = (*currentInfoFlowContext.localIFlow)[destIndex];
+      ifrmaps = slice((*currentInfoFlowContext.localIFlow)[regIndex], rt);
       UpdateIFlow(ifrmap, ifrmaps, 0, true);
-      currentInfoFlowContext.localIFlow[destIndex] = ifrmap;
+      (*currentInfoFlowContext.localIFlow)[destIndex] = ifrmap;
    }
 }
 
@@ -1074,20 +1118,21 @@ void Executor::updateInfoFlowForBinary(ExecutionState &state, int sourceIndex1, 
    rt.size = rs.size;
    int destIndex = ki->dest; 
    std::map<region, std::set<InfoFlowRegion_t> > ifrmap, ifrmaps;
-   if (sourceIndex1 >= 0 && currentInfoFlowContext.localIFlow.find(sourceIndex1) != currentInfoFlowContext.localIFlow.end()) {
-      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
-         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
-      ifrmaps = slice(currentInfoFlowContext.localIFlow[sourceIndex1], rs);
+   if (sourceIndex1 >= 0 && currentInfoFlowContext.localIFlow->find(sourceIndex1) != currentInfoFlowContext.localIFlow->end()) {
+      if (currentInfoFlowContext.localIFlow->find(destIndex) != currentInfoFlowContext.localIFlow->end())
+         ifrmap = (*currentInfoFlowContext.localIFlow)[destIndex];
+      ifrmaps = slice((*currentInfoFlowContext.localIFlow)[sourceIndex1], rs);
       UpdateIFlow(ifrmap, ifrmaps, 0, true);
-      currentInfoFlowContext.localIFlow[destIndex] = ifrmap; 
+      (*currentInfoFlowContext.localIFlow)[destIndex] = ifrmap; 
    }
-   if (sourceIndex2 >= 0 && currentInfoFlowContext.localIFlow.find(sourceIndex2) != currentInfoFlowContext.localIFlow.end()) {
-      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
-         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
+   if (sourceIndex2 >= 0 && currentInfoFlowContext.localIFlow->find(sourceIndex2) != 
+                                                    currentInfoFlowContext.localIFlow->end()) {
+      if (currentInfoFlowContext.localIFlow->find(destIndex) != currentInfoFlowContext.localIFlow->end())
+         ifrmap = (*currentInfoFlowContext.localIFlow)[destIndex];
       // we are over-approximating as we assume the cond holds both ways; so we force union via the false flag
-      ifrmaps = slice(currentInfoFlowContext.localIFlow[sourceIndex2], rs);
+      ifrmaps = slice((*currentInfoFlowContext.localIFlow)[sourceIndex2], rs);
       UpdateIFlow(ifrmap, ifrmaps, 0, false);
-      currentInfoFlowContext.localIFlow[destIndex] = ifrmap;
+      (*currentInfoFlowContext.localIFlow)[destIndex] = ifrmap;
    }
 }
 
@@ -1108,15 +1153,15 @@ void Executor::updateInfoFlowForExtract(ExecutionState &state, int regIndex, KIn
    rt.offset = 0;
    rt.size = rs.size;
    int destIndex = ki->dest; 
-   if (currentInfoFlowContext.localIFlow.find(regIndex) != currentInfoFlowContext.localIFlow.end()) {
+   if (currentInfoFlowContext.localIFlow->find(regIndex) != currentInfoFlowContext.localIFlow->end()) {
       std::map<region, std::set<InfoFlowRegion_t> > ifrmap, ifrmaps;
       region radj; radj.offset=offset; radj.size = size;
-      ifrmaps = slice(currentInfoFlowContext.localIFlow[regIndex], radj);  
+      ifrmaps = slice((*currentInfoFlowContext.localIFlow)[regIndex], radj);  
       // should not happen due to SSA naming..
-      if (currentInfoFlowContext.localIFlow.find(destIndex) != currentInfoFlowContext.localIFlow.end())
-         ifrmap = currentInfoFlowContext.localIFlow[destIndex];
+      if (currentInfoFlowContext.localIFlow->find(destIndex) != currentInfoFlowContext.localIFlow->end())
+         ifrmap = (*currentInfoFlowContext.localIFlow)[destIndex];
       UpdateIFlow(ifrmap, ifrmaps, 0, true);
-      currentInfoFlowContext.localIFlow[destIndex] = ifrmap;
+      (*currentInfoFlowContext.localIFlow)[destIndex] = ifrmap;
    }
    
 }
@@ -6968,7 +7013,13 @@ void Executor::executeAlloc(ExecutionState &state,
         memory->allocate(CE->getZExtValue(), isLocal, /*isGlobal=*/false,
                          allocSite, allocationAlignment);
 
+   
     /* SYSREL extension */
+ 
+   if (isLocal && target->dest >= 0)  {
+      llvm::errs() << "recording register " << target->dest << " as a local variable\n"; 
+      (*currentInfoFlowContext.regMap)[target->dest] = mo;
+   }
 
    if (record)
       state.recordAlloc(mo->getBaseExpr());
