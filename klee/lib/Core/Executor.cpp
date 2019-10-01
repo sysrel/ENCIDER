@@ -4149,12 +4149,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     if (isa<InlineAsm>(fp)) {
        llvm::InlineAsm *iasm = dyn_cast<llvm::InlineAsm>(fp);
        if (symbolizeInlineAssembly) {
-          llvm::errs() << "handling inline assembly by symbolizing the return value " << iasm->getAsmString() << "\n";
+          //llvm::errs() << "handling inline assembly by symbolizing the return value " << iasm->getAsmString() << "\n";
           bool abort = false;
-          symbolizeReturnValueForAsmInstruction(state, ki, abort);
+          symbolizeReturnValueForAsmInstruction(state, ki, iasm, abort);
           if (abort)
              terminateStateOnExecError(state, "failure to symbolize return value of inline assembly");
-          return;
+          break;
        }
        else {
           llvm::errs() << "inline assembly is unsupported: " << iasm->getAsmString() << "\n";
@@ -6948,11 +6948,11 @@ void Executor::symbolizeArguments(ExecutionState &state,
 
 
 const MemoryObject *Executor::symbolizeReturnValueForAsmInstruction(ExecutionState &state, 
-                                  KInstruction *target, 
+                                  KInstruction *target, llvm::Value *inst,
                                   bool &abort) {
     std::string type_str;
     llvm::raw_string_ostream rso(type_str);
-    llvm::InlineAsm *iasm = dyn_cast<llvm::InlineAsm>(target->inst);
+    llvm::InlineAsm *iasm = dyn_cast<llvm::InlineAsm>(inst);
     if (!iasm) return NULL;
     Type *retType = iasm->getFunctionType()->getReturnType();
     retType->print(rso);
@@ -6965,17 +6965,15 @@ const MemoryObject *Executor::symbolizeReturnValueForAsmInstruction(ExecutionSta
        allocType = retType->getPointerElementType();
     mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, allocType, allocType,
           isLazySingle(retType, "*"), 1, rType, laddr, mksym, abort);
-    if (abort) {
+    if (!mo) {
        return NULL;
     }
     mo->name = "%sym" + std::to_string(target->dest) + "_" + getUniqueSymRegion("asm"); 
-    if (mksym) {
-       #ifdef VB
-       llvm::outs() << "symbolizing return value \n";
-       #endif
-       executeMakeSymbolic(state, mo, mo->name, allocType, true);
-    }
-    if (allocType == retType)
+    #ifdef VB
+    llvm::errs() << "symbolizing return value of inline assembly\n";
+    #endif
+    executeMakeSymbolic(state, mo, mo->name, allocType, true);
+    if (allocType == retType) 
        executeMemoryOperation(state, -2, -2, false, laddr, 0, target);
     else
        bindLocal(target, state, laddr);

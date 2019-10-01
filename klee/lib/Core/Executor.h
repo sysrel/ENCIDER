@@ -206,7 +206,7 @@ public:
 
 
   const MemoryObject *symbolizeReturnValueForAsmInstruction(ExecutionState &state, 
-                                   KInstruction *target, bool &abort);
+                                   KInstruction *target, llvm::Value *inst, bool &abort);
 
   const MemoryObject *symbolizeReturnValue(ExecutionState &state, 
                                   std::vector<ref<Expr> > &args,

@@ -389,7 +389,7 @@ namespace {
   LifeCycleConf("life-cycle-conf", cl::desc("Life-cycle configuration file"));
 
   cl::opt<bool>
-  SymbolizeInlineAssembly("sym-inline-asm", "Symbolize inline assembly call return value\n", cl::init(false));
+  SymbolizeInlineAssembly("sym-inline-asm", cl::desc("Symbolize inline assembly call return value (default false)"), cl::init(false));
 
   cl::opt<bool>
   LazyInit("lazy-init", cl::desc("Lazy initialization of input data structures (default false)"), cl::init(false));
