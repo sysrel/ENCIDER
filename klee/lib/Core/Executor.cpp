@@ -95,6 +95,7 @@
 #include <errno.h>
 #include <cxxabi.h>
 
+#include "llvm/IR/InlineAsm.h"
 #include "ResourceUsage.h"
 #include "AnalyzeConstraint.h"
 
@@ -103,7 +104,9 @@ using namespace klee;
 
 /* SYSREL extension */
 
-#define INFOFLOW 1
+bool symbolizeInlineAssembly = false;
+
+//#define INFOFLOW 1
 
 extern std::set<std::string> voidTypeCasts;
 size_t maxVoidTypeCastSize = 8;
@@ -186,7 +189,7 @@ std::set<long> updatedWithSymbolic;
 std::string infoFlowSummarizedFuncName;
 Function *infoFlowSummarizedFunc = NULL;
 
-#ifdef INFOFLOW
+//#ifdef INFOFLOW
 // InfoFlowSummarization
 struct infoflowdata {
   std::map<unsigned int, const MemoryObject*> *regMap;
@@ -201,6 +204,7 @@ std::map<ExecutionState*,
                            std::set<InfoFlowRegion_t> > > > memoryInfoFlow;
 // Maps info flow relevant memory objects to ids that are meaningful to the client, e.g., argument indices of a summarized function
 std::map<int, int> argRegsInfoFlow;
+// dest index to dest memory region to source memory regions 
 std::map<int, std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > >  infoFlowSummary;
 std::map<ExecutionState*, std::map<int, std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > > > infoFlowSummaryPerState;
 
@@ -233,7 +237,7 @@ bool operator<(const InfoFlowRegion_t ifr1, const InfoFlowRegion_t ifr2) {
 }
 }
 
-#endif
+//#endif
 
 /* Side channel end */
 
@@ -303,7 +307,7 @@ std::string getTypeName(Type *t);
 bool infoFlowSummaryMode = false;
 
 
-#ifdef INFOFLOW
+//#ifdef INFOFLOW
 /* InfoFlowSummarization */
 
 region adjustment(region r1, region r2);
@@ -326,6 +330,12 @@ void print(const InfoFlowRegion_t &ifr) {
      llvm::errs() << "[" << ifr.regions[i].offset << ":" << ifr.regions[i].size << "]";
 }
 
+void print(std::fstream &fstr, const InfoFlowRegion_t &ifr) {
+  fstr << ifr.index << ",";
+  for(unsigned int i=0; i<ifr.regions.size(); i++)
+     fstr << "[" << ifr.regions[i].offset << ":" << ifr.regions[i].size << "]";
+}
+
 void print(std::set<InfoFlowRegion_t> ifrs) {
   llvm::errs() << "{";
   unsigned int i=0;
@@ -338,6 +348,17 @@ void print(std::set<InfoFlowRegion_t> ifrs) {
   
 }
 
+void print(std::fstream &fstr, std::set<InfoFlowRegion_t> ifrs) {
+  fstr << "{";
+  unsigned int i=0;
+  for(auto ifr : ifrs) {
+     print(fstr, ifr);
+     if (i < ifrs.size() - 1)
+        fstr << "\n";
+  }
+  fstr << "}\n";
+  
+}
 
 
 
@@ -351,6 +372,24 @@ void dumpInfoFlow() {
            llvm::errs() << "\n\n";
      }
   }
+}
+
+void writeInfoFlowSummary(const char *fname) {
+   std::fstream rc(fname, std::fstream::out);
+   if (rc.is_open()) {
+      for(auto ifse : infoFlowSummary) {
+         for(auto ifse2 : ifse.second) {
+            print(rc, ifse2.second);
+            rc << "=>\n";
+            print(rc, ifse2.first);
+            rc << "\n"; 
+         }
+      }
+      rc.close();
+   }
+}
+
+void readInfoFlowSummary(char *fname){
 }
 
 
@@ -384,6 +423,7 @@ int getLocal(ExecutionState &state, KInstruction *ki, int index) {
 }
 
 void initInfoFlowContext(ExecutionState &state) {
+   if (!infoFlowSummaryMode) return;
    infoflowdata_t initvalue;
    initvalue.regMap = new std::map<unsigned int, const MemoryObject*>();
    initvalue.localIFlow = new std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > >();
@@ -395,6 +435,7 @@ void initInfoFlowContext(ExecutionState &state) {
 }
 
 void cloneInfoFlowContext(ExecutionState &state1, ExecutionState &state2) {
+    if (!infoFlowSummaryMode) return;
     std::vector<infoflowdata_t>  *cpstack = new std::vector<infoflowdata_t>();
     for(unsigned int i=0; i< infoflowstack[&state1]->size(); i++)  
        cpstack->push_back((*infoflowstack[&state1])[i]);
@@ -404,12 +445,14 @@ void cloneInfoFlowContext(ExecutionState &state1, ExecutionState &state2) {
 }
 
 void updateCurrentInfoFlowContext(ExecutionState &state) {
+  if (!infoFlowSummaryMode) return;
   int last = infoflowstack[&state]->size() - 1; 
   currentInfoFlowContext = (*infoflowstack[&state])[last];
   llvm::errs() << "switching to state " << &state << "\n";
 }
 
 void pushInfoFlowContext(ExecutionState &state) {
+   if (!infoFlowSummaryMode) return;
    int last = infoflowstack[&state]->size() - 1;
    (*infoflowstack[&state])[last] = currentInfoFlowContext;
    infoflowdata_t initvalue;
@@ -421,12 +464,14 @@ void pushInfoFlowContext(ExecutionState &state) {
 }
 
 void popInfoFlowContext(ExecutionState &state) {
+   if (!infoFlowSummaryMode) return; 
    infoflowstack[&state]->pop_back();
    currentInfoFlowContext =  infoflowstack[&state]->back();
    llvm::errs() << "poping info flow context for " << &state << "\n";
 }
 
 void saveInfoFlowContext(ExecutionState &state) {
+   if (!infoFlowSummaryMode) return;
    int last = infoflowstack[&state]->size() - 1;
    (*infoflowstack[&state])[last] = currentInfoFlowContext;       
    llvm::errs() << "saving info flow context for " << &state << "\n"; 
@@ -472,9 +517,6 @@ std::set<InfoFlowRegion_t> addLevel(std::set<InfoFlowRegion_t> dcs, unsigned int
        for(unsigned int i=0; i<dc.regions.size(); i++)
           dci.regions.push_back(dc.regions[i]);
        addLevel(dci, offset, size);
-       llvm::errs() << " after addLevel on set: \n";
-       print(dci);
-       llvm::errs() << "\n";
        res.insert(dci);
     } 
     print(res);
@@ -783,8 +825,6 @@ InfoFlowRegion_t adjust(InfoFlowRegion_t ifr, region adj) {
   res.index = ifr.index;
   for(unsigned int i=0; i<ifr.regions.size(); i++)
      res.regions.push_back(adjust(ifr.regions[i], adj));
-  print(res);
-  llvm::errs() << "\n"; 
   return res;
 }
 
@@ -794,7 +834,6 @@ std::set<InfoFlowRegion_t> adjust(std::set<InfoFlowRegion_t> ifrs, region adj) {
      InfoFlowRegion_t ifr2 = ifr;
      res.insert(adjust(ifr2,adj));
   }
-  print(res);
   return res;
 }
 
@@ -837,8 +876,6 @@ std::map<region, std::set<InfoFlowRegion_t> > slice(std::map<region, std::set<In
 void partitionAndUpdateIFlow(std::map<region, std::set<InfoFlowRegion_t> > &ifrmap, 
                                           region rt, std::set<InfoFlowRegion_t> ifrcs, bool replace) {
 
-  llvm::errs() << "in partition..\n";
-  print(ifrcs);
   bool exactMatch = false;
   std::set<InfoFlowRegion_t> rgs;
   for(auto me : ifrmap) {
@@ -1173,7 +1210,7 @@ void Executor::updateInfoFlowForExt(ExecutionState &state, int regIndex, KInstru
 }
 
 
-#endif
+//#endif
 
 bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2);
 
@@ -3693,13 +3730,19 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         }
       }
       /* SYSREL extension */
-      updateInfoFlowForReturn(state, getLocal(state, ki, 0), ki);
+      #ifdef INFOFLOW
+      if (!isVoidReturn)
+         updateInfoFlowForReturn(state, getLocal(state, ki, 0), ki);
+      #endif
     } else {
       /* SYSREL extension */
       if (!terminating) {
          checkHighSensitiveLocals(state,i);
       }
-      updateInfoFlowForReturn(state, getLocal(state, ki, 0), ki);
+      #ifdef INFOFLOW
+      if (!isVoidReturn)
+         updateInfoFlowForReturn(state, getLocal(state, ki, 0), ki);
+      #endif
       /* SYSREL extension */
       state.popFrame();
       #ifdef INFOFLOW
@@ -4104,8 +4147,20 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       break;
 
     if (isa<InlineAsm>(fp)) {
-       terminateStateOnExecError(state, "inline assembly is unsupported");
-       break;
+       llvm::InlineAsm *iasm = dyn_cast<llvm::InlineAsm>(fp);
+       if (symbolizeInlineAssembly) {
+          llvm::errs() << "handling inline assembly by symbolizing the return value " << iasm->getAsmString() << "\n";
+          bool abort = false;
+          symbolizeReturnValueForAsmInstruction(state, ki, abort);
+          if (abort)
+             terminateStateOnExecError(state, "failure to symbolize return value of inline assembly");
+          return;
+       }
+       else {
+          llvm::errs() << "inline assembly is unsupported: " << iasm->getAsmString() << "\n";
+          terminateStateOnExecError(state, "inline assembly is unsupported");
+          break;
+       }
     }
     // evaluate arguments
     std::vector< ref<Expr> > arguments;
@@ -5700,6 +5755,7 @@ void Executor::run(ExecutionState &initialState) {
   timeSideChannelAnalysis(this);
   collectInfoFlow();
   dumpInfoFlow(); 
+  writeInfoFlowSummary((infoFlowSummarizedFuncName + "_summary.txt").c_str());
   /* SYSREL side channel end */
 
 }
@@ -6891,6 +6947,43 @@ void Executor::symbolizeArguments(ExecutionState &state,
 }
 
 
+const MemoryObject *Executor::symbolizeReturnValueForAsmInstruction(ExecutionState &state, 
+                                  KInstruction *target, 
+                                  bool &abort) {
+    std::string type_str;
+    llvm::raw_string_ostream rso(type_str);
+    llvm::InlineAsm *iasm = dyn_cast<llvm::InlineAsm>(target->inst);
+    if (!iasm) return NULL;
+    Type *retType = iasm->getFunctionType()->getReturnType();
+    retType->print(rso);
+    const MemoryObject *mo;
+    ref<Expr> laddr;
+    llvm::Type *rType;
+    bool mksym;
+    Type *allocType = retType;
+    if (retType->isPointerTy())
+       allocType = retType->getPointerElementType();
+    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, allocType, allocType,
+          isLazySingle(retType, "*"), 1, rType, laddr, mksym, abort);
+    if (abort) {
+       return NULL;
+    }
+    mo->name = "%sym" + std::to_string(target->dest) + "_" + getUniqueSymRegion("asm"); 
+    if (mksym) {
+       #ifdef VB
+       llvm::outs() << "symbolizing return value \n";
+       #endif
+       executeMakeSymbolic(state, mo, mo->name, allocType, true);
+    }
+    if (allocType == retType)
+       executeMemoryOperation(state, -2, -2, false, laddr, 0, target);
+    else
+       bindLocal(target, state, laddr);
+
+   return mo;
+}
+
+
 const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state, 
                                   std::vector<ref<Expr> > & args,
                                   KInstruction *target,
@@ -7016,7 +7109,7 @@ void Executor::executeAlloc(ExecutionState &state,
    
     /* SYSREL extension */
  
-   if (isLocal && target->dest >= 0)  {
+   if (infoFlowSummaryMode && isLocal && target->dest >= 0)  {
       llvm::errs() << "recording register " << target->dest << " as a local variable\n"; 
       (*currentInfoFlowContext.regMap)[target->dest] = mo;
    }
@@ -8068,7 +8161,7 @@ void Executor::runFunctionAsMain(Function *f,
   }
   #ifdef INFOFLOW
     infoFlowSummarizedFunc = moduleHandle->getFunction(infoFlowSummarizedFuncName);
-    if (!infoFlowSummarizedFunc) 
+    if (infoFlowSummaryMode && !infoFlowSummarizedFunc) 
        assert(false && "info flow summary cannot be computed for an unexisting function!");
   #endif
   /* SYSREL side channel end */

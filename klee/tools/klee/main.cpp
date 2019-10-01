@@ -151,6 +151,7 @@ extern std::set<std::string> securitySensitiveBranches;
 extern std::map<std::string, int> inputFuncsSuccRetValue;
 extern bool infoFlowSummaryMode;
 extern std::string infoFlowSummarizedFuncName;
+extern bool symbolizeInlineAssembly;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -388,12 +389,14 @@ namespace {
   LifeCycleConf("life-cycle-conf", cl::desc("Life-cycle configuration file"));
 
   cl::opt<bool>
+  SymbolizeInlineAssembly("sym-inline-asm", "Symbolize inline assembly call return value\n", cl::init(false));
+
+  cl::opt<bool>
   LazyInit("lazy-init", cl::desc("Lazy initialization of input data structures (default false)"), cl::init(false));
 
   cl::opt<bool>
   InfoFlowSummaryMode("infoflow-summary", cl::desc("Information flow summary mode (default false)"), 
                                           cl::init(false));
-
   cl::opt<std::string>
   InfoFlowSummaryEntry("infoflow-summary-entry", cl::desc("The name of the function to be summarized"));  
 
@@ -2315,6 +2318,9 @@ int main(int argc, char **argv, char **envp) {
      progModel = true;
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());
   }
+
+  if (SymbolizeInlineAssembly)
+     symbolizeInlineAssembly = true;
 
   if (TimingObservationPoints != "")
      readTimingObservationPoints(TimingObservationPoints.c_str());

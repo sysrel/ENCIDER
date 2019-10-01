@@ -205,6 +205,9 @@ public:
                                   std::vector< ref<Expr> > &arguments, int tid) ;
 
 
+  const MemoryObject *symbolizeReturnValueForAsmInstruction(ExecutionState &state, 
+                                   KInstruction *target, bool &abort);
+
   const MemoryObject *symbolizeReturnValue(ExecutionState &state, 
                                   std::vector<ref<Expr> > &args,
                                   KInstruction *target,

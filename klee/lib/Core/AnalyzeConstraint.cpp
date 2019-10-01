@@ -30,11 +30,18 @@ ref<Expr> buildProjection(ref<Expr>& cexpr, bool high);
 namespace std {
 
 bool operator<(const region r1, const region r2) {
+  if (r1.offset < r2.offset)
+     return true;
+  else if (r1.offset == r2.offset)
+    return r1.size < r2.size;
+  else  return false;
+  /* 
   if (r1.offset == r2.offset)
      return r1.size < r2.size;
   else if (r1.size == r2.size) 
      return r2.offset < r2.offset;
   else r1.offset + r1.size  < r2.offset + r2.size;
+  */
 }
 
 bool operator<(const infoflowsource_t i1, const infoflowsource_t i2) {
