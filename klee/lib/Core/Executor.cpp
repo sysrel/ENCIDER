@@ -1371,7 +1371,7 @@ void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *func
            if (asuccess) {
               ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int32), getWidthForLLVMType(bt));
               llvm::errs() << "checking arg " << a << " of " <<  fname << " : " << result << " for sensitive flow\n"; 
-              if (exprHasSymRegion(result, true)) {
+              if (exprHasSymRegion(state, result, true)) {
                  llvm::errs() << " high region flows into " << fname << "\n";
                  highIndices.push_back(a);
                  sig += pow(2,a);
@@ -1379,7 +1379,7 @@ void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *func
            }
         }
         else {
-           if (exprHasSymRegion(args[a], true)) {
+           if (exprHasSymRegion(state, args[a], true)) {
               llvm::errs() << " high region flows into " << fname << "\n";
               highIndices.push_back(a);
               sig += pow(2,a);
@@ -1614,7 +1614,29 @@ bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2)
   return true; 
 }
 
-bool isInRegion(std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
+bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offset, Expr::Width type)  {
+    ref<Expr> rbase = ConstantExpr::alloc(r.offset, offset->getWidth());
+    ref<Expr> rend =  ConstantExpr::alloc(r.offset + r.size - 1, offset->getWidth());
+    ref<Expr> end = AddExpr::create(offset, ConstantExpr::alloc(type - 1, offset->getWidth())); 
+    ref<Expr> ie1 =  UleExpr::create(rbase, offset);
+    ref<Expr> ie2 = UleExpr::create(rend, end);
+    ref<Expr> case1 = AndExpr::create(ie1, ie2);
+    ref<Expr> ie3 = UleExpr::create(offset, rbase);
+    ref<Expr> ie4 = UleExpr::create(end, rend);
+    ref<Expr> case2 = AndExpr::create(ie3, ie4);
+    ref<Expr> intexp = OrExpr::create(case1, case2);
+
+    bool res;    
+    double timeout = coreSolverTimeout;
+    solver->setTimeout(timeout);
+    bool success = solver->mayBeTrue(state, intexp, res);
+    solver->setTimeout(0);
+    if (success && res) 
+       return true;
+    return false;
+}
+
+bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
   if (klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(offset)) {
      uint64_t value = CE->getZExtValue();     
      for(unsigned int i=0; i < rs.size(); i++) {
@@ -1625,7 +1647,13 @@ bool isInRegion(std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
         }
      }
   }
-  else assert(false && "Not expecting a symbolic offset "); 
+  else {
+     for(unsigned int i=0; i < rs.size(); i++) {
+        if (checkSymInRegion(state, rs[i], offset, type)) {
+           return true;
+        } 
+     }
+  }
   return false;
 }
 
@@ -1636,23 +1664,24 @@ bool isASymRegion(std::string symname, bool high) {
       return (lowSymRegions.find(symname) != lowSymRegions.end()); 
 }
 
-bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high) {
+bool Executor::isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width type, 
+      bool high) {
   //llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
   if (high) {
      if (highSymRegions.find(symname) == highSymRegions.end()) 
         return false;
      std::vector<region> rs = highSymRegions[symname];    
-     return isInRegion(rs, offset, type);
+     return isInRegion(state, rs, offset, type);
   }
   else {
      if (lowSymRegions.find(symname) == lowSymRegions.end()) 
         return false;
      std::vector<region> rs = lowSymRegions[symname];
-     return isInRegion(rs, offset, type);
+     return isInRegion(state, rs, offset, type);
   }
 }
 
-bool isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
+bool Executor::isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
   long sa = (long)&state;
   if (highMemoryRegions.find(sa) == highMemoryRegions.end()) {
      assert(false && "State does not have high regions!!!");
@@ -1662,7 +1691,7 @@ bool isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr
      return false;
   else {
      std::vector<region> rs = m[baseAddress];
-     return isInRegion(rs, offset, type);
+     return isInRegion(state, rs, offset, type);
   }
 }
 
@@ -1675,7 +1704,7 @@ void printSymRegions() {
      llvm::errs() << k.first << "\n";
 }
 
-bool isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
+bool Executor::isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
   long sa = (long)&state;
   if (lowMemoryRegions.find(sa) == lowMemoryRegions.end()) {
      assert(false && "State does not have low regions!!!");
@@ -1685,7 +1714,7 @@ bool isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr>
      return false;
   else {
      std::vector<region> rs = m[baseAddress];
-     return isInRegion(rs, offset, type);
+     return isInRegion(state, rs, offset, type);
   }
 }
 
@@ -1714,7 +1743,7 @@ void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::v
       llvm::errs() << "no relevant args to check for info flow for " << fname << "\n";   
       return;
    }
-   std::vector<region> rs = getHighInfoFlowRegions(fname, argsValues);
+   std::vector<region> rs = getHighInfoFlowRegions(state, fname, argsValues);
    //llvm::errs() << "will info flow into " << mo->name << "\n";
    if (rs.size() > 0) {
       //llvm::errs() << "yes!\n";
@@ -4641,7 +4670,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
       /* SYSREL extension */ 
       /* side channel begin */
-      if (state.inEnclave && exprHasSymRegion(index, true)) {
+      if (state.inEnclave && exprHasSymRegion(state, index, true)) {
           llvm::errs() << "CRITICAL: Security sensitive index in GetElementPtr:\n";
           ki->inst->print(llvm::errs());
           llvm::errs() << index << "\n"; 
@@ -4661,7 +4690,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     if (kgepi->offset) {
       /* SYSREL extension */ 
       /* side channel begin */
-      if (state.inEnclave && exprHasSymRegion(Expr::createPointer(kgepi->offset), true)) {
+      if (state.inEnclave && exprHasSymRegion(state, Expr::createPointer(kgepi->offset), true)) {
           llvm::errs() << "CRITICAL: Security sensitive offset in GetElementPtr:\n";
           ki->inst->print(llvm::errs());
           llvm::errs() << kgepi->offset << "\n";
@@ -4682,7 +4711,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     bindLocal(ki, state, base);
 
     /* side channel */
-    if (state.inEnclave && exprHasSymRegion(base, true)) {
+    if (state.inEnclave && exprHasSymRegion(state, base, true)) {
        // Check for the possibility of the address base mapping to different cache lines for different security sensitive values
        // Let cache line size denoted by 2^L and memory address size denoted by N
        // Since N-L bits are used to decide the cache line that gets accessed, we will check the following formula
@@ -5633,8 +5662,8 @@ void Executor::run(ExecutionState &initialState) {
 	            std::cerr << "\n>>>> Branch Condition : \n";
 		    r1->dump();
              #endif
-             bool hasHloc = exprHasSymRegion(r1, true);
-             bool hasLloc = exprHasSymRegion(r1, false);
+             bool hasHloc = exprHasSymRegion(state, r1, true);
+             bool hasLloc = exprHasSymRegion(state, r1, false);
              RD* srd = newNode(s);
 	     s->rdid = srd->stateid;
 	     rdmapinsert(s->rdid, srd);
@@ -5645,7 +5674,7 @@ void Executor::run(ExecutionState &initialState) {
              srd->LC = currentRD->LC;
              srd->ru = currentRD->ru; 
 	     if (hasHloc && !hasLloc) {
-	     	ref<Expr> proj = getProjectionOnRegion(r1, true);
+	     	ref<Expr> proj = getProjectionOnRegion(state, r1, true);
                 //llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
                 // check if the projection is consistent with the path condition
                 bool result;
@@ -5697,7 +5726,7 @@ void Executor::run(ExecutionState &initialState) {
                 }
 
                 if (hasLloc) {
-   	           ref<Expr> proj = getProjectionOnRegion(r1, false);
+   	           ref<Expr> proj = getProjectionOnRegion(state, r1, false);
                    //llvm::errs() << " low projection on " << r1 << " : " << proj << "\n";
 
                    // check if the projection is consistent with the path condition
@@ -6603,9 +6632,9 @@ bool Executor::isSymRegionSensitive(ExecutionState &state, ref<Expr> CE, std::st
    else if (!oncall && mixedFunctionArgsRet.find(fname) != mixedFunctionArgsRet.end())
       argsM = mixedFunctionArgsRet[fname];  
    if (argsH.find(ai) != argsH.end()) 
-      return exprHasSymRegion(CE, true);
+      return exprHasSymRegion(state, CE, true);
    else if (argsL.find(ai) != argsL.end()) 
-      return exprHasSymRegion(CE, false);
+      return exprHasSymRegion(state, CE, false);
    else if (argsM.find(ai) != argsM.end()) { 
      // this is expensive to check; so lets be conservative and force to set it sensitive even if it is known to be sens
      return false;

@@ -1,4 +1,6 @@
 #include <iostream>
+#include "Executor.h"
+#include "klee/ExecutionState.h"
 #include "AnalyzeConstraint.h"
 #include "klee/util/ExprUtil.h"
 #include "klee/util/ArrayCache.h"
@@ -11,7 +13,7 @@ extern bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigne
 
 std::map<std::string, std::map<region, std::set<infoflowsource_t> > > infoFlowRules;
 
-bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high);
+//bool isInSymRegion(std::string symname, ref<Expr> offset, Expr::Width type, bool high);
 bool isASymRegion(std::string symname, bool high);
 
 /* Variables based on sensivity */
@@ -163,9 +165,10 @@ void mergeAndCoalesce(std::vector<region> rs1, std::vector<region> rs2, std::vec
       // llvm::errs() << rs3[i].offset << "," << rs3[i].size << "\n";
 }
 
-std::vector<region> extractRegion(ref<Expr> expr, region range, bool high);
+//std::vector<region> extractRegion(ref<Expr> expr, region range, bool high);
 
-std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Expr> > & args) {
+std::vector<region> Executor::getHighInfoFlowRegions(ExecutionState &state, std::string fname, 
+                                    std::vector<ref<Expr> > & args) {
   std::vector<region> rs;
   if (infoFlowRules.find(fname) != infoFlowRules.end()) {
      std::map<region, std::set<infoflowsource_t> > fm = infoFlowRules[fname];
@@ -176,7 +179,7 @@ std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Ex
               std::vector<region> temp;
               ref<Expr> &argp = args[ifs.argno];
               if (argp.isNull()) continue;
-              std::vector<region> r1 = extractRegion(args[ifs.argno],ifs.ifregion,true);
+              std::vector<region> r1 = extractRegion(state, args[ifs.argno],ifs.ifregion,true);
               if (r1.size() == 0) continue;
               std::vector<region> r2;
               intersect(ifs.ifregion, r1, r2);
@@ -339,10 +342,10 @@ const Array *renameArray(MemoryManager *memory, const Array *array, bool high, u
 }
 
 
-bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
+bool Executor::exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool high) {
   region r;
   r.offset = 0; r.size = 64;
-  std::vector<region> r1 = extractRegion(cexpr,r,high);
+  std::vector<region> r1 = extractRegion(state, cexpr,r,high);
   if (r1.size() == 0) return false;
   for(unsigned int i=0; i<r1.size(); i++)
      llvm::errs() << "expr has high=" << high << " " << r1[i].offset << "," << r1[i].size << "\n";
@@ -376,13 +379,13 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
 }
 */
 
-std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
+std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, bool high) {
    std::vector<region> rs;
    //llvm::errs() << "extracting region from " << cexpr << "\n";
    switch (cexpr->getKind()) {
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
-          if (isInSymRegion(rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high)) {
+          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high)) {
              ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
              if (!CE) { // approximating symbolic offset/index based on the possible range!
                 rs.push_back(range);
@@ -401,8 +404,8 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
       } 
       case Expr::Concat: {
           //llvm::errs() << "in concat: \n"; 
-          std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
-          std::vector<region> r2 = extractRegion(cexpr->getKid(1), range, high);
+          std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, high);
+          std::vector<region> r2 = extractRegion(state, cexpr->getKid(1), range, high);
           if  (r1.size() == 0 && r2.size() == 0) {
               return rs;
           }
@@ -418,7 +421,7 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
       }
       case Expr::Extract: {
         ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
-        std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
+        std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, high);
         region r2;
         r2.offset = EE->offset;
         r2.size = EE->width;
@@ -431,7 +434,7 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
       case Expr::Shl: 
       case Expr::LShr:
       case Expr::AShr: { 
-        std::vector<region> r1 = extractRegion(cexpr->getKid(0), range, high);
+        std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, high);
         if (r1.size() == 0) return rs;
         ConstantExpr * CE = dyn_cast<ConstantExpr>(cexpr->getKid(1));
         if (!CE) { // approximating symbolic offset/index based on the possible range!
@@ -450,7 +453,7 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
       }
       default: {
          if (cexpr->getKind() == Expr::SExt || cexpr->getKind() == Expr::ZExt)  {
-            return extractRegion(cexpr->getKid(0), range, high);
+            return extractRegion(state, cexpr->getKid(0), range, high);
          }        
          /*else if (!boolOp && (cexpr->getKind() == Expr::Slt || cexpr->getKind() == Expr::Sle || 
                   cexpr->getKind() == Expr::Sgt || cexpr->getKind() == Expr::Sge || 
@@ -464,14 +467,14 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
          }*/
          else if (cexpr->getNumKids() > 0) {
             //llvm::errs() << "child 0 " << cexpr->getKid(0) << "\n";
-            std::vector<region> rtemp1 = extractRegion(cexpr->getKid(0), range, high);
+            std::vector<region> rtemp1 = extractRegion(state, cexpr->getKid(0), range, high);
             //llvm::errs() << "child 0 " << cexpr->getKid(0) << " results (high=" << high << "): \n"; 
             //for(unsigned int i=0; i<rtemp1.size(); i++)
               // llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
             std::vector<region> rtemp3; 
             for(unsigned int i=1; i<cexpr->getNumKids(); i++) {
                //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << "\n";
-               std::vector<region> rtemp2 = extractRegion(cexpr->getKid(i), range, high);
+               std::vector<region> rtemp2 = extractRegion(state, cexpr->getKid(i), range, high);
                //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << " results (high=" << high << "): \n";
                //for(unsigned int j=0; j<rtemp2.size(); j++)
                  // llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
@@ -487,7 +490,7 @@ std::vector<region> extractRegion(ref<Expr> cexpr, region range, bool high) {
 
 }
 
-ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
+ref<Expr> Executor::getProjectionOnRegion(ExecutionState &state, ref<Expr> cexpr, bool high, bool maybebitwise) {
     switch (cexpr->getKind()) {    
       case Expr::Constant: {
         klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(cexpr);
@@ -495,7 +498,7 @@ ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
       }
       case Expr::Extract: {
         ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
-        return ExtractExpr::create(getProjectionOnRegion(cexpr->getKid(0), high, true), EE->offset, EE->width);
+        return ExtractExpr::create(getProjectionOnRegion(state, cexpr->getKid(0), high, true), EE->offset, EE->width);
       }
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
@@ -504,36 +507,36 @@ ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
           return nrexpr;
       } 
       case Expr::Concat: {
-          ref<Expr> rexpr1 = getProjectionOnRegion(cexpr->getKid(0), high, true);
-          ref<Expr> rexpr2 = getProjectionOnRegion(cexpr->getKid(1), high, true);
+          ref<Expr> rexpr1 = getProjectionOnRegion(state, cexpr->getKid(0), high, true);
+          ref<Expr> rexpr2 = getProjectionOnRegion(state, cexpr->getKid(1), high, true);
           return ConcatExpr::create(rexpr1, rexpr2);
       }
       case Expr::And:
       case Expr::Or:
       case Expr::Xor: {
           if (!maybebitwise) {
-             bool k0 = exprHasSymRegion(cexpr->getKid(0), high);
-             bool k1 = exprHasSymRegion(cexpr->getKid(1), high);
+             bool k0 = exprHasSymRegion(state, cexpr->getKid(0), high);
+             bool k1 = exprHasSymRegion(state, cexpr->getKid(1), high);
              //llvm::errs() << cexpr->getKid(0) << " has high (" << high << " sym region?: " << k0 << "\n";
              //llvm::errs() << cexpr->getKid(1) << " has high (" << high << " sym region?: " << k1 << "\n";
              if (k0 && k1) {
                 if (cexpr->getKind() == Expr::And)
-                   return AndExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
-                                       getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise));
+                   return AndExpr::create(getProjectionOnRegion(state, cexpr->getKid(0),high,maybebitwise), 
+                                       getProjectionOnRegion(state, cexpr->getKid(1),high,maybebitwise));
                 else if (cexpr->getKind() == Expr::Or)
-                   return OrExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
-                                       getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise));
+                   return OrExpr::create(getProjectionOnRegion(state, cexpr->getKid(0),high,maybebitwise), 
+                                       getProjectionOnRegion(state, cexpr->getKid(1),high,maybebitwise));
                 else if (cexpr->getKind() == Expr::Xor)
-                   return XorExpr::create(getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise), 
-                                       getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise)); 
+                   return XorExpr::create(getProjectionOnRegion(state, cexpr->getKid(0),high,maybebitwise), 
+                                       getProjectionOnRegion(state, cexpr->getKid(1),high,maybebitwise)); 
                 else assert(false);
                   
              }
              else if (k0) {
-                return getProjectionOnRegion(cexpr->getKid(0),high,maybebitwise);
+                return getProjectionOnRegion(state, cexpr->getKid(0),high,maybebitwise);
              }
              else if (k1) {
-                return getProjectionOnRegion(cexpr->getKid(1),high,maybebitwise);
+                return getProjectionOnRegion(state, cexpr->getKid(1),high,maybebitwise);
              }
              else assert(false);
           }
@@ -547,7 +550,7 @@ ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
         int size = cexpr->getNumKids();
         int i;
         for(i=0; i<size; i++) {
-           ref<Expr> rexpr = getProjectionOnRegion(cexpr->getKid(i), high, maybebitwise);
+           ref<Expr> rexpr = getProjectionOnRegion(state, cexpr->getKid(i), high, maybebitwise);
            args.push_back(Expr::CreateArg(rexpr));
            //llvm::errs() << "args[" << i << "] " << args[i].expr << "\n";
         }    
@@ -560,8 +563,8 @@ ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high, bool maybebitwise) {
    }
 }
 
-ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high) {
-  return getProjectionOnRegion(cexpr, high, false);
+ref<Expr> Executor::getProjectionOnRegion(ExecutionState &state, ref<Expr> cexpr, bool high) {
+  return getProjectionOnRegion(state, cexpr, high, false);
 }
 
 ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id) {

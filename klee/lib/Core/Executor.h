@@ -15,6 +15,7 @@
 #ifndef KLEE_EXECUTOR_H
 #define KLEE_EXECUTOR_H
 
+#include "AnalyzeConstraint.h"
 #include "klee/ExecutionState.h"
 #include "klee/Interpreter.h"
 #include "klee/Internal/Module/Cell.h"
@@ -204,6 +205,27 @@ public:
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments, int tid) ;
 
+  bool isInRegion(ExecutionState &state, std::vector<region> rs, ref<Expr> offset, Expr::Width type);
+
+  bool checkSymInRegion(ExecutionState &state, region r, ref<Expr> offset, Expr::Width type);
+
+  bool isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width type, 
+      bool high);
+
+  bool isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type);
+
+  bool isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type);
+
+  std::vector<region> getHighInfoFlowRegions(ExecutionState &state, std::string fname, 
+                                    std::vector<ref<Expr> > & args);
+
+  bool exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool high);
+
+  std::vector<region> extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, bool high);
+
+  ref<Expr> getProjectionOnRegion(ExecutionState &state, ref<Expr> cexpr, bool high, bool maybebitwise);
+
+  ref<Expr> getProjectionOnRegion(ExecutionState &state, ref<Expr> cexpr, bool high);
 
   const MemoryObject *symbolizeReturnValueForAsmInstruction(ExecutionState &state, 
                                    KInstruction *target, llvm::Value *inst, bool &abort);
