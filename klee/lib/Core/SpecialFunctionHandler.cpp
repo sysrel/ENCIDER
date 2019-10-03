@@ -313,9 +313,15 @@ SpecialFunctionHandler::readStringAtAddress(ExecutionState &state,
   for (i = 0; i < mo->size - 1; i++) {
     ref<Expr> cur = os->read8(i);
     cur = executor.toUnique(state, cur);
-    assert(isa<ConstantExpr>(cur) && 
-           "hit symbolic char while reading concrete string");
-    buf[i] = cast<ConstantExpr>(cur)->getZExtValue(8);
+    /* SYSREL EXTENSION */
+    //assert(isa<ConstantExpr>(cur) && 
+      //     "hit symbolic char while reading concrete string");
+ 
+    if (isa<ConstantExpr>(cur) )
+       buf[i] = cast<ConstantExpr>(cur)->getZExtValue(8);
+    else 
+       buf[i] = '!';
+    /* SYSREL EXTENSION */
   }
   buf[i] = 0;
   
