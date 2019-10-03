@@ -1386,7 +1386,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
           allocationSize = constexp->getZExtValue();
       else {
            // check if we can derive a solution consistent with primArraySize
-           ref<Expr> primeq = EqExpr::create(arguments[param], ConstantExpr::create(primArraySize, 32));
+           ref<Expr> primeq = EqExpr::create(arguments[param], ConstantExpr::create(primArraySize, arguments[param]->getWidth()));
            bool ret = false;
            bool success = ((Executor*)(theInterpreter))->solver->mayBeTrue(state, primeq, ret);
            if(!success || !ret) {
