@@ -7320,10 +7320,14 @@ void Executor::executeAlloc(ExecutionState &state,
     }
 
     if (fixedSize.first) { // can be zero when fork fails
-       llvm::errs() << "Encountered a large alloc; symbolizing the return value instead!\n";
        // SYSREL extension 
-       bool abort = false;
-       symbolizeReturnValueSimple(state, target, target->inst->getParent()->getParent(), abort); 
+       //llvm::errs() << "Encountered a large alloc; symbolizing the return value instead!\n";
+       //bool abort = false;
+       //symbolizeReturnValueSimple(state, target, target->inst->getParent()->getParent(), abort); 
+       llvm::errs() << "Encountered a large alloc; using the primitive array size instead!\n";
+       ref<Expr> ps = ConstantExpr::alloc(primArraySize, 32);
+       executeAlloc(*fixedSize.first, ps, isLocal,
+                   target, zeroMemory, record, reallocFrom);
        //executeAlloc(*fixedSize.first, example, isLocal,
                    //target, zeroMemory, record, reallocFrom);
        // SYSREL extension 
