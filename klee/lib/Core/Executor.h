@@ -230,6 +230,10 @@ public:
   const MemoryObject *symbolizeReturnValueForAsmInstruction(ExecutionState &state, 
                                    KInstruction *target, llvm::Value *inst, bool &abort);
 
+  const MemoryObject *symbolizeReturnValueSimple(ExecutionState &state, 
+                                  KInstruction *target,
+                                  Function *function, bool &abort);
+
   const MemoryObject *symbolizeReturnValue(ExecutionState &state, 
                                   std::vector<ref<Expr> > &args,
                                   KInstruction *target,

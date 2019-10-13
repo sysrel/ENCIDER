@@ -40,6 +40,9 @@
 using namespace llvm;
 using namespace klee;
 
+// to be used when a symbolic size is passed to a malloc model
+#define MALLOC_CONC_SIZE 10000
+
 namespace {
   cl::opt<bool>
   ReadablePosix("readable-posix-inputs",
@@ -1386,7 +1389,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
           allocationSize = constexp->getZExtValue();
       else {
            // check if we can derive a solution consistent with primArraySize
-           ref<Expr> primeq = EqExpr::create(arguments[param], ConstantExpr::create(primArraySize, arguments[param]->getWidth()));
+           ref<Expr> primeq = EqExpr::create(arguments[param], ConstantExpr::create(MALLOC_CONC_SIZE, arguments[param]->getWidth()));
            bool ret = false;
            bool success = ((Executor*)(theInterpreter))->solver->mayBeTrue(state, primeq, ret);
            if(!success || !ret) {

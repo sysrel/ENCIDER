@@ -5661,6 +5661,9 @@ void Executor::run(ExecutionState &initialState) {
              #ifdef VBSC
 	            std::cerr << "\n>>>> Branch Condition : \n";
 		    r1->dump();
+                    const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);
+                    state.prevPC->inst->print(llvm::errs());
+                    printInfo(iit);                    
              #endif
              bool hasHloc = exprHasSymRegion(state, r1, true);
              bool hasLloc = exprHasSymRegion(state, r1, false);
@@ -6861,10 +6864,10 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    const ConstantExpr *co = dyn_cast<ConstantExpr>(offsetexpr);
                    if (co) {
                       if ((op.first->size - co->getZExtValue()) < sm->size) {
-                         #ifdef VB
+                         //#ifdef VB
                          llvm::errs() << "Lazy init of a void pointer mismatches real type, "
-                                       << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
-                         #endif
+                                      << op.first->size << " " << co->getZExtValue() << " " << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
+                         //#endif
                          terminateStateOnError((*tstate), "memory error: cast due a void pointer", Ptr,
                             NULL, getAddressInfo((*tstate), op.first->getBaseExpr()));
                          return false;
@@ -6947,10 +6950,10 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    const ConstantExpr *co = dyn_cast<ConstantExpr>(offsetexpr);
                    if (co) {
                       if ((op.first->size - co->getZExtValue()) < sm->size) {
-                         #ifdef VB
+                         //#ifdef VB
                          llvm::errs() << "Lazy init of a void pointer mismatches real type, "
-                                       << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
-                         #endif
+                                      << op.first->size << " " <<  co->getZExtValue() << " " << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
+                         //#endif
                          terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
                             NULL, getAddressInfo(state, op.first->getBaseExpr()));
                          term = true;
@@ -7008,6 +7011,50 @@ const MemoryObject *Executor::symbolizeReturnValueForAsmInstruction(ExecutionSta
        bindLocal(target, state, laddr);
 
    return mo;
+}
+
+const MemoryObject *Executor::symbolizeReturnValueSimple(ExecutionState &state, 
+                                  KInstruction *target,
+                                  Function *function, bool &abort) {
+
+    if (function->getReturnType()->isVoidTy())
+       return NULL;
+    std::string type_str;
+    llvm::raw_string_ostream rso(type_str);
+    function->getReturnType()->print(rso);
+    #ifdef VB
+    llvm::outs() << "return type of external function " << function->getName() << ": " << rso.str() << "\n";
+    #endif
+    const MemoryObject *mo;
+    ref<Expr> laddr;
+    llvm::Type *rType;
+    bool mksym;
+    llvm::Type *retType = function->getReturnType();
+    llvm::Type *allocType = retType;
+    if (retType->isPointerTy())
+       allocType = retType->getPointerElementType();
+    mo = memory->allocateLazyForTypeOrEmbedding(state, state.prevPC->inst, allocType, allocType,
+          isLazySingle(function->getReturnType(), "*"), 1, rType, laddr, mksym, abort);
+    if (abort) {
+       return NULL;
+    }
+    mo->name = "%sym" + std::to_string(target->dest) + "_" + getUniqueSymRegion(function->getName().str());
+    #ifdef VB
+    llvm::outs() << "mo=" << mo << "\n";
+    llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target$
+    #endif
+    if (mksym) {
+       #ifdef VB
+       llvm::outs() << "symbolizing return value \n";
+       #endif
+       executeMakeSymbolic(state, mo, mo->name, allocType, true);
+    }
+    if (allocType == retType)
+       executeMemoryOperation(state, -2, -2, false, laddr, 0, target);
+    else
+       bindLocal(target, state, laddr);
+
+    return mo;
 }
 
 
@@ -7272,9 +7319,15 @@ void Executor::executeAlloc(ExecutionState &state,
       }
     }
 
-    if (fixedSize.first) // can be zero when fork fails
-      executeAlloc(*fixedSize.first, example, isLocal,
-                   target, zeroMemory, record, reallocFrom);
+    if (fixedSize.first) { // can be zero when fork fails
+       llvm::errs() << "Encountered a large alloc; symbolizing the return value instead!\n";
+       // SYSREL extension 
+       bool abort = false;
+       symbolizeReturnValueSimple(state, target, target->inst->getParent()->getParent(), abort); 
+       //executeAlloc(*fixedSize.first, example, isLocal,
+                   //target, zeroMemory, record, reallocFrom);
+       // SYSREL extension 
+    }
   }
 }
 
