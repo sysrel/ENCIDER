@@ -205,23 +205,23 @@ public:
                                   llvm::Function *function,
                                   std::vector< ref<Expr> > &arguments, int tid) ;
 
-  bool isInRegion(ExecutionState &state, std::vector<region> rs, ref<Expr> offset, Expr::Width type);
+  bool isInRegion(ExecutionState &state, std::vector<region> rs, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed);
 
-  bool checkSymInRegion(ExecutionState &state, region r, ref<Expr> offset, Expr::Width type);
+  bool checkSymInRegion(ExecutionState &state, region r, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed);
 
-  bool isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width type, 
+  bool isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed,
       bool high);
 
-  bool isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type);
+  bool isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed);
 
-  bool isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type);
+  bool isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed);
 
   std::vector<region> getHighInfoFlowRegions(ExecutionState &state, std::string fname, 
                                     std::vector<ref<Expr> > & args);
 
   bool exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool high);
 
-  std::vector<region> extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, bool high);
+  std::vector<region> extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, int &numsym, bool top, bool high);
 
   ref<Expr> getProjectionOnRegion(ExecutionState &state, ref<Expr> cexpr, bool high, bool maybebitwise);
 

@@ -179,7 +179,8 @@ std::vector<region> Executor::getHighInfoFlowRegions(ExecutionState &state, std:
               std::vector<region> temp;
               ref<Expr> &argp = args[ifs.argno];
               if (argp.isNull()) continue;
-              std::vector<region> r1 = extractRegion(state, args[ifs.argno],ifs.ifregion,true);
+              int ns = 0;
+              std::vector<region> r1 = extractRegion(state, args[ifs.argno],ifs.ifregion,ns,true,true);
               if (r1.size() == 0) continue;
               std::vector<region> r2;
               intersect(ifs.ifregion, r1, r2);
@@ -345,7 +346,8 @@ const Array *renameArray(MemoryManager *memory, const Array *array, bool high, u
 bool Executor::exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool high) {
   region r;
   r.offset = 0; r.size = 64;
-  std::vector<region> r1 = extractRegion(state, cexpr,r,high);
+  int ns = 0; 
+  std::vector<region> r1 = extractRegion(state, cexpr,r,ns,true,high);
   if (r1.size() == 0) return false;
   for(unsigned int i=0; i<r1.size(); i++)
      llvm::errs() << "expr has high=" << high << " " << r1[i].offset << "," << r1[i].size << "\n";
@@ -379,33 +381,37 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
 }
 */
 
-std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, bool high) {
+std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, int &numsym, bool top, bool high) {
    std::vector<region> rs;
    //llvm::errs() << "extracting region from " << cexpr << "\n";
    switch (cexpr->getKind()) {
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
-          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, rexpr->getWidth(), high)) {
-             ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
-             if (!CE) { // approximating symbolic offset/index based on the possible range!
-                rs.push_back(range);
-               return rs;
-             }
-             else  {
-                region r;
-                r.offset = CE->getZExtValue() * rexpr->getWidth();
-                r.size = rexpr->getWidth();
-                llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
-                rs.push_back(r);
-                return rs;
-             }
+          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), high, false)) 
+             numsym++;
+          ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
+          if (!CE) { // approximating symbolic offset/index based on the possible range!
+             rs.push_back(range);
+             return rs;
           }
-          else return rs;
+          else  {
+             region r;
+             r.offset = CE->getZExtValue() * rexpr->getWidth();
+             r.size = rexpr->getWidth();
+             //llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
+             rs.push_back(r);
+             return rs;
+         }
       } 
       case Expr::Concat: {
-          //llvm::errs() << "in concat: \n"; 
-          std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, high);
-          std::vector<region> r2 = extractRegion(state, cexpr->getKid(1), range, high);
+          //llvm::errs() << "in concat: \n";
+          int numsym1 = 0;
+          int numsym2 = 0; 
+          std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, numsym1, false, high);
+          std::vector<region> r2 = extractRegion(state, cexpr->getKid(1), range, numsym2, false, high);
+          numsym += numsym1 + numsym2;
+          if (top && numsym == 0) 
+             return rs; 
           if  (r1.size() == 0 && r2.size() == 0) {
               return rs;
           }
@@ -414,27 +420,35 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
           }
           else if (r2.size() == 0) {
              return r1; 
-          }           
+          }
           //llvm::errs() << " concat merging..\n";
           mergeAndCoalesce(r1, r2, rs);           
           return rs;
       }
       case Expr::Extract: {
         ExtractExpr *EE = dyn_cast<ExtractExpr>(cexpr);
-        std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, high);
+        int numsym1 = 0;
+        std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, numsym1, false, high);
+        numsym += numsym1;
         region r2;
         r2.offset = EE->offset;
         r2.size = EE->width;
         std::vector<region> r3; 
         bool inter = intersect(r2,r1,r3);         
+        if (top && numsym1 == 0)
+           return rs;
         if (inter) 
            return r3;
         return rs;
       }
       case Expr::Shl: 
       case Expr::LShr:
-      case Expr::AShr: { 
-        std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, high);
+      case Expr::AShr: {
+        int numsym1 = 0; 
+        std::vector<region> r1 = extractRegion(state, cexpr->getKid(0), range, numsym1, false, high);
+        numsym += numsym1;
+        if (top && numsym1 == 0)
+           return rs;
         if (r1.size() == 0) return rs;
         ConstantExpr * CE = dyn_cast<ConstantExpr>(cexpr->getKid(1));
         if (!CE) { // approximating symbolic offset/index based on the possible range!
@@ -453,7 +467,12 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
       }
       default: {
          if (cexpr->getKind() == Expr::SExt || cexpr->getKind() == Expr::ZExt)  {
-            return extractRegion(state, cexpr->getKid(0), range, high);
+            int numsym1 = 0;
+            std::vector<region> rs1 = extractRegion(state, cexpr->getKid(0), range, numsym1, false, high);
+            numsym += numsym1;
+            if (top && numsym1 == 0)
+               return rs;
+            return rs1;
          }        
          /*else if (!boolOp && (cexpr->getKind() == Expr::Slt || cexpr->getKind() == Expr::Sle || 
                   cexpr->getKind() == Expr::Sgt || cexpr->getKind() == Expr::Sge || 
@@ -467,14 +486,18 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
          }*/
          else if (cexpr->getNumKids() > 0) {
             //llvm::errs() << "child 0 " << cexpr->getKid(0) << "\n";
-            std::vector<region> rtemp1 = extractRegion(state, cexpr->getKid(0), range, high);
+            int numsym1 = 0; 
+            std::vector<region> rtemp1 = extractRegion(state, cexpr->getKid(0), range, numsym1, false, high);
+            numsym += numsym1;
             //llvm::errs() << "child 0 " << cexpr->getKid(0) << " results (high=" << high << "): \n"; 
             //for(unsigned int i=0; i<rtemp1.size(); i++)
               // llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
             std::vector<region> rtemp3; 
             for(unsigned int i=1; i<cexpr->getNumKids(); i++) {
                //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << "\n";
-               std::vector<region> rtemp2 = extractRegion(state, cexpr->getKid(i), range, high);
+               int numsym2 = 0;
+               std::vector<region> rtemp2 = extractRegion(state, cexpr->getKid(i), range, numsym2, false, high);
+               numsym += numsym2;
                //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << " results (high=" << high << "): \n";
                //for(unsigned int j=0; j<rtemp2.size(); j++)
                  // llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
@@ -482,6 +505,8 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
                rtemp1 = rtemp3;
                rtemp3.clear();
             }
+            if (top && numsym == 0)
+               return rs; 
             return rtemp1;
          }
          else return rs;

@@ -251,6 +251,7 @@ bool operator<(const InfoFlowRegion_t ifr1, const InfoFlowRegion_t ifr2) {
 // this is to avoid assertion failure
 // represents size in bits so SIZE_FOR_UNTYPED (2000) * 8
 #define SIZE_FOR_UNKNOWN_TYPES 8*8
+int MAX_ALLOC_SIZE=10240;
 
 cl::opt<bool>
 InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"),
@@ -1614,45 +1615,58 @@ bool rangesIntersect(unsigned min1, unsigned max1, unsigned min2, unsigned max2)
   return true; 
 }
 
-bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offset, Expr::Width type)  {
+bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed)  {
     ref<Expr> rbase = ConstantExpr::alloc(r.offset, offset->getWidth());
     ref<Expr> rend =  ConstantExpr::alloc(r.offset + r.size - 1, offset->getWidth());
-    ref<Expr> end = AddExpr::create(offset, ConstantExpr::alloc(type - 1, offset->getWidth())); 
-    ref<Expr> ie1 =  UleExpr::create(rbase, offset);
-    ref<Expr> ie2 = UleExpr::create(rend, end);
-    ref<Expr> case1 = AndExpr::create(ie1, ie2);
-    ref<Expr> ie3 = UleExpr::create(offset, rbase);
-    ref<Expr> ie4 = UleExpr::create(end, rend);
-    ref<Expr> case2 = AndExpr::create(ie3, ie4);
-    ref<Expr> intexp = OrExpr::create(case1, case2);
+    ref<Expr> o1 = offset;
+    if (!computed)
+       o1 = MulExpr::create(offset, ConstantExpr::alloc(offsetType, offset->getWidth()));
+    ref<Expr> end = AddExpr::create(o1, ConstantExpr::alloc(type - 1, offset->getWidth())); 
+    ref<Expr> case1 = UgtExpr::create(rbase, end);
+    ref<Expr> case2 = UgtExpr::create(o1, rend);
 
-    bool res;    
+    bool res = false;    
     double timeout = coreSolverTimeout;
     solver->setTimeout(timeout);
-    bool success = solver->mayBeTrue(state, intexp, res);
+    bool success = solver->mayBeTrue(state, case1, res);
     solver->setTimeout(0);
     if (success && res) 
-       return true;
-    return false;
+       return false;
+    res = false;
+    solver->setTimeout(timeout);
+    success = solver->mayBeTrue(state, case2, res);
+    solver->setTimeout(0);
+    if (success && res) 
+       return false;
+    return true;
 }
 
-bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Expr> offset, Expr::Width type) {
+// offset must already be computed as the byte offset
+bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed) {
   if (klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(offset)) {
      uint64_t value = CE->getZExtValue();     
+     uint64_t base;
+     if (computed) 
+        base = value;
+     else base = value*offsetType;
      for(unsigned int i=0; i < rs.size(); i++) {
-        if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, value*type, value*type + type-1)) {
+        
+        llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+                         base << "," << base + type-1 << "\n";        
+        if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, base, base + type-1)) {
            llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-                         value*type << "," << value*type + type-1 << "\n";
+                         base << "," << base + type-1 << "\n";
            return true; 
         }
      }
   }
   else {
      for(unsigned int i=0; i < rs.size(); i++) {
-        if (checkSymInRegion(state, rs[i], offset, type)) {
+        if (checkSymInRegion(state, rs[i], offset, offsetType, type, computed)) {
            return true;
         } 
      }
+    llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
   }
   return false;
 }
@@ -1664,34 +1678,37 @@ bool isASymRegion(std::string symname, bool high) {
       return (lowSymRegions.find(symname) != lowSymRegions.end()); 
 }
 
-bool Executor::isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width type, 
+bool Executor::isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed,  
       bool high) {
   //llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
   if (high) {
      if (highSymRegions.find(symname) == highSymRegions.end()) 
         return false;
      std::vector<region> rs = highSymRegions[symname];    
-     return isInRegion(state, rs, offset, type);
+     return isInRegion(state, rs, offset, offsetType, type, computed);
   }
   else {
      if (lowSymRegions.find(symname) == lowSymRegions.end()) 
         return false;
      std::vector<region> rs = lowSymRegions[symname];
-     return isInRegion(state, rs, offset, type);
+     return isInRegion(state, rs, offset, offsetType, type, computed);
   }
 }
 
-bool Executor::isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
+bool Executor::isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed) {
   long sa = (long)&state;
   if (highMemoryRegions.find(sa) == highMemoryRegions.end()) {
      assert(false && "State does not have high regions!!!");
   }
   std::map<ref<Expr>, std::vector<region> > m = highMemoryRegions[sa];
-  if (m.find(baseAddress) == m.end())
+  if (m.find(baseAddress) == m.end()) {
+     llvm::errs() << "base address not marked as security sensitive\n";
      return false;
+  }
   else {
      std::vector<region> rs = m[baseAddress];
-     return isInRegion(state, rs, offset, type);
+     llvm::errs() << "checking if is in high mem region: \n";
+     return isInRegion(state, rs, offset, offsetType, type, computed);
   }
 }
 
@@ -1704,7 +1721,7 @@ void printSymRegions() {
      llvm::errs() << k.first << "\n";
 }
 
-bool Executor::isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width type) {
+bool Executor::isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed) {
   long sa = (long)&state;
   if (lowMemoryRegions.find(sa) == lowMemoryRegions.end()) {
      assert(false && "State does not have low regions!!!");
@@ -1714,7 +1731,7 @@ bool Executor::isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress,
      return false;
   else {
      std::vector<region> rs = m[baseAddress];
-     return isInRegion(state, rs, offset, type);
+     return isInRegion(state, rs, offset, offsetType, type, computed);
   }
 }
 
@@ -4664,8 +4681,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> index = eval(ki, it->first, state).value;
 
       #ifdef VB
-      llvm::outs() << "gep index: " << index << "\n";
-      llvm::outs() << "gep pointer: " << Expr::createPointer(elementSize) << "\n";
+      llvm::errs() << "gep index: " << index << "\n";
+      llvm::errs() << "gep pointer: " << Expr::createPointer(elementSize) << "\n";
       #endif
 
       /* SYSREL extension */ 
@@ -5658,15 +5675,17 @@ void Executor::run(ExecutionState &initialState) {
 	 for(; it!=successorsPaths->end(); ++it) {
             ExecutionState *s = *it;
  	    ref<Expr> r1 = s->lastCondition;
+             bool hasHloc = exprHasSymRegion(state, r1, true);
+             bool hasLloc = exprHasSymRegion(state, r1, false);
              #ifdef VBSC
 	            std::cerr << "\n>>>> Branch Condition : \n";
 		    r1->dump();
                     const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);
                     state.prevPC->inst->print(llvm::errs());
                     printInfo(iit);                    
+                    llvm::errs() << "has high? " << hasHloc << "\n";
+                    llvm::errs() << "has low? " << hasLloc << "\n";
              #endif
-             bool hasHloc = exprHasSymRegion(state, r1, true);
-             bool hasLloc = exprHasSymRegion(state, r1, false);
              RD* srd = newNode(s);
 	     s->rdid = srd->stateid;
 	     rdmapinsert(s->rdid, srd);
@@ -6263,7 +6282,8 @@ void Executor::callExternalFunction(ExecutionState &state,
                 return;
              }
              ref<Expr> ret_value = getDestCell(state, target).value;
-             symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments, ret_value);
+             if (!ret_value.isNull())
+                symbolizeAndMarkArgumentsOnReturn(state, target, function, arguments, ret_value);
           }
        } // even if a model is handled via modeling it may be designated as an input function!
        // to be handled while model is simulated!
@@ -7167,17 +7187,23 @@ void Executor::executeAlloc(ExecutionState &state,
                             bool record,
                             const ObjectState *reallocFrom) {
   #ifdef VB 
-  llvm::outs() << "Alloc'ing...\n";
+  llvm::errs() << "Alloc'ing...\n";
   #endif
   size = toUnique(state, size);
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(size)) {
     const llvm::Value *allocSite = state.prevPC->inst;
     size_t allocationAlignment = getAllocationAlignment(allocSite);
+    int allocsize = CE->getZExtValue();
     #ifdef VB
-    llvm::errs() << "Alloc size: " << CE->getZExtValue() << "\n";
+    llvm::errs() << "Alloc size: " << CE->getZExtValue() << " or " << allocsize << " vs MAX: " << MAX_ALLOC_SIZE << " " << (CE->getZExtValue() > MAX_ALLOC_SIZE) << "\n";
     #endif
+    if (allocsize <= 0 || allocsize > MAX_ALLOC_SIZE) {
+       //llvm::errs() << "Replacing " << allocsize << " alloc size with " << primArraySize << "\n";
+       allocsize = primArraySize;
+    }
+    //llvm::errs() << "adjusted alloc size: " << allocsize << "\n"; 
     MemoryObject *mo =
-        memory->allocate(CE->getZExtValue(), isLocal, /*isGlobal=*/false,
+        memory->allocate(allocsize, isLocal, /*isGlobal=*/false,
                          allocSite, allocationAlignment);
 
    
@@ -7266,6 +7292,8 @@ void Executor::executeAlloc(ExecutionState &state,
       example = tmp;
     }
 
+    llvm::errs() << "Inferred alloc size " << example << "\n";
+
     StatePair fixedSize = fork(state, EqExpr::create(example, size), true);
 
     if (fixedSize.second) {
@@ -7281,7 +7309,13 @@ void Executor::executeAlloc(ExecutionState &state,
       assert(success && "FIXME: Unhandled solver failure");
       (void) success;
       if (res) {
-        executeAlloc(*fixedSize.second, tmp, isLocal,
+        if (lazyInit) {
+           ref<Expr> ps = ConstantExpr::alloc(primArraySize, 32);
+           executeAlloc(*fixedSize.second, ps, isLocal,
+                     target, zeroMemory, record, reallocFrom);
+        }
+        else 
+           executeAlloc(*fixedSize.second, tmp, isLocal,
                      target, zeroMemory, record, reallocFrom);
       } else {
         // See if a *really* big value is possible. If so assume
@@ -7300,8 +7334,8 @@ void Executor::executeAlloc(ExecutionState &state,
 
           /* SYSREL extension */
           if (lazyInit) {
-             llvm::errs() << "concretized symbolic size as " << 10 << "\n";
-              executeAlloc(*hugeSize.second, ConstantExpr::create(10,64), isLocal,
+             llvm::errs() << "concretized symbolic size as " << primArraySize << "\n";
+              executeAlloc(*hugeSize.second, ConstantExpr::create(primArraySize,32), isLocal,
                    target, zeroMemory, record, reallocFrom);
 
          }
@@ -7450,14 +7484,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
+  //#ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  #endif
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -7493,11 +7527,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     }
 
     ref<Expr> offset = mo->getOffsetExpr(address);
-    #ifdef VB
-    llvm::outs() << "address for memop " << address << "\n";
-    llvm::outs() << "default offset for target address " << offset << "\n";
-    llvm::outs() << "base memory address " << mo->getBaseExpr() << "\n";
-    #endif
+    //#ifdef VB
+    llvm::errs() << "address for memop " << address << "\n";
+    llvm::errs() << "default offset for target address " << offset << "\n";
+    llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
+    //#endif
     /* SYSREL EXTENSION */
     if (forcedOffset) {
        offset = ConstantExpr::alloc(0, Expr::Int64);
@@ -7601,9 +7635,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            #ifdef VB
+            //#ifdef VB
             llvm::errs() << "load orig result: " << result << "\n";
-            #endif
+            //#endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -7615,10 +7649,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               #ifdef VB 
+               //#ifdef VB 
                llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               #endif
+               //#endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -7629,10 +7663,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 #ifdef VB
+                 //#ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
-                 #endif
+                 //#endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
@@ -7651,24 +7685,24 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   
 
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
-                  #endif
+                  //#endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
                   } 
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
-                  #endif
+                  //#endif
                   forcedOffset = true;
                   executeMemoryOperation(state, -2, -2, true, address, laddr, target);
                   forcedOffset = false;
                   result = laddr;
                   /* side channel */
                   // check if initializing a pointer field of a high security memory object
-                  if (isInHighMemoryRegion(state, baseAddress, offset, type)) {
+                  if (isInHighMemoryRegion(state, baseAddress, offset, Expr::Int8, type, true)) {
                      std::vector<region> rs; 
                      if (highTypeRegions.find(rso2str) != highTypeRegions.end()) {
                         rs = highTypeRegions[rso2str];
@@ -7682,12 +7716,12 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                      setHighMemoryRegion(state, mo->getBaseExpr(), rs);
                      setHighSymRegion(mo->name, rs);
                      mo->ishigh = true;
-                     #ifdef VB
+                     //#ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
-                     #endif
+                     //#endif
                   }
-                  if (isInLowMemoryRegion(state, baseAddress, offset, type)) {
+                  if (isInLowMemoryRegion(state, baseAddress, offset, Expr::Int8, type, true)) {
                      std::vector<region> rs; 
                      if (lowTypeRegions.find(rso2str) != lowTypeRegions.end()) {
                         rs = lowTypeRegions[rso2str];
@@ -7766,9 +7800,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   ExecutionState *unbound = &state;
 
   int index = 0;
-
+  const MemoryObject *mo; 
   for (ResolutionList::iterator i = rl.begin(), ie = rl.end(); i != ie; ++i) {
-    const MemoryObject *mo = i->first;
+    mo = i->first;
     const ObjectState *os = i->second;
     ref<Expr> inBounds = mo->getBoundsCheckPointer(address, bytes);
 
@@ -7841,13 +7875,13 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       #endif
       std::string s;
       llvm::raw_string_ostream ors(s);
-      ors << "Memory out of bound\n";
+      ors << "memory error: out of bound pointer, mem base=" << mo->getBaseExpr() << " offsending address = " << address << " mem size= " << mo->size << "\n";
       state.dumpStack(ors);
       #ifdef VB 
       llvm::outs() << ors.str() ;
       ExprPPrinter::printConstraints(llvm::outs(), state.constraints);
       #endif
-      terminateStateOnError(*unbound, "memory error: out of bound pointer", Ptr,
+      terminateStateOnError(*unbound, ors.str()/* "memory error: out of bound pointer"*/, Ptr,
                             NULL, getAddressInfo(*unbound, address));
     }
   }
@@ -8062,6 +8096,9 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                  std::vector<region> rs; 
                  if (highTypeRegions.find(atname) != highTypeRegions.end()) {
                     rs = highTypeRegions[atname];
+                    llvm::errs() << "high security regions from type def\n";
+                    for(unsigned int hr=0; hr<rs.size(); hr++)
+                       llvm::errs() << rs[hr].offset << "," << rs[hr].size << "\n"; 
                  }
                  else { // if not specified assume the whole region is high security sensitive
                     region r;
@@ -8107,8 +8144,14 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                  }
                  if (highTypeRegions.find(atname) != highTypeRegions.end()) {
                     std::vector<region> rs = highTypeRegions[atname];  
+                    llvm::errs() << "high security regions from type def\n";
+                    for(unsigned int hr=0; hr<rs.size(); hr++)
+                       llvm::errs() << rs[hr].offset << "," << rs[hr].size << "\n"; 
                     setHighMemoryRegion(state, mo->getBaseExpr(), rs);
                     setHighSymRegion(mo->name, rs); 
+                    //#ifdef VB
+                    llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as high security insensitive\n";
+                    //#endif            
                  }
               }
               if (!nosym/* && mksym*/) {
