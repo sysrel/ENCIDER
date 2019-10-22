@@ -349,8 +349,8 @@ bool Executor::exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool hig
   int ns = 0; 
   std::vector<region> r1 = extractRegion(state, cexpr,r,ns,true,high);
   if (r1.size() == 0) return false;
-  for(unsigned int i=0; i<r1.size(); i++)
-     llvm::errs() << "expr has high=" << high << " " << r1[i].offset << "," << r1[i].size << "\n";
+  //for(unsigned int i=0; i<r1.size(); i++)
+    // llvm::errs() << "expr has high=" << high << " " << r1[i].offset << "," << r1[i].size << "\n";
   for(unsigned int i=0; i<r1.size(); i++)
      if (r1[i].size > 0)
         return true;

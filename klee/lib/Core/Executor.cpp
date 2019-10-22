@@ -1651,11 +1651,11 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
      else base = value*offsetType;
      for(unsigned int i=0; i < rs.size(); i++) {
         
-        llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-                         base << "," << base + type-1 << "\n";        
+        //llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+          //               base << "," << base + type-1 << "\n";        
         if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, base, base + type-1)) {
-           llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-                         base << "," << base + type-1 << "\n";
+           //llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+             //            base << "," << base + type-1 << "\n";
            return true; 
         }
      }
@@ -1666,7 +1666,7 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
            return true;
         } 
      }
-    llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
+    //llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
   }
   return false;
 }
@@ -4717,11 +4717,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
  
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
-      //#ifdef VB
+      #ifdef VB
       ki->inst->print(llvm::errs());  
       llvm::errs() << "geptr offset: " << kgepi->offset << "\n";
       llvm::errs() << "geptr base: " << base << "\n";
-      //#endif
+      #endif
     }
     #ifdef VB
     llvm::errs() << "geptr final base: " << base << "\n";
@@ -4734,12 +4734,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        // Let cache line size denoted by 2^L and memory address size denoted by N
        // Since N-L bits are used to decide the cache line that gets accessed, we will check the following formula
        // \exists high'. base >> L<> base[high'/high] >> L
-       llvm::errs() << "Checking for cache based side channel:\n";
+       //llvm::errs() << "Checking for cache based side channel:\n";
        ref<Expr> rexpr = renameExpr(memory, base, true); 
        //llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
        ref<Expr> diffcachelines;
        if (cacheLineMode) {
-          llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
+          //llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
           ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
           ref<Expr> clexpr2 = LShrExpr::alloc(rexpr, ConstantExpr::alloc(cacheLineBits, 64));
           ref<Expr> cleqexpr = EqExpr::create(clexpr1, clexpr2);
@@ -7485,14 +7485,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -7528,11 +7528,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     }
 
     ref<Expr> offset = mo->getOffsetExpr(address);
-    //#ifdef VB
+    #ifdef VB
     llvm::errs() << "address for memop " << address << "\n";
     llvm::errs() << "default offset for target address " << offset << "\n";
     llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
-    //#endif
+    #endif
     /* SYSREL EXTENSION */
     if (forcedOffset) {
        offset = ConstantExpr::alloc(0, Expr::Int64);
@@ -7636,9 +7636,9 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         /* SYSREL EXTENSION */
        if (lazyInit) {
         if (!dyn_cast<ConstantExpr>(result)) {
-            //#ifdef VB
+            #ifdef VB
             llvm::errs() << "load orig result: " << result << "\n";
-            //#endif
+            #endif
             bool lazyInitTemp = false, singleInstance = false;
             llvm::Instruction *inst = state.prevPC->inst;
             llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -7650,10 +7650,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               //#ifdef VB 
+               #ifdef VB 
                llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               //#endif
+               #endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -7664,10 +7664,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 //#ifdef VB
+                 #ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
-                 //#endif
+                 #endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
@@ -7686,17 +7686,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   
 
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
-                  //#endif
+                  #endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
                   } 
-                  //#ifdef VB
+                  #ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
-                  //#endif
+                  #endif
                   forcedOffset = true;
                   executeMemoryOperation(state, -2, -2, true, address, laddr, target);
                   forcedOffset = false;
@@ -7717,10 +7717,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                      setHighMemoryRegion(state, mo->getBaseExpr(), rs);
                      setHighSymRegion(mo->name, rs);
                      mo->ishigh = true;
-                     //#ifdef VB
+                     #ifdef VB
                      llvm::errs() << "lazy initialized memory object " << mo->name << " at " <<  laddr 
                                   << " and container base " << mo->getBaseExpr() << " marked security sensitive\n";
-                     //#endif
+                     #endif
                   }
                   if (isInLowMemoryRegion(state, baseAddress, offset, Expr::Int8, type, true)) {
                      std::vector<region> rs; 
