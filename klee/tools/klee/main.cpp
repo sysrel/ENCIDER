@@ -188,7 +188,15 @@ void writeSecuritySenstiveBranches(const char *fname) {
 }
 
 
-
+void writeCacheSideChannels(const char *fname) {
+  std::fstream rc(fname, std::fstream::out);
+  if (rc.is_open()) {
+     for(auto s: cachelocs) {
+        rc << s.first << ":" << s.second << "\n\n";
+     }
+     rc.close();
+  }
+}
 
 
 void writeSensitiveLeaksOnStack(const char *fname) {
@@ -2596,6 +2604,7 @@ int main(int argc, char **argv, char **envp) {
   writeSensitiveFlows("sensitiveFlows.txt"); 
   writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
   writeSecuritySenstiveBranches("securitySensitiveBranches.txt");
+  writeCacheSideChannels("cacheSideChannels.txt");
 
   delete handler;
 
