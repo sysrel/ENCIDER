@@ -387,7 +387,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
    switch (cexpr->getKind()) {
       case Expr::Read: {
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
-          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), high, false)) 
+          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), false, high)) 
              numsym++;
           ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
           if (!CE) { // approximating symbolic offset/index based on the possible range!

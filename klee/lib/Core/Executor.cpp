@@ -4717,10 +4717,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
  
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
-      #ifdef VB
-      llvm::errs() << "geptr offset: " << Expr::createPointer(kgepi->offset) << "\n";
+      //#ifdef VB
+      ki->inst->print(llvm::errs());  
+      llvm::errs() << "geptr offset: " << kgepi->offset << "\n";
       llvm::errs() << "geptr base: " << base << "\n";
-      #endif
+      //#endif
     }
     #ifdef VB
     llvm::errs() << "geptr final base: " << base << "\n";
