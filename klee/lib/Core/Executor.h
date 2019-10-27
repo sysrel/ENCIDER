@@ -162,6 +162,10 @@ public:
                  std::vector<ref<Expr> > & argsOrig, 
                  std::vector<ref<Expr> > & argsRes);
 
+  void recordMostRecentBranchInfo(ExecutionState &state, ref<Expr> cond, llvm::Instruction *brinst) ;
+
+  void getMostRecentBranchInfo(ExecutionState &state, ref<Expr> &cond, llvm::Instruction *&brinst, bool &found) ;
+
   void checkAndUpdateInfoFlow(ExecutionState &state, llvm::Function *f, std::vector<ref<Expr> > & args, const MemoryObject *mo) ;
 
   void checkAndRecordSensitiveFlow(ExecutionState &state, llvm::Function *function, 

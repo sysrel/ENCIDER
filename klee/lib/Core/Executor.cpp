@@ -154,7 +154,8 @@ std::map<long, std::map<ref<Expr>, std::vector<region> > > highMemoryRegions;
 // Maps addresses of ExecutionState's to addresses of low security sensitive regions
 // regions provide precise tracking of subregions
 std::map<long, std::map<ref<Expr>, std::vector<region> > > lowMemoryRegions;
-klee::ref<Expr> branchCondition;
+std::map<long, klee::ref<Expr> > branchConditionMap;
+std::map<long, llvm::Instruction*> branchInstrMap;
 std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
 extern std::string entryFunctionName;
 //extern std::map<std::string, std::set<int> > dynamicHighLoc, dynamicLowLoc;
@@ -188,6 +189,23 @@ std::set<long> updatedWithSymbolic;
 
 std::string infoFlowSummarizedFuncName;
 Function *infoFlowSummarizedFunc = NULL;
+
+void Executor::recordMostRecentBranchInfo(ExecutionState &state, ref<Expr> cond, llvm::Instruction *brinst) {
+  long sid = (long)&state;
+  branchConditionMap[sid] = cond;
+  branchInstrMap[sid] = brinst;      
+}
+
+void Executor::getMostRecentBranchInfo(ExecutionState &state, ref<Expr> &cond, llvm::Instruction *&brinst, bool &found) {
+  long sid = (long)&state;
+  if (branchConditionMap.find(sid) == branchConditionMap.end() || branchInstrMap.find(sid) == branchInstrMap.end()) {
+     found = false;
+     return;
+  }
+  cond = branchConditionMap[sid];
+  brinst = branchInstrMap[sid];
+  found = true;
+}
 
 //#ifdef INFOFLOW
 // InfoFlowSummarization
@@ -1651,11 +1669,11 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
      else base = value*offsetType;
      for(unsigned int i=0; i < rs.size(); i++) {
         
-        //llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-          //               base << "," << base + type-1 << "\n";        
+        llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+                         base << "," << base + type-1 << "\n";        
         if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, base, base + type-1)) {
-           //llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-             //            base << "," << base + type-1 << "\n";
+           llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+                         base << "," << base + type-1 << "\n";
            return true; 
         }
      }
@@ -1666,7 +1684,7 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
            return true;
         } 
      }
-    //llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
+    llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
   }
   return false;
 }
@@ -3859,7 +3877,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
              "Wrong operand index!");
       ref<Expr> cond = eval(ki, 0, state).value;
       /* SYSREL side channel begin */
-      branchCondition = cond;
+      recordMostRecentBranchInfo(state, cond, i);
       /* SYSREL side channel end */
       //llvm::errs() << "PC: \n"; 
       //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
@@ -3986,7 +4004,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     SwitchInst *si = cast<SwitchInst>(i);
     ref<Expr> cond = eval(ki, 0, state).value;
     /* SYSREL side channel begin */
-    branchCondition = cond;
+    recordMostRecentBranchInfo(state, cond, i);
     /* SYSREL side channel  end */
     BasicBlock *bb = si->getParent();
 
@@ -5675,7 +5693,12 @@ void Executor::run(ExecutionState &initialState) {
     	 bool done = false;
 	 for(; it!=successorsPaths->end(); ++it) {
             ExecutionState *s = *it;
- 	    ref<Expr> r1 = s->lastCondition;
+ 	    //ref<Expr> r1 = s->lastCondition;
+ 	    ref<Expr> r1;
+            llvm::Instruction *brInst = NULL;
+            bool mrbfound = false;
+            getMostRecentBranchInfo(state,r1,brInst, mrbfound);
+            assert(mrbfound && "Most recent branch of the state has not been recorded\n");
              bool hasHloc = exprHasSymRegion(state, r1, true);
              bool hasLloc = exprHasSymRegion(state, r1, false);
              #ifdef VBSC
@@ -5722,6 +5745,11 @@ void Executor::run(ExecutionState &initialState) {
                       RD::numHAncestors++;
                       std::stringstream ss;
                       ss << ii_info.file.c_str() << " " << ii_info.line << ":\n ";
+                      std::string tstr;
+                      llvm::raw_string_ostream ros(tstr);
+                      if (brInst != NULL)
+                         ros << (*brInst) << "\n";
+                      ss << ros.str() ;
                       ss << proj << "\n";
                       securitySensitiveBranches.insert(ss.str());
 	           }
