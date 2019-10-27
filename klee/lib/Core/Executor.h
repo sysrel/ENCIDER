@@ -162,9 +162,9 @@ public:
                  std::vector<ref<Expr> > & argsOrig, 
                  std::vector<ref<Expr> > & argsRes);
 
-  void recordMostRecentBranchInfo(ExecutionState &state, ref<Expr> cond, llvm::Instruction *brinst) ;
+  void recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) ;
 
-  void getMostRecentBranchInfo(ExecutionState &state, ref<Expr> &cond, llvm::Instruction *&brinst, bool &found) ;
+  void getMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *&brinst, bool &found) ;
 
   void checkAndUpdateInfoFlow(ExecutionState &state, llvm::Function *f, std::vector<ref<Expr> > & args, const MemoryObject *mo) ;
 
@@ -584,7 +584,7 @@ private:
   /// NULL pointers for states which were unable to be created.
   void branch(ExecutionState &state, 
               const std::vector< ref<Expr> > &conditions,
-              std::vector<ExecutionState*> &result);
+              std::vector<ExecutionState*> &result, bool forBranch=false);
   /* SYSREL extension */
   void branchThread(ExecutionState &state, 
                       const std::vector< ref<Expr> > &conditions,
@@ -594,7 +594,7 @@ public:
   // Fork current and return states in which condition holds / does
   // not hold, respectively. One of the states is necessarily the
   // current state, and one of the states may be null.
-  StatePair fork(ExecutionState &current, ref<Expr> condition, bool isInternal);
+  StatePair fork(ExecutionState &current, ref<Expr> condition, bool isInternal, bool forBranch=false);
   /* SYSREL extension */
   StatePair forkThread(ExecutionState &current, ref<Expr> condition, bool isInternal, int tid) ;
 
@@ -603,7 +603,8 @@ public:
   /// function is a wrapper around the state's addConstraint function
   /// which also manages propagation of implied values,
   /// validity checks, and seed patching.
-  void addConstraint(ExecutionState &state, ref<Expr> condition);
+  void addConstraint(ExecutionState &state, ref<Expr> condition, bool forBranch=false);
+
 
 private:
 

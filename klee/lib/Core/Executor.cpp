@@ -190,21 +190,21 @@ std::set<long> updatedWithSymbolic;
 std::string infoFlowSummarizedFuncName;
 Function *infoFlowSummarizedFunc = NULL;
 
-void Executor::recordMostRecentBranchInfo(ExecutionState &state, ref<Expr> cond, llvm::Instruction *brinst) {
+void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
   long sid = (long)&state;
-  branchConditionMap[sid] = cond;
-  branchInstrMap[sid] = brinst;      
+  branchInstrMap[sid] = brinst;     
+  //llvm::errs() << "Recorded most recent branch as " << (*brinst) << "\n";
 }
 
-void Executor::getMostRecentBranchInfo(ExecutionState &state, ref<Expr> &cond, llvm::Instruction *&brinst, bool &found) {
+void Executor::getMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *&brinst, bool &found) {
   long sid = (long)&state;
-  if (branchConditionMap.find(sid) == branchConditionMap.end() || branchInstrMap.find(sid) == branchInstrMap.end()) {
+  if (branchInstrMap.find(sid) == branchInstrMap.end()) {
      found = false;
      return;
   }
-  cond = branchConditionMap[sid];
   brinst = branchInstrMap[sid];
   found = true;
+  //llvm::errs() << "Most recent branch: " << (*brinst) << "\n"; 
 }
 
 //#ifdef INFOFLOW
@@ -2804,7 +2804,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
 
 void Executor::branch(ExecutionState &state,
                       const std::vector< ref<Expr> > &conditions,
-                      std::vector<ExecutionState*> &result) {
+                      std::vector<ExecutionState*> &result, bool forBranch) {
   TimerStatIncrementer timer(stats::forkTime);
   unsigned N = conditions.size();
   assert(N);
@@ -2885,11 +2885,11 @@ void Executor::branch(ExecutionState &state,
 
   for (unsigned i=0; i<N; ++i)
     if (result[i])
-      addConstraint(*result[i], conditions[i]);
+      addConstraint(*result[i], conditions[i], forBranch);
 }
 
 Executor::StatePair
-Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
+Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal, bool forBranch) {
 
 
   Solver::Validity res;
@@ -2919,7 +2919,7 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
       bool success = solver->getValue(current, condition, value);
       assert(success && "FIXME: Unhandled solver failure");
       (void) success;
-      addConstraint(current, EqExpr::create(value, condition));
+      addConstraint(current, EqExpr::create(value, condition), forBranch);
       condition = value;
     }
   }
@@ -2950,10 +2950,10 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
         // add constraints
         if(branch) {
           res = Solver::True;
-          addConstraint(current, condition);
+          addConstraint(current, condition, forBranch);
         } else  {
           res = Solver::False;
-          addConstraint(current, Expr::createIsZero(condition));
+          addConstraint(current, Expr::createIsZero(condition), forBranch);
         }
       }
     } else if (res==Solver::Unknown) {
@@ -2975,10 +2975,10 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
 
         TimerStatIncrementer timer(stats::forkTime);
         if (theRNG.getBool()) {
-          addConstraint(current, condition);
+          addConstraint(current, condition, forBranch);
           res = Solver::True;
         } else {
-          addConstraint(current, Expr::createIsZero(condition));
+          addConstraint(current, Expr::createIsZero(condition), forBranch);
           res = Solver::False;
         }
       }
@@ -3011,7 +3011,7 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
       assert(trueSeed || falseSeed);
 
       res = trueSeed ? Solver::True : Solver::False;
-      addConstraint(current, trueSeed ? condition : Expr::createIsZero(condition));
+      addConstraint(current, trueSeed ? condition : Expr::createIsZero(condition), forBranch);
     }
   }
 
@@ -3105,8 +3105,8 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
       }
     }
 
-    addConstraint(*trueState, condition);
-    addConstraint(*falseState, Expr::createIsZero(condition));
+    addConstraint(*trueState, condition, forBranch);
+    addConstraint(*falseState, Expr::createIsZero(condition), forBranch);
 
     // Kinda gross, do we even really still want this option?
     if (MaxDepth && MaxDepth<=trueState->depth) {
@@ -3128,7 +3128,7 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
   }
 }
 
-void Executor::addConstraint(ExecutionState &state, ref<Expr> condition) {
+void Executor::addConstraint(ExecutionState &state, ref<Expr> condition, bool forBranch) {
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(condition)) {
     if (!CE->isTrue())
       llvm::report_fatal_error("attempt to add invalid constraint");
@@ -3155,12 +3155,20 @@ void Executor::addConstraint(ExecutionState &state, ref<Expr> condition) {
     if (warn)
       klee_warning("seeds patched for violating constraint");
   }
+ 
+  if (forBranch)
+     state.addConstraintForBranch(condition);
+  else
+     state.addConstraint(condition);
+ 
 
-  state.addConstraint(condition);
   if (ivcEnabled)
     doImpliedValueConcretization(state, condition,
                                  ConstantExpr::alloc(1, Expr::Bool));
 }
+
+
+
 
 const Cell& Executor::eval(KInstruction *ki, unsigned index,
                            ExecutionState &state) const {
@@ -3877,11 +3885,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
              "Wrong operand index!");
       ref<Expr> cond = eval(ki, 0, state).value;
       /* SYSREL side channel begin */
-      recordMostRecentBranchInfo(state, cond, i);
+      recordMostRecentBranchInfo(state, i);
       /* SYSREL side channel end */
       //llvm::errs() << "PC: \n"; 
       //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
-      Executor::StatePair branches = fork(state, cond, false);
+      Executor::StatePair branches = fork(state, cond, false, true);
 
       // NOTE: There is a hidden dependency here, markBranchVisited
       // requires that we still be in the context of the branch
@@ -3982,7 +3990,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
     // fork states
     std::vector<ExecutionState *> branches;
-    branch(state, expressions, branches);
+    branch(state, expressions, branches, true);
 
     // terminate error state
     if (result) {
@@ -4004,7 +4012,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     SwitchInst *si = cast<SwitchInst>(i);
     ref<Expr> cond = eval(ki, 0, state).value;
     /* SYSREL side channel begin */
-    recordMostRecentBranchInfo(state, cond, i);
+    recordMostRecentBranchInfo(state, i);
     /* SYSREL side channel  end */
     BasicBlock *bb = si->getParent();
 
@@ -4105,7 +4113,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         conditions.push_back(branchTargets[*it]);
       }
       std::vector<ExecutionState*> branches;
-      branch(state, conditions, branches);
+      branch(state, conditions, branches, true);
 
       std::vector<ExecutionState*>::iterator bit = branches.begin();
       for (std::vector<BasicBlock *>::iterator it = bbOrder.begin(),
@@ -5693,11 +5701,10 @@ void Executor::run(ExecutionState &initialState) {
     	 bool done = false;
 	 for(; it!=successorsPaths->end(); ++it) {
             ExecutionState *s = *it;
- 	    //ref<Expr> r1 = s->lastCondition;
- 	    ref<Expr> r1;
+ 	    ref<Expr> r1 = s->lastCondition;
             llvm::Instruction *brInst = NULL;
             bool mrbfound = false;
-            getMostRecentBranchInfo(state,r1,brInst, mrbfound);
+            getMostRecentBranchInfo(state,brInst, mrbfound);
             assert(mrbfound && "Most recent branch of the state has not been recorded\n");
              bool hasHloc = exprHasSymRegion(state, r1, true);
              bool hasLloc = exprHasSymRegion(state, r1, false);
