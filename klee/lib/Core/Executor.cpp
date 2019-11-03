@@ -1285,11 +1285,29 @@ bool exprHasSymRegionFast(ref<Expr> expr, bool high) {
          if (exprs.find(sr.first) != std::string::npos)
             return true;
       }
+      for(auto stm : highMemoryRegions)
+         for(auto mr : stm.second) {
+            std::string estr;
+            llvm::raw_string_ostream rsot(estr);
+            mr.first->print(rsot);
+            std::string es = rsot.str();
+            if (exprs.find(es) != std::string::npos)
+               return true;
+         }
    }
    else {
       for(auto sr : lowSymRegions) {
          if (exprs.find(sr.first) != std::string::npos)
             return true;
+      }
+      for(auto stm : lowMemoryRegions)
+         for(auto mr : stm.second) {
+            std::string estr;
+            llvm::raw_string_ostream rsot(estr);
+            mr.first->print(rsot);
+            std::string es = rsot.str(); 
+            if (exprs.find(es) != std::string::npos)
+               return true;
       }
    }
    return false;
@@ -1311,7 +1329,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
       ref<Expr> value = os->read(ConstantExpr::alloc(0, Expr::Int64),(*it)->size*8);
       ref<Expr> &test = value;
       if (test.isNull()) continue;
-      //llvm::errs() << "checking leak in " << value << "\n";
+      //llvm::errs() << "checking leak in " << value << " for local variable " << localVar << "\n";
       if (exprHasSymRegionFast(value, true)) {
             std::stringstream ss;
             ss << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
@@ -1320,7 +1338,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
             ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             ss2 << value << "\n\n";
             highSecurityLeaksOnStack.insert(ss2.str());
-            llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << "\n"; 
+            llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
       } 
    }
    /*Cell *cells = state.stack.back().locals; 
@@ -1639,6 +1657,7 @@ bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offse
     ref<Expr> o1 = offset;
     if (!computed)
        o1 = MulExpr::create(offset, ConstantExpr::alloc(offsetType, offset->getWidth()));
+    else o1 = MulExpr::create(offset, ConstantExpr::alloc(8, offset->getWidth()));
     ref<Expr> end = AddExpr::create(o1, ConstantExpr::alloc(type - 1, offset->getWidth())); 
     ref<Expr> case1 = UgtExpr::create(rbase, end);
     ref<Expr> case2 = UgtExpr::create(o1, rend);
@@ -1665,12 +1684,12 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
      uint64_t value = CE->getZExtValue();     
      uint64_t base;
      if (computed) 
-        base = value;
+        base = value*8;
      else base = value*offsetType;
      for(unsigned int i=0; i < rs.size(); i++) {
         
         llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-                         base << "," << base + type-1 << "\n";        
+                        base << "," << base + type-1 << "\n";        
         if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, base, base + type-1)) {
            llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
                          base << "," << base + type-1 << "\n";
@@ -7225,6 +7244,7 @@ void Executor::executeAlloc(ExecutionState &state,
   #ifdef VB 
   llvm::errs() << "Alloc'ing...\n";
   #endif
+
   size = toUnique(state, size);
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(size)) {
     const llvm::Value *allocSite = state.prevPC->inst;
@@ -7241,6 +7261,12 @@ void Executor::executeAlloc(ExecutionState &state,
     MemoryObject *mo =
         memory->allocate(allocsize, isLocal, /*isGlobal=*/false,
                          allocSite, allocationAlignment);
+
+    //#ifdef VB
+    if (isLocal)
+       llvm::errs() << "Local alloc: " << (*target->inst) << " at address " << mo->getBaseExpr() << "\n"; 
+    //#endif
+
 
    
     /* SYSREL extension */
@@ -7911,7 +7937,8 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       #endif
       std::string s;
       llvm::raw_string_ostream ors(s);
-      ors << "memory error: out of bound pointer, mem base=" << mo->getBaseExpr() << " offsending address = " << address << " mem size= " << mo->size << "\n";
+      //if (mo)
+      //   ors << "memory error: out of bound pointer, mem base=" << mo->getBaseExpr() << " offsending address = " << address << " mem size= " << mo->size << "\n";
       state.dumpStack(ors);
       #ifdef VB 
       llvm::outs() << ors.str() ;
