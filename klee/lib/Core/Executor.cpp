@@ -286,6 +286,7 @@ extern std::vector<std::string> asyncFunc;
 extern std::vector<std::string> enabledFunc;
 extern APIHandler *apiHandler;
 extern bool progModel;
+extern std::map<std::string, std::map<unsigned int, int> > lazyInitInitializersWValues;
 extern std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
 extern std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
 
@@ -1667,14 +1668,19 @@ bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offse
     solver->setTimeout(timeout);
     bool success = solver->mayBeTrue(state, case1, res);
     solver->setTimeout(0);
-    if (success && res) 
+    if (success && res) {
+       llvm::errs() << "case 1 of not intersecting holds: " << case1  << "\n";
        return false;
+    }
     res = false;
     solver->setTimeout(timeout);
     success = solver->mayBeTrue(state, case2, res);
     solver->setTimeout(0);
-    if (success && res) 
+    if (success && res) {
+       llvm::errs() << "case 2 of not intersecting holds: " << case2  << "\n";
        return false;
+    }
+    llvm::errs() << "symbolic intersect holds!\n";
     return true;
 }
 
@@ -1866,6 +1872,15 @@ void initializeLazyInit(ObjectState *obj, Type *t) {
      }
      tname = tname.substr(pos);       
      //llvm::errs() << "checking initializers for type " << tname << "!\n";
+     if (lazyInitInitializersWValues.find(tname) != lazyInitInitializersWValues.end()) {
+       //llvm::errs() << "initializer found!\n"; 
+        std::map<unsigned int, int> offsets = lazyInitInitializersWValues[tname];
+        for(auto offset : offsets) {
+           //llvm::errs() << "Initializing object of lazy init type " << tname << " at offs$
+           ref<Expr> ve = klee::ConstantExpr::alloc(offset.second, Expr::Int32); 
+           obj->write(offset.first, ve);
+        }
+     }
      if (lazyInitInitializers.find(tname) != lazyInitInitializers.end()) {
        //llvm::errs() << "initializer found!\n"; 
         std::vector<unsigned int> offsets = lazyInitInitializers[tname];
@@ -7546,14 +7561,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
+  //#ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  #endif
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -7589,11 +7604,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     }
 
     ref<Expr> offset = mo->getOffsetExpr(address);
-    #ifdef VB
+    //#ifdef VB
     llvm::errs() << "address for memop " << address << "\n";
     llvm::errs() << "default offset for target address " << offset << "\n";
     llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
-    #endif
+    //#endif
     /* SYSREL EXTENSION */
     if (forcedOffset) {
        offset = ConstantExpr::alloc(0, Expr::Int64);

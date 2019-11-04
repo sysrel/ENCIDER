@@ -92,6 +92,7 @@ int numLazyInst = 20;
 std::vector<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
+std::map<std::string, std::map<unsigned int, int> > lazyInitInitializersWValues;
 std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
 std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
 bool progModel = false;
@@ -1615,6 +1616,20 @@ void readLazyInitInitializers(const char * name) {
            }
            fmap[value] = fname;
            lazyFuncPtrInitializers[tname] = fmap;
+        }
+        else if (token == "data") {
+           getline(iss, offset, ',');
+           offset = ltrim(rtrim(offset));
+           unsigned int ovalue = std::stoi(offset);
+           getline(iss, offset, ',');
+           offset = ltrim(rtrim(offset));
+           int dvalue = std::stoi(offset);
+           std::map<unsigned int, int> ovm;
+           if (lazyInitInitializersWValues.find(tname) != lazyInitInitializersWValues.end())
+              ovm = lazyInitInitializersWValues[tname];
+           ovm[ovalue] = dvalue;
+           lazyInitInitializersWValues[tname] = ovm;
+           llvm::outs() << "lazy init type=" << tname << " offset " << ovalue << " to be set to " << dvalue << "\n";
         } 
         else { 
          std::vector<unsigned int> offsets;
