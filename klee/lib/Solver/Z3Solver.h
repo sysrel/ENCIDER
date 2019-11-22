@@ -28,6 +28,11 @@ public:
   /// value; 0
   /// is off.
   virtual void setCoreSolverTimeout(double timeout);
+
+  /* SYSREL extension */
+  virtual unsigned maxSat(std::vector<ref<Expr>> softConstraints);
+  /* SYSREL extension  end */
+
 };
 }
 

@@ -153,6 +153,10 @@ extern std::map<std::string, int> inputFuncsSuccRetValue;
 extern bool infoFlowSummaryMode;
 extern std::string infoFlowSummarizedFuncName;
 extern bool symbolizeInlineAssembly;
+extern bool checkLeaksPreciseAndFocused;
+extern std::set<unsigned> secretDependentRUSet;
+extern bool leakageWMaxSat;
+extern unsigned leakageMaxSat;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -450,6 +454,9 @@ namespace {
   cl::opt<std::string>
   TimingObservationPoints("timing-obs-point", cl::desc("Specifies the functions that mark the points where attackers can take timing measurements, e.g., ocalls for SGX\n"));
 
+  //cl::opt<std::string>
+  //MaxSmtQueryFileName("maxsmt-query-file", cl::desc("Specifies the file name to which the MaxSMT query to be written\n"));
+
   cl::opt<std::string>
   SideChannelMethod("side-channel-method", cl::desc("side channel analysis method. Options are \ 
                                              \n \t (use naive for using all leaf nodes (may not terminate)\n \
@@ -468,6 +475,9 @@ namespace {
 
   cl::opt<std::string>
   CheckStackLeak("check-stack-leak", cl::desc("Name of the file that specifies the functions for which stack leak check will be performed\n"));
+
+  cl::opt<bool>  
+  ComputeLeakageMaxSat("leakage-maxsat", cl::desc("If set to true, computes leakage using a maxSat solver \n"));
  
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
@@ -2363,8 +2373,13 @@ int main(int argc, char **argv, char **envp) {
   if (SensitiveTypeRegions != "")
      readSensitiveTypeRegions(SensitiveTypeRegions.c_str());
 
-  if (CheckStackLeak != "")
+  if (CheckStackLeak != "") {
      readCheckStackLeak(CheckStackLeak.c_str());
+     checkLeaksPreciseAndFocused = true;
+  }
+
+  if (ComputeLeakageMaxSat)
+     leakageWMaxSat = true;
 
   if (CacheLineBits && CacheBitMask) {
      llvm::errs() << "Choose either cache line mode (by setting cache line bits) or cache bitmask (by setting cache bitmask)!\n";
@@ -2408,6 +2423,9 @@ int main(int argc, char **argv, char **envp) {
   if (PrefixRedact != "") {
      readPrefixes(PrefixRedact.c_str());
   }
+
+  //if (MaxSmtQueryFileName != "") 
+    // maxSmtQueryFileName = MaxSmtQueryFileName;
 
   /* end SYSREL extension */
 
@@ -2588,6 +2606,9 @@ int main(int argc, char **argv, char **envp) {
   stats << "KLEE: done: minInst = " << minInstCount << "\n";
   stats << "KLEE: done: maxInst = " << maxInstCount << "\n";
   stats << "KLEE: done: HAncestors = " << RD::numHAncestors << "\n";
+  stats << "KLEE: done: secretDependentUniqueObser = " << secretDependentRUSet.size() << "\n";
+  if (leakageWMaxSat)
+     stats << "KLEE: done: leakage using maxsat = " << leakageMaxSat << "\n";
   stats << "KLEE: done: HLeaksOnStack = " <<  codeLocHighSecurityLeaksOnStack.size() << "\n";
   stats << "KLEE: done: HLMixedConstraints = " << RD::numHLMixedConstraints << "\n";
   stats << "KLEE: done: HVars= " << highLoc->size() << "\n"; 

@@ -122,6 +122,9 @@ public:
 public:
   KModule *kmodule;
   /* SYSREL extension */
+
+  void computeMaxSMT();
+
   void executeMakeSymbolicThread(ExecutionState &state, 
                                    const MemoryObject *mo,
 				   const std::string &name,

@@ -634,6 +634,12 @@ ref<Expr> rename(MemoryManager *memory, ref<Expr> cexpr, bool high, unsigned id)
    }
 }
 
+
+ref<Expr> renameExpr(MemoryManager *memory, unsigned versionNo, ref<Expr> cexpr, bool high) {
+   return rename(memory, cexpr, high, versionNo);
+}
+
+
 // uses a static index that gets incremented each time a rename operation is used
 ref<Expr> renameExpr(MemoryManager *memory, ref<Expr> cexpr, bool high) {
   static unsigned id = 0;

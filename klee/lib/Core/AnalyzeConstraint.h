@@ -61,6 +61,7 @@ namespace std {
 std::vector<region> getHighInfoFlowRegions(std::string fname, std::vector<ref<Expr> > & args);
 ref<Expr> getProjectionOnRegion(ref<Expr> cexpr, bool high) ;
 bool exprHasSymRegion(ref<Expr> cexpr, bool high);
+ref<Expr> renameExpr(MemoryManager *memory, unsigned versionNo, ref<Expr> cexpr, bool high);
 ref<Expr> renameExpr(MemoryManager *memory, ref<Expr> cexpr, bool high);
 std::set<std::string>* getNameofAddressConstraintSet(klee::ref<Expr> cexpr);
 std::vector<std::string> * processline(std::string s, std::string delimiter);

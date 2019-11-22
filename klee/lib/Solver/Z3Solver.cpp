@@ -9,6 +9,8 @@
 #include "klee/Config/config.h"
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "klee/Internal/Support/FileHandling.h"
+#include "klee/Expr.h"
+#include "klee/util/Ref.h"
 #ifdef ENABLE_Z3
 #include "Z3Solver.h"
 #include "Z3Builder.h"
@@ -65,6 +67,11 @@ public:
   ~Z3SolverImpl();
 
   char *getConstraintLog(const Query &);
+
+  /* SYSREL extension */
+  virtual unsigned maxSat(std::vector<ref<Expr> > softConstraints);
+  /* SYSREL extension end */
+
   void setCoreSolverTimeout(double _timeout) {
     assert(_timeout >= 0.0 && "timeout must be >= 0");
     timeout = _timeout;
@@ -143,6 +150,14 @@ char *Z3Solver::getConstraintLog(const Query &query) {
 void Z3Solver::setCoreSolverTimeout(double timeout) {
   impl->setCoreSolverTimeout(timeout);
 }
+
+/* SYSREL extension */
+unsigned Z3Solver::maxSat(std::vector<ref<Expr>> softConstraints) {
+  return impl->maxSat(softConstraints);
+}
+/* SYSREL extension  end */
+
+
 
 char *Z3SolverImpl::getConstraintLog(const Query &query) {
   std::vector<Z3ASTHandle> assumptions;
@@ -455,5 +470,47 @@ bool Z3SolverImpl::validateZ3Model(::Z3_solver &theSolver, ::Z3_model &theModel)
 SolverImpl::SolverRunStatus Z3SolverImpl::getOperationStatusCode() {
   return runStatusCode;
 }
+
+/* SYSREL extension */
+unsigned Z3SolverImpl::maxSat(std::vector<ref<Expr> > softConstraints) {
+  TimerStatIncrementer t(stats::queryTime);
+  Z3_optimize optimizer = Z3_mk_optimize(builder->ctx);
+  Z3_optimize_inc_ref(builder->ctx, optimizer);
+  for(unsigned int i=0; i<softConstraints.size(); i++) {
+     Z3ASTHandle sc = Z3ASTHandle(builder->construct(softConstraints[i]));
+     std::stringstream strm;
+     strm << 1;
+     Z3_optimize_assert_soft(builder->ctx, optimizer, sc, strm.str().c_str(), 0);       
+  }
+  Z3_ast_vector result = Z3_optimize_get_objectives(builder->ctx, optimizer);
+  for (unsigned i = 0; i < Z3_ast_vector_size(builder->ctx, result); i++) {
+      Z3_ast a = Z3_ast_vector_get(builder->ctx, result, i);
+      llvm::errs() << "z3 objective: " << Z3_ast_to_string(builder->ctx, a) << "\n";
+  }
+  Z3_string z3s = Z3_optimize_to_string(builder->ctx, optimizer);
+  llvm::errs() << "z3 optimization info: " << z3s << "\n";
+  Z3_optimize_check(builder->ctx, optimizer, 0, NULL);
+  Z3_ast l = Z3_optimize_get_lower(builder->ctx, optimizer, 0);
+  Z3_string ls = Z3_ast_to_string(builder->ctx,l); 
+  std::string lss(ls);
+  unsigned lower = std::stoi(lss);
+  llvm::errs() << "z3 lower: " << lower << "\n";
+  Z3_ast u = Z3_optimize_get_upper(builder->ctx, optimizer, 0);
+  Z3_string us = Z3_ast_to_string(builder->ctx,u);
+  std::string uss(us);
+  unsigned upper = std::stoi(uss);
+  llvm::errs() << "z3 upper: " << upper << "\n";
+  llvm::errs() << "# soft constraints: " << softConstraints.size() << "\n";
+  unsigned leakage = softConstraints.size() - upper;
+  llvm::errs() << "leakage: " << leakage << "\n";
+  assert(softConstraints.size() >= upper);
+  Z3_stats r = Z3_optimize_get_statistics(builder->ctx, optimizer);
+  llvm::errs() << "z3 stats: " << Z3_stats_to_string(builder->ctx,r) << "\n";
+  Z3_optimize_dec_ref(builder->ctx, optimizer);
+  return leakage;
 }
+/* SYSREL extension end */
+
+}
+
 #endif // ENABLE_Z3

@@ -23,6 +23,7 @@
 #include "UserSearcher.h"
 #include "ExecutorTimerInfo.h"
 
+#include "../Solver/Z3Solver.h"
 
 #include "klee/ExecutionState.h"
 #include "klee/Expr.h"
@@ -179,16 +180,23 @@ ArrayCache *acache = NULL;
 //int maxForkMulRes = 10;
 int maxForkMulRes = 2147483647;
 int primArraySize = 32;
+int leakCheckOffset = 64;
 std::map<std::string, int> uniqueSym;
 std::set<std::string> highSecurityLeaksOnStack;
 std::set<std::string> codeLocHighSecurityLeaksOnStack;
 std::set<std::string> stackLeakToBeChecked;
+bool checkLeaksPreciseAndFocused = false;
 std::set<std::string> securitySensitiveBranches;
 std::map<std::string, int> inputFuncsSuccRetValue;
 std::set<long> updatedWithSymbolic;
-
+std::set<unsigned> secretDependentRUSet;
+std::map<unsigned, unsigned> secretDependentRUMap;
+std::map<unsigned, std::vector<ConstraintManager> > secretDependentRUConstMap;
 std::string infoFlowSummarizedFuncName;
 Function *infoFlowSummarizedFunc = NULL;
+bool leakageWMaxSat = false;
+unsigned leakageMaxSat = 0;
+
 
 void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
   long sid = (long)&state;
@@ -1276,7 +1284,50 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
    return NULL;
 }
 
-bool exprHasSymRegionFast(ref<Expr> expr, bool high) {
+bool exprHasSymMemory(ref<Expr> expr, bool high, std::string &msg) {
+   std::string expr_str;
+   llvm::raw_string_ostream rso(expr_str);
+   expr->print(rso);
+   std::string exprs = rso.str();
+   if (high) {
+      for(auto stm : highMemoryRegions)
+         for(auto mr : stm.second) {
+            std::string estr;
+            llvm::raw_string_ostream rsot(estr);
+            mr.first->print(rsot);
+            std::string es = rsot.str();
+            if (exprs.find(es) != std::string::npos)
+               return true;
+            klee::ConstantExpr *CE = dyn_cast<klee::ConstantExpr>(mr.first);
+            if (CE) {
+               for(unsigned int o = 1; o <= leakCheckOffset; o++) {
+                  //llvm::errs() << "checking  sensitive high mem " << 
+                  // CE->getZExtValue() << " by offset " << o << " in " << exprs << "\n"; 
+                  if (exprs.find(std::to_string(CE->getZExtValue() + o)) 
+                             != std::string::npos) {
+                     msg = "off by " + std::to_string(o) +
+                           " bytes from high sensitive address " 
+                           + std::to_string(CE->getZExtValue()) + "\n";
+                     return true;  
+                  }
+                  //llvm::errs() << "checking  sensitive high mem " << 
+                  // CE->getZExtValue() << " by offset " << o << " in " << exprs << "\n"; 
+                  if (exprs.find(std::to_string(CE->getZExtValue() + o)) 
+                             != std::string::npos) {
+                     msg = "off by " + std::to_string(o) +
+                           " bytes from high sensitive address " 
+                           + std::to_string(CE->getZExtValue()) + "\n";
+                     return true;  
+                  }
+                  //llvm::errs() << "not in " << exprs << "\n";
+               }
+            }
+         }
+   }
+   return false;
+}
+
+bool exprHasSymRegionFast(ref<Expr> expr, bool high, std::string &msg) {
    std::string expr_str;
    llvm::raw_string_ostream rso(expr_str);
    expr->print(rso);
@@ -1286,15 +1337,7 @@ bool exprHasSymRegionFast(ref<Expr> expr, bool high) {
          if (exprs.find(sr.first) != std::string::npos)
             return true;
       }
-      for(auto stm : highMemoryRegions)
-         for(auto mr : stm.second) {
-            std::string estr;
-            llvm::raw_string_ostream rsot(estr);
-            mr.first->print(rsot);
-            std::string es = rsot.str();
-            if (exprs.find(es) != std::string::npos)
-               return true;
-         }
+      return exprHasSymMemory(expr, high, msg);  
    }
    else {
       for(auto sr : lowSymRegions) {
@@ -1325,19 +1368,40 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
   unsigned int localVar = 0; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
          ie = sf.allocas.end(); it != ie; ++it, localVar++) {
+      if ((sf.kf->function->getReturnType()->isVoidTy() && 
+          localVar < sf.kf->function->arg_size()) ||
+          (!sf.kf->function->getReturnType()->isVoidTy() && 
+          localVar <= sf.kf->function->arg_size())) 
+          continue;
       //llvm::errs() << "base of alloca: " << (*it)->name << " " << (*it)->getBaseExpr() << " num bytes=" << (*it)->size << "\n";
       const ObjectState *os = state.addressSpace.findObject((*it));
       ref<Expr> value = os->read(ConstantExpr::alloc(0, Expr::Int64),(*it)->size*8);
       ref<Expr> &test = value;
       if (test.isNull()) continue;
+      std::string info = "";
       //llvm::errs() << "checking leak in " << value << " for local variable " << localVar << "\n";
-      if (exprHasSymRegionFast(value, true)) {
+      if (checkLeaksPreciseAndFocused) {
+         std::string cfname = removeDotSuffix(fname);
+         if (stackLeakToBeChecked.find(cfname) != stackLeakToBeChecked.end() && 
+             (exprHasSymRegion(state, value, true) || 
+              exprHasSymMemory(value, true, info))) {
             std::stringstream ss;
             ss << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             codeLocHighSecurityLeaksOnStack.insert(ss.str());
             std::stringstream ss2;
             ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             ss2 << value << "\n\n";
+            highSecurityLeaksOnStack.insert(ss2.str());
+            llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
+         }
+      }
+      else if (exprHasSymRegionFast(value, true, info)) {
+            std::stringstream ss;
+            ss << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
+            codeLocHighSecurityLeaksOnStack.insert(ss.str());
+            std::stringstream ss2;
+            ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
+            ss2 << value << " " << info << "\n\n";
             highSecurityLeaksOnStack.insert(ss2.str());
             llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
       } 
@@ -1669,7 +1733,7 @@ bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offse
     bool success = solver->mayBeTrue(state, case1, res);
     solver->setTimeout(0);
     if (success && res) {
-       llvm::errs() << "case 1 of not intersecting holds: " << case1  << "\n";
+       //llvm::errs() << "case 1 of not intersecting holds: " << case1  << "\n";
        return false;
     }
     res = false;
@@ -1677,10 +1741,10 @@ bool Executor::checkSymInRegion(ExecutionState &state, region r, ref<Expr> offse
     success = solver->mayBeTrue(state, case2, res);
     solver->setTimeout(0);
     if (success && res) {
-       llvm::errs() << "case 2 of not intersecting holds: " << case2  << "\n";
+       //llvm::errs() << "case 2 of not intersecting holds: " << case2  << "\n";
        return false;
     }
-    llvm::errs() << "symbolic intersect holds!\n";
+    //llvm::errs() << "symbolic intersect holds!\n";
     return true;
 }
 
@@ -1694,11 +1758,11 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
      else base = value*offsetType;
      for(unsigned int i=0; i < rs.size(); i++) {
         
-        llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-                        base << "," << base + type-1 << "\n";        
+        //llvm::errs() << "do ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+          //              base << "," << base + type-1 << "\n";        
         if (rangesIntersect(rs[i].offset, rs[i].offset + rs[i].size-1, base, base + type-1)) {
-           llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
-                         base << "," << base + type-1 << "\n";
+           //llvm::errs() << "ranges intersect: " << rs[i].offset << "," << rs[i].offset + rs[i].size-1 << " AND " << 
+             //            base << "," << base + type-1 << "\n";
            return true; 
         }
      }
@@ -1857,7 +1921,7 @@ void computeMaxVoidTypeCastSize() {
   } 
 }
 
-void initializeLazyInit(ObjectState *obj, Type *t) {
+void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
   if (!t) return;
   StructType *st = dyn_cast<StructType>(t);
   if (st) {
@@ -1876,9 +1940,9 @@ void initializeLazyInit(ObjectState *obj, Type *t) {
        //llvm::errs() << "initializer found!\n"; 
         std::map<unsigned int, int> offsets = lazyInitInitializersWValues[tname];
         for(auto offset : offsets) {
-           //llvm::errs() << "Initializing object of lazy init type " << tname << " at offs$
            ref<Expr> ve = klee::ConstantExpr::alloc(offset.second, Expr::Int32); 
-           obj->write(offset.first, ve);
+           llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset.first << " to value " << ve << " at base address " << mo->getBaseExpr() << "\n";
+           obj->write(offset.first, ve); 
         }
      }
      if (lazyInitInitializers.find(tname) != lazyInitInitializers.end()) {
@@ -5874,6 +5938,8 @@ void Executor::run(ExecutionState &initialState) {
   doDumpStates();
   /* SYSREL side channel begin */
   timeSideChannelAnalysis(this);
+  if (leakageWMaxSat)
+     computeMaxSMT();
   collectInfoFlow();
   dumpInfoFlow(); 
   writeInfoFlowSummary((infoFlowSummarizedFuncName + "_summary.txt").c_str());
@@ -5955,6 +6021,43 @@ void Executor::continueState(ExecutionState &state){
   }
 }
 
+void Executor::computeMaxSMT() {
+   //std::fstream fsmt(fname.c_str(), std::fstream::out);
+   //if (fsmt.is_open()) {
+      unsigned versionNo = 0;
+      std::vector<ref<Expr> > softConstraints;
+      for(auto cms : secretDependentRUConstMap) {
+         versionNo++;
+         ref<Expr> orExpr;
+         for(unsigned j=0; j<cms.second.size(); j++) {
+            ref<Expr> andExpr;
+            for (ConstraintManager::const_iterator i = cms.second[j].begin();
+                          i != cms.second[j].end(); i++) {
+                if (andExpr.isNull())
+                   andExpr = *i;
+                else {
+                   ref<Expr> temp = andExpr;
+                   andExpr = AndExpr::create(temp, *i);
+                }
+            }
+            if (orExpr.isNull())
+               orExpr = andExpr;
+            else {
+               ref<Expr> temp = orExpr; 
+               orExpr = OrExpr::create(temp, andExpr);
+            }
+        }
+        ref<Expr> rn = renameExpr(memory, versionNo, orExpr, true);
+        softConstraints.push_back(rn);
+        llvm::errs() << "maxsmt disjunct: " << rn << "\n";
+      }
+      Z3Solver  *z3 = new Z3Solver();
+      leakageMaxSat = z3->maxSat(softConstraints);
+      llvm::errs() << "leakage based on max smt " << leakageMaxSat << "\n";
+   //   fsmt.close();
+   //} 
+}
+
 void Executor::terminateState(ExecutionState &state) {
   /* SYSREL extension */
   if (state.instCount < minInstCount && state.instCount != 0)
@@ -5967,6 +6070,25 @@ void Executor::terminateState(ExecutionState &state) {
         minInstCount = rdd->ru; 
      if (rdd->ru > maxInstCount)
         maxInstCount = rdd->ru; 
+     // record statistics on the resource usage
+     if (rdd->HA) {
+        // secret dependent path
+        secretDependentRUSet.insert(rdd->ru);
+        unsigned c = 0;
+        if (secretDependentRUMap.find(rdd->ru) != secretDependentRUMap.end()) {
+           c = secretDependentRUMap[rdd->ru];
+        }
+        secretDependentRUMap[rdd->ru] = c+1;
+        // store the path condition
+        // printing should be done at the very end..
+        // ExprSMTLIBPrinter *smtpr = new ExprSMTLIBPrinter();
+        std::vector<ConstraintManager> cs;
+        if (secretDependentRUConstMap.find(rdd->ru) !=  secretDependentRUConstMap.end()) {
+           cs = secretDependentRUConstMap[rdd->ru];
+        }            
+        cs.push_back(state.constraints);
+        secretDependentRUConstMap[rdd->ru] = cs;
+     }
   }
   #ifdef VB
   llvm::errs() << "Checking the state at the end of path\n";
@@ -7986,7 +8108,7 @@ void Executor::executeMakeSymbolic(ExecutionState &state,
     /* SYSREL extension */
     if (clrFncPtr)
        clearFunctionPointers(mo, os, t);
-    initializeLazyInit(os, t);
+    initializeLazyInit(mo, os, t);
     /* SYSREL extension */
 
     std::map< ExecutionState*, std::vector<SeedInfo> >::iterator it =

@@ -46,6 +46,10 @@ namespace klee {
       return solver->getConstraintLog(query);
     }
 
+    /* SYSREL extension */
+    virtual unsigned maxSat(std::vector<ref<Expr> > softConstraints) { return 0; };
+    /* SYSREL extension end */
+
     bool evaluate(const ExecutionState&, ref<Expr>, Solver::Validity &result);
 
     bool mustBeTrue(const ExecutionState&, ref<Expr>, bool &result);

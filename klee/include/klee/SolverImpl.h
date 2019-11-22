@@ -104,6 +104,10 @@ namespace klee {
     }
 
     virtual void setCoreSolverTimeout(double timeout) {};
+
+   /* SYSREL extension */
+   virtual unsigned maxSat(std::vector<ref<Expr> > softconstraints) { return 0; };
+   /* SYSREL extension */
 };
 
 }
