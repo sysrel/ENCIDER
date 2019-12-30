@@ -157,6 +157,7 @@ extern bool checkLeaksPreciseAndFocused;
 extern std::set<unsigned> secretDependentRUSet;
 extern bool leakageWMaxSat;
 extern unsigned leakageMaxSat;
+extern bool skipOptimizingSensitiveRegionCheck;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -447,6 +448,9 @@ namespace {
 
   cl::opt<std::string>
   SensitiveInputs("sensitive-inputs",  cl::desc("Functions arguments that are categorized as (high/low) security sensitive\n"));
+
+  cl::opt<bool>
+  SkipOptSensCheck("skip-opt-sens-check", cl::desc("Skip checks whether specified region is already known to be sensitive (default is false)\n")); 
 
   cl::opt<std::string>
   SensitiveTypeRegions("sensitive-type-region", cl::desc("Specifies regions (offset,size) of types categorized as (high/low) security sensitive\n"));
@@ -2369,6 +2373,9 @@ int main(int argc, char **argv, char **envp) {
 
   if (SensitiveInputs != "")
      readSensitiveFunctionArgs(SensitiveInputs.c_str(), true);
+
+  if (SkipOptSensCheck)
+     skipOptimizingSensitiveRegionCheck = true;
 
   if (SensitiveTypeRegions != "")
      readSensitiveTypeRegions(SensitiveTypeRegions.c_str());

@@ -107,6 +107,8 @@ using namespace klee;
 
 bool symbolizeInlineAssembly = false;
 
+bool skipOptimizingSensitiveRegionCheck = false;
+
 //#define INFOFLOW 1
 
 extern std::set<std::string> voidTypeCasts;
@@ -3652,7 +3654,9 @@ void Executor::executeCall(ExecutionState &state,
     unsigned numFormals = f->arg_size();
     for (unsigned i=0; i<numFormals; ++i)
       bindArgument(kf, i, state, arguments[i]);
+    llvm::errs() << "before check 2\n";
     symbolizeAndMarkSensitiveArgumentsOnCall(state,ki,f,arguments);
+    llvm::errs() << "after check 2\n";
   }
 }
 
@@ -5660,6 +5664,9 @@ void Executor::run(ExecutionState &initialState) {
   }
 
   searcher = constructUserSearcher(*this);
+  llvm::errs() << "Using searcher "; 
+  searcher->printName(llvm::errs());
+  llvm::errs() << "\n";
 
   std::vector<ExecutionState *> newStates(states.begin(), states.end());
   searcher->update(0, newStates, std::vector<ExecutionState *>());
@@ -5877,8 +5884,11 @@ void Executor::run(ExecutionState &initialState) {
 	     else {
                 if (hasHloc && hasLloc) {
                    RD::numHLMixedConstraints++;
+                   #ifdef VBSC
                    llvm::errs() << "Mixed Branch Condition:\n";
-                   r1->dump();
+                   // Note: may increase runtime
+                   //r1->dump();
+                   #endif
                 }
 
                 if (hasLloc) {
@@ -6022,8 +6032,6 @@ void Executor::continueState(ExecutionState &state){
 }
 
 void Executor::computeMaxSMT() {
-   //std::fstream fsmt(fname.c_str(), std::fstream::out);
-   //if (fsmt.is_open()) {
       unsigned versionNo = 0;
       std::vector<ref<Expr> > softConstraints;
       for(auto cms : secretDependentRUConstMap) {
@@ -6049,13 +6057,13 @@ void Executor::computeMaxSMT() {
         }
         ref<Expr> rn = renameExpr(memory, versionNo, orExpr, true);
         softConstraints.push_back(rn);
+        std::fstream fsmt("maxsmt.txt", std::fstream::out);
         llvm::errs() << "maxsmt disjunct: " << rn << "\n";
       }
       Z3Solver  *z3 = new Z3Solver();
       leakageMaxSat = z3->maxSat(softConstraints);
       llvm::errs() << "leakage based on max smt " << leakageMaxSat << "\n";
-   //   fsmt.close();
-   //} 
+    
 }
 
 void Executor::terminateState(ExecutionState &state) {
@@ -6407,7 +6415,9 @@ void Executor::callExternalFunction(ExecutionState &state,
 
     if (progModel) {
       checkAndRecordSensitiveFlow(state,function, arguments);
+      llvm::errs() << "before check 1\n";
       symbolizeAndMarkSensitiveArgumentsOnCall(state, target, function, arguments);
+      llvm::errs() << "after check 1\n";
       // check if PROSE version of the function exists, if so use that one
       std::string prosename = function->getName().str() + "_PROSE"; 
       Function *proseFn = moduleHandle->getFunction(prosename);
@@ -6704,7 +6714,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
         mixedFunctionArgs.find(fname) == mixedFunctionArgs.end()) { 
        return false; 
     }
-    KFunction *kf = kmodule->functionMap[entryFunc];
+    KFunction *kf = kmodule->functionMap[function];
     std::set<int> argsH, argsL, argsM; 
     if (highFunctionArgs.find(fname) != highFunctionArgs.end())
        argsH = highFunctionArgs[fname];
@@ -6748,15 +6758,19 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                   if (asuccess) {
                    if (state.isSymbolic(op.first) || updatedWithSymbolic.find((long)op.first) != updatedWithSymbolic.end()) {
                       llvm::errs() << "yes!\n";
+                      if (!skipOptimizingSensitiveRegionCheck) {
                       // check if it is already known to have a sensitive region
                       ref<Expr> cur = op.second->read(ConstantExpr::alloc(0, Expr::Int64),op.first->size*8);
                       ConstantExpr *CE = dyn_cast<ConstantExpr>(cur);
                       if (!CE) {
+                        llvm::errs() << "going to check sym region sensitive\n";
                         if (isSymRegionSensitive(state, cur, fname, ai, true)) {
                            llvm::errs() << cur << "already known to be sensitive \n";
                            continue;
                         }
+                        llvm::errs() << "done checking sym region sensitive\n";
                      } 
+                     }
                      // set high/low
                      ref<Expr> mobase = op.first->getBaseExpr(); 
                      ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);
@@ -6805,7 +6819,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                }
             } 
             size_t allocationAlignment = 8;
-            Instruction *inst = &*(entryFunc->begin()->begin());
+            Instruction *inst = &*(function->begin()->begin());
             const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
             MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
             std::string name = function->getName();
@@ -7683,14 +7697,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -7707,12 +7721,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       value = state.constraints.simplifyExpr(value);
   }
 
+  llvm::errs() << "address width " << address->getWidth() << "\n";
+  if (address->getWidth() < Expr::Int64)
+     address = ZExtExpr::alloc(address, Expr::Int64); 
+
   // fast path: single in-bounds resolution
   ObjectPair op;
   bool success;
   solver->setTimeout(coreSolverTimeout);
   if (!state.addressSpace.resolveOne(state, solver, address, op, success)) {
     address = toConstant(state, address, "resolveOne failure");
+    llvm::errs() << "address2 width " << address->getWidth() << "\n"; 
     success = state.addressSpace.resolveOne(cast<ConstantExpr>(address), op);
   }
   solver->setTimeout(0);
@@ -7726,11 +7745,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     }
 
     ref<Expr> offset = mo->getOffsetExpr(address);
-    //#ifdef VB
+    #ifdef VB
     llvm::errs() << "address for memop " << address << "\n";
     llvm::errs() << "default offset for target address " << offset << "\n";
     llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
-    //#endif
+    #endif
     /* SYSREL EXTENSION */
     if (forcedOffset) {
        offset = ConstantExpr::alloc(0, Expr::Int64);
