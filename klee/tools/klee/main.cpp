@@ -158,6 +158,9 @@ extern std::set<unsigned> secretDependentRUSet;
 extern bool leakageWMaxSat;
 extern unsigned leakageMaxSat;
 extern bool skipOptimizingSensitiveRegionCheck;
+extern unsigned numSecretDependent;
+extern unsigned numSecretIndependent;
+extern bool pauseSecretIndependent;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -486,8 +489,8 @@ namespace {
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
                                                     to map an undefined function to its model function\n"));
-
-
+  cl::opt<bool>
+  PauseSecretIndependent("pause-secret-indep", cl::desc("Pause states that are secret independent when there are active secret dependent states!\n"));
 
                                              
   /* SYSREL extension */
@@ -2431,6 +2434,9 @@ int main(int argc, char **argv, char **envp) {
      readPrefixes(PrefixRedact.c_str());
   }
 
+  if (PauseSecretIndependent)
+     pauseSecretIndependent = true;
+
   //if (MaxSmtQueryFileName != "") 
     // maxSmtQueryFileName = MaxSmtQueryFileName;
 
@@ -2620,6 +2626,8 @@ int main(int argc, char **argv, char **envp) {
   stats << "KLEE: done: HLMixedConstraints = " << RD::numHLMixedConstraints << "\n";
   stats << "KLEE: done: HVars= " << highLoc->size() << "\n"; 
   stats << "KLEE: done: LVars= " << lowLoc->size() << "\n"; 
+  stats << "KLEE: done: secretDepStates= " << numSecretDependent << "\n";
+  stats << "KLEE: done: secretIndepStates= " << numSecretIndependent << "\n";
   stats << "KLEE: done: total instructions = "
         << instructions << "\n";
   stats << "KLEE: done: completed paths = "

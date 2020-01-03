@@ -180,6 +180,7 @@ WeightedRandomSearcher::WeightedRandomSearcher(WeightType _type)
   case QueryCost:
   case MinDistToUncovered:
   case CoveringNew:
+  case SensitiveCov:
     updateWeights = true;
     break;
   default:
@@ -200,6 +201,14 @@ double WeightedRandomSearcher::getWeight(ExecutionState *es) {
   default:
   case Depth: 
     return es->weight;
+  case SensitiveCov: {
+    if (!es->isSecretDescendant())
+       return 0;
+    else return 100.0;
+    //uint64_t count = theStatisticManager->getValue(stats::sensitiveDesc);
+    //llvm::errs() << "weighted random searcher secret relevant weigth: " << (1. / std::max((uint64_t) 1, count)) << "\n"; 
+    //return (1. / std::max((uint64_t) 1, count));
+  }
   case InstCount: {
     /* SYSREL extension */
     uint64_t count;
@@ -273,8 +282,12 @@ void WeightedRandomSearcher::update(
     const std::vector<ExecutionState *> &removedStates) {
   if (current && updateWeights &&
       std::find(removedStates.begin(), removedStates.end(), current) ==
-          removedStates.end())
-    states->update(current, getWeight(current));
+          removedStates.end()) {
+     // SYSREL extension
+     if (states->inTree(current))
+        // SYSREL extension
+        states->update(current, getWeight(current));
+  }
 
   for (std::vector<ExecutionState *>::const_iterator it = addedStates.begin(),
                                                      ie = addedStates.end();
@@ -286,7 +299,10 @@ void WeightedRandomSearcher::update(
   for (std::vector<ExecutionState *>::const_iterator it = removedStates.begin(),
                                                      ie = removedStates.end();
        it != ie; ++it) {
-    states->remove(*it);
+    // SYSREL extension
+    if (states->inTree(*it))
+       // SYSREL extension
+       states->remove(*it);
   }
 }
 

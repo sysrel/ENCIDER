@@ -76,7 +76,10 @@ namespace klee {
       NURS_Depth,
       NURS_ICnt,
       NURS_CPICnt,
-      NURS_QC
+      NURS_QC,
+      /* SYSREL extension */
+      NURS_SensitiveCov
+      /* SYSREL extension */
     };
   };
 
@@ -130,7 +133,8 @@ namespace klee {
       InstCount,
       CPInstCount,
       MinDistToUncovered,
-      CoveringNew
+      CoveringNew,
+      SensitiveCov
     };
 
   private:
@@ -158,6 +162,7 @@ namespace klee {
       case CPInstCount        : os << "CPInstCount\n"; return;
       case MinDistToUncovered : os << "MinDistToUncovered\n"; return;
       case CoveringNew        : os << "CoveringNew\n"; return;
+      case SensitiveCov       : os << "SensitiveCoverage\n"; return;
       default                 : os << "<unknown type>\n"; return;
       }
     }

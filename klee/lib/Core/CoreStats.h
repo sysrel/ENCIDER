@@ -26,7 +26,9 @@ namespace stats {
   extern Statistic falseBranches;
   extern Statistic forkTime;
   extern Statistic solverTime;
-
+  // SYSREL extension
+  // The number of active descendants of an H-ancestor
+  extern Statistic sensitiveDesc;
   /// The number of process forks.
   extern Statistic forks;
 

@@ -92,7 +92,10 @@ namespace klee {
     void stepInstruction(ExecutionState &es);
     /* SYSREL extension */
     void stepInstructionThread(ExecutionState &es, int tid);
+    void secretDependentSuccessor(ExecutionState &es);
     /* SYSREL extension */
+
+
 
     /// Return time in seconds since execution start.
     double elapsed();

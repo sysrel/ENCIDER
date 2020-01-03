@@ -277,6 +277,7 @@ private:
   LifeCycleModelState *lcmState;
   std::set<ref<Expr> > alloced;
   std::set<ref<Expr> > freed;
+  bool secretDescendant;
   /* SYSREL extension begin */
 public:
   /* SYSREL extension begin */
@@ -416,6 +417,8 @@ public:
   void recordAlloc(ref<Expr>);
   void recordFree(ref<Expr>);
   bool isFreed(ref<Expr>); 
+  bool isSecretDescendant();
+  void setSecretDescendant(bool);
   /* SYSREL extension */
 };
 }

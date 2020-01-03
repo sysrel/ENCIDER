@@ -176,6 +176,8 @@ extern std::set<std::string> prefixRedact;
 std::set<RD*> resourceTreeRootList;
 RD *root;
 RD *currentRD;
+std::vector<ExecutionState *> addedStates_copy;
+std::vector<ExecutionState *> removedStates_copy;
 bool fset = false;
 Function *ff;
 ArrayCache *acache = NULL;
@@ -198,7 +200,9 @@ std::string infoFlowSummarizedFuncName;
 Function *infoFlowSummarizedFunc = NULL;
 bool leakageWMaxSat = false;
 unsigned leakageMaxSat = 0;
-
+unsigned numSecretDependent=0;
+unsigned numSecretIndependent=0;
+bool pauseSecretIndependent = false;
 
 void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
   long sid = (long)&state;
@@ -3655,7 +3659,7 @@ void Executor::executeCall(ExecutionState &state,
     for (unsigned i=0; i<numFormals; ++i)
       bindArgument(kf, i, state, arguments[i]);
     llvm::errs() << "before check 2\n";
-    symbolizeAndMarkSensitiveArgumentsOnCall(state,ki,f,arguments);
+    symbolizeAndMarkSensitiveArgumentsOnCall(state,ki,f,arguments,false);
     llvm::errs() << "after check 2\n";
   }
 }
@@ -5403,11 +5407,46 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 }
 
 void Executor::updateStates(ExecutionState *current) {
+
+ 
+  // SYSREL extension
+  // since hasHLoc is evaluated later, we will refer to these lists to update the statistics 
+  if (pauseSecretIndependent) {
+     if (stats::sensitiveDesc.getValue() > 0) {
+         for (std::vector<ExecutionState *>::iterator it = addedStates.begin(),
+                                                  ie = addedStates.end();
+             it != ie; ++it) {
+             if (!(*it)->isSecretDescendant()) {
+                pausedStates.push_back(*it);            
+             }
+         }     
+         for (std::vector<ExecutionState *>::iterator it = pausedStates.begin(),
+                                                  ie = pausedStates.end(); 
+             it != ie; ++it) {
+             std::vector<ExecutionState *>::iterator temp = std::find(addedStates.begin(),addedStates.end(),*it);
+             if (temp != addedStates.end())
+                addedStates.erase(temp);
+         }
+     }
+     else {
+         for (std::vector<ExecutionState *>::iterator it = pausedStates.begin(),
+                                                  ie = pausedStates.end(); 
+             it != ie; ++it) {
+             continuedStates.push_back(*it);
+         }
+         pausedStates.clear();
+     }
+  }
+  addedStates_copy = addedStates;
+  removedStates_copy = removedStates;
+  // SYSREL extension  
+
+
   if (searcher) {
     searcher->update(current, addedStates, removedStates);
     searcher->update(nullptr, continuedStates, pausedStates);
-    pausedStates.clear();
-    continuedStates.clear();
+    //pausedStates.clear();
+    //continuedStates.clear();
   }
 
   states.insert(addedStates.begin(), addedStates.end());
@@ -5418,7 +5457,9 @@ void Executor::updateStates(ExecutionState *current) {
        it != ie; ++it) {
     ExecutionState *es = *it;
     std::set<ExecutionState*>::iterator it2 = states.find(es);
-    assert(it2!=states.end());
+    //assert(it2!=states.end());
+    // SYSREL extension 
+    if (it2!=states.end()) {
     states.erase(it2);
     std::map<ExecutionState*, std::vector<SeedInfo> >::iterator it3 =
       seedMap.find(es);
@@ -5426,6 +5467,7 @@ void Executor::updateStates(ExecutionState *current) {
       seedMap.erase(it3);
     processTree->remove(es->ptreeNode);
     delete es;
+    } // SYSREL extension 
   }
   removedStates.clear();
 }
@@ -5822,6 +5864,9 @@ void Executor::run(ExecutionState &initialState) {
                     llvm::errs() << "has high? " << hasHloc << "\n";
                     llvm::errs() << "has low? " << hasLloc << "\n";
              #endif
+             if (hasHloc)
+                s->setSecretDescendant(true);
+
              RD* srd = newNode(s);
 	     s->rdid = srd->stateid;
 	     rdmapinsert(s->rdid, srd);
@@ -5937,6 +5982,20 @@ void Executor::run(ExecutionState &initialState) {
       }
     }
    }
+
+   if (statsTracker) {
+      for(unsigned aid = 0; aid < addedStates_copy.size(); aid++)
+         if (addedStates_copy[aid]->isSecretDescendant())
+            ++stats::sensitiveDesc;
+      for(unsigned rid = 0; rid < removedStates_copy.size(); rid++)
+         if (removedStates_copy[rid]->isSecretDescendant()) {
+            --stats::sensitiveDesc;
+            numSecretDependent++;
+         }
+         else numSecretIndependent++;
+   }
+   addedStates_copy.clear();
+   removedStates_copy.clear();
    /* SYSREL Side Channel End */
 
   }
@@ -6096,6 +6155,10 @@ void Executor::terminateState(ExecutionState &state) {
         }            
         cs.push_back(state.constraints);
         secretDependentRUConstMap[rdd->ru] = cs;
+        //#ifdef VB
+        llvm::errs() <<"PATH COND for secret dependent state:\n";
+        ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
+        //#endif
      }
   }
   #ifdef VB
@@ -6120,6 +6183,15 @@ void Executor::terminateState(ExecutionState &state) {
     removedStates.push_back(&state);
   } else {
     // never reached searcher, just delete immediately
+
+    /* SYSREL extension */
+    if (state.isSecretDescendant()) {
+       numSecretDependent++;
+    }
+    else numSecretIndependent++;
+    /* SYSREL extension */
+  
+
     std::map< ExecutionState*, std::vector<SeedInfo> >::iterator it3 =
       seedMap.find(&state);
     if (it3 != seedMap.end())
@@ -6416,7 +6488,7 @@ void Executor::callExternalFunction(ExecutionState &state,
     if (progModel) {
       checkAndRecordSensitiveFlow(state,function, arguments);
       llvm::errs() << "before check 1\n";
-      symbolizeAndMarkSensitiveArgumentsOnCall(state, target, function, arguments);
+      symbolizeAndMarkSensitiveArgumentsOnCall(state, target, function, arguments, true);
       llvm::errs() << "after check 1\n";
       // check if PROSE version of the function exists, if so use that one
       std::string prosename = function->getName().str() + "_PROSE"; 
@@ -6703,10 +6775,12 @@ bool Executor::checkHighArgumentFlow(ExecutionState &state,
      return flows;
 }
 
+// depending on the called context, the stack frame of the function may or may not be created
+// In the latter case the operands should be used to store the symbolized expressions
 bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                                   KInstruction *target,
                                   Function *function,
-                                  std::vector< ref<Expr> > &arguments) {
+                                  std::vector< ref<Expr> > &arguments, bool useCallInstOperands) {
 
     std::string fname = function->getName();
     if (highFunctionArgs.find(fname) == highFunctionArgs.end() && 
@@ -6808,6 +6882,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
               }
           }
           else { // pass by value args
+           if (!useCallInstOperands) {
             // check if it is already known to have a sensitive region
             ref<Expr> &cur = getArgumentCell(state, kf, ai).value;
             if (cur.isNull()) continue;
@@ -6840,6 +6915,11 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             std::string atname = getTypeName(at);
             llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 3" << fname  << " for arg " << ai << "\n";
             setSymRegionSensitive(state,mo, fname, at, ai, pointerType, true);
+          } 
+          else { // useCallInstOperands
+             // It means we have been called without a stack frame for the called function!
+             llvm::errs() << "Skipping marking sensitivity for arg " << ai << " with value " << arguments[ai] << " in function " << function->getName() << " to avoid data-flow analysis\n";
+          }
          }
       }
     }
@@ -6998,6 +7078,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
           }
        }
     }
+    else tstate = &state;
 
     std::set<unsigned int> argset = inputFuncArgs[fname];
     std::set<int> argsH, argsL, argsM; 
@@ -7697,14 +7778,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
+  //#ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  #endif
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -8093,6 +8174,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       #endif
       std::string s;
       llvm::raw_string_ostream ors(s);
+      ors << (*target->inst) ;
       //if (mo)
       //   ors << "memory error: out of bound pointer, mem base=" << mo->getBaseExpr() << " offsending address = " << address << " mem size= " << mo->size << "\n";
       state.dumpStack(ors);

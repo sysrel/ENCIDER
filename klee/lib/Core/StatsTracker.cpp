@@ -453,6 +453,11 @@ void StatsTracker::stepInstructionThread(ExecutionState &es, int tid) {
       stats::instructions % IStatsWriteAfterInstructions.getValue() == 0)
     writeIStats();
 }
+
+void StatsTracker::secretDependentSuccessor(ExecutionState &es) {
+   ++stats::sensitiveDesc;
+}
+
 /* SYSREL extension */
 
 

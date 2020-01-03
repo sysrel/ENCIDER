@@ -191,10 +191,12 @@ public:
                                      unsigned int offset=0);
 
 
+  // depending on the called context, the stack frame of the function may or may not be created
+  // In the latter case the operands should be used to store the symbolized expressions
   bool symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                                   KInstruction *target,
                                   llvm::Function *function,
-                                  std::vector< ref<Expr> > &arguments);
+                                  std::vector< ref<Expr> > &arguments, bool useCallInstOperands);
 
   bool symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   KInstruction *target,

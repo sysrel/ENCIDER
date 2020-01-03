@@ -61,6 +61,8 @@ namespace klee {
     /// operator+= - Increment the statistic by \arg addend.
     Statistic &operator +=(const uint64_t addend);
 
+    Statistic &operator --() { if (getValue() > 0) return (*this -= 1); else return *this;}
+
     /* SYSREL extension */
     /// operator+= - Decrement the statistic by \arg addend.
     Statistic &operator -=(const uint64_t addend);

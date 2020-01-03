@@ -119,6 +119,7 @@ ExecutionState::ExecutionState(KFunction *kf) :
   pmstack.clear();
   inEnclave = true;
   lastEnclaveFunction = "";
+  secretDescendant = false;
   /* SYSREL */  
 }
 
@@ -134,6 +135,7 @@ ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
   pmstack.clear();
   inEnclave = true;
   lastEnclaveFunction = "";
+  secretDescendant = false;
   /* SYSREL */  
 }
 
@@ -233,6 +235,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
      pmstack.push_back(new PMFrame(*pmf));
   inEnclave = state.inEnclave;
   lastEnclaveFunction = state.lastEnclaveFunction;
+  secretDescendant = state.secretDescendant;
   /* SYSREL */ 
 }
 
@@ -1204,6 +1207,14 @@ std::string ExecutionState::getUnique(std::string n) {
   return n + "_" + std::to_string(symIdCounters[n]);    
 }
 
+
+bool ExecutionState::isSecretDescendant() {
+  return secretDescendant;
+}
+
+void ExecutionState::setSecretDescendant(bool val) {
+  secretDescendant = val;  
+}
 
 PMFrame::PMFrame() {
    action = NULL;
