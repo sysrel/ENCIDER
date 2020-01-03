@@ -6155,10 +6155,10 @@ void Executor::terminateState(ExecutionState &state) {
         }            
         cs.push_back(state.constraints);
         secretDependentRUConstMap[rdd->ru] = cs;
-        //#ifdef VB
+        #ifdef VB
         llvm::errs() <<"PATH COND for secret dependent state:\n";
         ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
-        //#endif
+        #endif
      }
   }
   #ifdef VB
@@ -7778,14 +7778,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  //#ifdef VB
+  #ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  //#endif
+  #endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
