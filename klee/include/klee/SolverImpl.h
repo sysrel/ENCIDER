@@ -35,7 +35,8 @@ namespace klee {
                            SOLVER_RUN_STATUS_FORK_FAILED,
                            SOLVER_RUN_STATUS_INTERRUPTED,
                            SOLVER_RUN_STATUS_UNEXPECTED_EXIT_CODE,
-                           SOLVER_RUN_STATUS_WAITPID_FAILED };
+                           SOLVER_RUN_STATUS_WAITPID_FAILED,
+                           SOLVER_SHUT_DOWN };
 
     /// computeValidity - Compute a full validity result for the
     /// query.
@@ -107,6 +108,8 @@ namespace klee {
 
    /* SYSREL extension */
    virtual unsigned maxSat(std::vector<ref<Expr> > softconstraints) { return 0; };
+   static bool interrupted;
+   static bool forceOutput;
    /* SYSREL extension */
 };
 

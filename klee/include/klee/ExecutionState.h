@@ -264,6 +264,8 @@ public:
   void check(); 
   llvm::Type *getSymbolType(std::string);  
   std::map<llvm::Type *, MemoryObject *> lazyInitSingleInstances;
+  void setIncompletePC(bool);
+  bool isIncompletePC();
   /* SYSREL extension begin */
 private:
   // unsupported, use copy constructor

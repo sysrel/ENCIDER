@@ -50,3 +50,6 @@ const char *SolverImpl::getOperationStatusString(SolverRunStatus statusCode) {
     return "UNRECOGNIZED OPERATION STATUS";
   }
 }
+
+bool SolverImpl::interrupted = false;
+bool SolverImpl::forceOutput = false;

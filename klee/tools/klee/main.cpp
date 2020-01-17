@@ -45,6 +45,9 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/Signals.h"
 
+#include "klee/SolverImpl.h"
+
+
 #if LLVM_VERSION_CODE < LLVM_VERSION(3, 5)
 #include "llvm/Support/system_error.h"
 #endif
@@ -66,6 +69,7 @@
 
 using namespace llvm;
 using namespace klee;
+
 
 
 /* begin SYSREL extension */
@@ -161,6 +165,8 @@ extern bool skipOptimizingSensitiveRegionCheck;
 extern unsigned numSecretDependent;
 extern unsigned numSecretIndependent;
 extern bool pauseSecretIndependent;
+extern std::set<long> statesWithCorruptedPC;
+unsigned watchdogGrace = 1;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -174,6 +180,8 @@ CallbackAPIHandler *callbackAPIHandler = NULL;
 FreeAPIHandler *freeAPIHandler = NULL;
 SideEffectAPIHandler *sideEffectAPIHandler = NULL;
 */
+
+
 
 void addInfoFlowRule(std::string fname, region fr,  std::set<infoflowsource_t> ifss) {
  std::map<region, std::set<infoflowsource_t> > fm;
@@ -492,7 +500,11 @@ namespace {
   cl::opt<bool>
   PauseSecretIndependent("pause-secret-indep", cl::desc("Pause states that are secret independent when there are active secret dependent states!\n"));
 
-                                             
+  cl::opt<bool>
+  ForceOutput("force-output", cl::desc("Force output generation on termination \n"));
+
+  cl::opt<unsigned>
+  WatchdogGrace("watchdog-grace", cl::desc("Grace period provided by the watchdog to the interpreter to write the test cases\n"));                                           
   /* SYSREL extension */
 
 
@@ -831,12 +843,21 @@ llvm::raw_fd_ostream *KleeHandler::openTestFile(const std::string &suffix,
 void KleeHandler::processTestCase(const ExecutionState &state,
                                   const char *errorMessage,
                                   const char *errorSuffix) {
+
+  if (SolverImpl::interrupted && SolverImpl::forceOutput && statesWithCorruptedPC.find((long)&state) != statesWithCorruptedPC.end()) {
+     llvm::errs() << "Could Skip incomplete test case due to time tor terminate with forced output option set!\n";
+     //return;
+  }
+
   if (!NoOutput) {
     std::vector< std::pair<std::string, std::vector<unsigned char> > > out;
     bool success = m_interpreter->getSymbolicSolution(state, out);
 
-    if (!success)
+    if (!success) {
       klee_warning("unable to get symbolic solution, losing test case");
+      if (SolverImpl::interrupted && SolverImpl::forceOutput)
+         return;
+    }
 
     double start_time = util::getWallTime();
 
@@ -1885,7 +1906,6 @@ Sequential *readLCMConfig(const char *name) {
 
 
 
-static bool interrupted = false;
 
 // Pulled out so it can be easily called from a debugger.
 extern "C"
@@ -1899,7 +1919,7 @@ void stop_forking() {
 }
 
 static void interrupt_handle() {
-  if (!interrupted && theInterpreter) {
+  if (!SolverImpl::interrupted && theInterpreter) {
     llvm::errs() << "KLEE: ctrl-c detected, requesting interpreter to halt.\n";
     halt_execution();
     sys::SetInterruptFunction(interrupt_handle);
@@ -1907,7 +1927,7 @@ static void interrupt_handle() {
     llvm::errs() << "KLEE: ctrl-c detected, exiting.\n";
     exit(1);
   }
-  interrupted = true;
+  SolverImpl::interrupted = true;
 }
 
 static void interrupt_handle_watchdog() {
@@ -2123,7 +2143,7 @@ int main(int argc, char **argv, char **envp) {
 
       // Simple stupid code...
       while (1) {
-        sleep(1);
+        sleep(watchdogGrace);
 
         int status, res = waitpid(pid, &status, WNOHANG);
 
@@ -2148,7 +2168,7 @@ int main(int argc, char **argv, char **envp) {
             if (level==1) {
               klee_warning(
                   "KLEE: WATCHDOG: time expired, attempting halt via INT\n");
-              kill(pid, SIGINT);
+              kill(pid, SIGINT); 
             } else if (level==2) {
               klee_warning(
                   "KLEE: WATCHDOG: time expired, attempting halt via gdb\n");
@@ -2437,6 +2457,12 @@ int main(int argc, char **argv, char **envp) {
   if (PauseSecretIndependent)
      pauseSecretIndependent = true;
 
+  if (ForceOutput) 
+     SolverImpl::forceOutput = true;
+
+  if (WatchdogGrace)
+     watchdogGrace = WatchdogGrace;
+
   //if (MaxSmtQueryFileName != "") 
     // maxSmtQueryFileName = MaxSmtQueryFileName;
 
@@ -2447,6 +2473,8 @@ int main(int argc, char **argv, char **envp) {
   if (ReplayPathFile != "") {
     interpreter->setReplayPath(&replayPath);
   }
+
+
 
   char buf[256];
   time_t t[2];
@@ -2495,7 +2523,7 @@ int main(int argc, char **argv, char **envp) {
                    << " (" << ++i << "/" << kTestFiles.size() << ")\n";
       // XXX should put envp in .ktest ?
       interpreter->runFunctionAsMain(mainFn, out->numArgs, out->args, pEnvp);
-      if (interrupted) break;
+      if (SolverImpl::interrupted) break;
     }
     interpreter->setReplayKTest(0);
     while (!kTests.empty()) {

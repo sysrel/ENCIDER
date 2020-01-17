@@ -40,11 +40,18 @@ extern Interpreter *theInterpreter;
 extern bool isAllocTypeLazyInit(llvm::Type *t, bool &single, int &count) ;
 extern std::map<std::string, std::vector<std::string> > inferenceClue;
 extern size_t maxVoidTypeCastSize;
+extern std::map<long, std::map<ref<Expr>, const MemoryObject *> > addressToMemObj;
+extern cl::opt<bool> PreferredResolution;
 // to avoid assertion failure when size cannot be determined
 #define SIZE_FOR_UNTYPED 8
 /* SYSREL EXTENSION */
 
 namespace {
+
+cl::opt<bool>
+ConformToEmbedding("use-embedding-in-alloc", cl::desc("Use embedding relationship in lazy alloc (default false)\n"), cl::init(false));
+
+
 llvm::cl::opt<bool> DeterministicAllocation(
     "allocate-determ",
     llvm::cl::desc("Allocate memory deterministically(default=off)"),
@@ -193,6 +200,14 @@ MemoryObject *MemoryManager::simulateMalloc(ExecutionState &state, ref<Expr> siz
     MemoryObject *mo = allocate(CE->getZExtValue(), false, /*isGlobal=*/false,
                           state.prevPC->inst, allocationAlignment);
     mo->name = "smalloc" + CE->getZExtValue();
+    if (PreferredResolution) {
+       std::map<ref<Expr>, const MemoryObject *> m;
+       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
+          m = addressToMemObj[(long)&state];
+          m[mo->getBaseExpr()] = mo;
+          addressToMemObj[(long)&state] = m; 
+       }
+     }
     #ifdef VB
     llvm::outs() << "simulating allocation of size : " << CE->getZExtValue() << " at address " << mo->getBaseExpr() << "\n";
     #endif
@@ -209,6 +224,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
      std::string type_str;
      llvm::raw_string_ostream rso(type_str);
      allocType->print(rso); 
+     llvm::errs() << "allocLazyOrEmbed for type " << rso.str() << " address = " << allocType << "\n"; 
      size_t allocationAlignment = 8;
      const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
      llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(inst);
@@ -277,20 +293,31 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
         }
      }
      size_t allocsize;
-     if (!allocType->isSized())
+     if (!allocType->isSized()) {
         allocsize = SIZE_FOR_UNTYPED;
-     else 
+     }
+     else {
         allocsize = dl.getTypeAllocSize(allocType);
+        llvm::errs() << "alloc size from data layout: " << allocsize << "\n";
+     }
      //if (allocType->isVoidTy())  {
      // Void* are represented as i8* in LLVM IR..
      if (allocType->isIntegerTy(8))  {
         allocsize = maxVoidTypeCastSize;
-        //llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
+        llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
      }
-     #ifdef VB
-     llvm::errs() << "allocation size: " << allocsize*count << "\n"; 
-     #endif
+     //#ifdef VB
+     llvm::errs() << "allocation size: " << allocsize*count << " for type " << rso.str() << " address= " << allocType << "\n"; 
+     //#endif
      mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
+     if (PreferredResolution) {
+       std::map<ref<Expr>, const MemoryObject *> m;
+       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
+          m = addressToMemObj[(long)&state];
+          m[mo->getBaseExpr()] = mo; 
+          addressToMemObj[(long)&state] = m; 
+       }
+     }
      resaddr = mo->getBaseExpr();
      rallocType = allocType;
      llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
@@ -333,7 +360,8 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   allocType->print(rso); 
-  if (isEmbeddedType(allocType)) {
+  llvm::errs() << "allocLazyOrEmbed for type " << rso.str() << " address = " << allocType << "\n"; 
+  if (ConformToEmbedding && isEmbeddedType(allocType)) {
     if (isSingle) {  
         if (state.lazyInitSingleInstances.find(allocType) != state.lazyInitSingleInstances.end()) {
            rallocType = allocType;
@@ -534,12 +562,20 @@ MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::In
  // Void* are represented as i8* in LLVM IR..
  if (allocType->isIntegerTy(8))  {
     allocsize = maxVoidTypeCastSize;
-    //llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
+    llvm::errs() << "allocation size for void type: " << allocsize << " times " << count << "\n"; 
  }
- #ifdef VB 
- llvm::outs() << "allocation size: " << allocsize*count << "\n"; 
- #endif 
+ //#ifdef VB 
+ llvm::outs() << "allocation size: " << allocsize*count << " for type " << rso.str() << " address= " << allocType << "\n"; 
+ //#endif 
  mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
+ if (PreferredResolution) {
+       std::map<ref<Expr>, const MemoryObject *> m;
+       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
+          m = addressToMemObj[(long)&state];
+          m[mo->getBaseExpr()] = mo; 
+          addressToMemObj[(long)&state] = m; 
+       }
+ }
  llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
  if (st) {
     std::string tname = getTypeName(allocType); 

@@ -50,6 +50,7 @@
 #include "klee/Internal/System/MemoryUsage.h"
 #include "klee/SolverStats.h"
 #include "klee/sysrel.h"
+#include "klee/SolverImpl.h"
 
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Attributes.h"
@@ -203,6 +204,8 @@ unsigned leakageMaxSat = 0;
 unsigned numSecretDependent=0;
 unsigned numSecretIndependent=0;
 bool pauseSecretIndependent = false;
+std::set<long> statesWithCorruptedPC;
+
 
 void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
   long sid = (long)&state;
@@ -290,7 +293,14 @@ InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to nu
              cl::init(false));
 
 
+cl::opt<bool>
+PreferredResolution("use-one-for-resol", cl::desc("Use the candidate memory object stored for the relevant symbolic \ 
+                                  address expression for symbolic address resolution!\n"), cl::init(false));
+std::map<long, std::map<ref<Expr>, const MemoryObject *> > addressToMemObj;
+std::map<long, std::map<ref<Expr>, ref<Expr> > > symIndexToMemBase;
 extern std::set<std::string> assemblyFunctions;
+
+
 
 KModule *kmoduleExt;
 llvm::Function *entryFunc;
@@ -4860,6 +4870,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     #endif
     bindLocal(ki, state, base);
 
+    if (PreferredResolution) {
+       if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
+          std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
+          m[base] = origbase;
+          symIndexToMemBase[(long)&state] = m;
+       }
+    }
+
     /* side channel */
     if (state.inEnclave && exprHasSymRegion(state, base, true)) {
        // Check for the possibility of the address base mapping to different cache lines for different security sensitive values
@@ -6004,7 +6022,8 @@ void Executor::run(ExecutionState &initialState) {
   searcher = 0;
   // SYSREL side channel
   std::cerr << "Size of rdmap : " << rdmap->size() << "\n";
-  doDumpStates();
+  if (!SolverImpl::interrupted || !SolverImpl::forceOutput)
+    doDumpStates();
   /* SYSREL side channel begin */
   timeSideChannelAnalysis(this);
   if (leakageWMaxSat)
@@ -6015,6 +6034,7 @@ void Executor::run(ExecutionState &initialState) {
   /* SYSREL side channel end */
 
 }
+
 
 std::string Executor::getAddressInfo(ExecutionState &state,
                                      ref<Expr> address) const{
@@ -6204,7 +6224,7 @@ void Executor::terminateState(ExecutionState &state) {
 
 void Executor::terminateStateEarly(ExecutionState &state,
                                    const Twine &message) {
-  if (!OnlyOutputStatesCoveringNew || state.coveredNew ||
+  if ((!SolverImpl::interrupted || !SolverImpl::forceOutput) && !OnlyOutputStatesCoveringNew || state.coveredNew ||
       (AlwaysOutputSeeds && seedMap.count(&state)))
     interpreterHandler->processTestCase(state, (message + "\n").str().c_str(),
                                         "early");
@@ -7778,14 +7798,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
-  #ifdef VB
+  //#ifdef VB
   llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
   state.prevPC->inst->print(llvm::errs());
   llvm::errs() << "\n address: " << address << "\n";
   llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
   if (isWrite)
      llvm::errs() << "storing value " << value << "\n";
-  #endif
+  //#endif
 
 
   Expr::Width type = (isWrite ? value->getWidth() :
@@ -7826,11 +7846,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     }
 
     ref<Expr> offset = mo->getOffsetExpr(address);
-    #ifdef VB
+    //#ifdef VB
     llvm::errs() << "address for memop " << address << "\n";
     llvm::errs() << "default offset for target address " << offset << "\n";
     llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
-    #endif
+    //#endif
     /* SYSREL EXTENSION */
     if (forcedOffset) {
        offset = ConstantExpr::alloc(0, Expr::Int64);
@@ -8090,10 +8110,40 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   // resolution with out of bounds)
 
   ResolutionList rl;
-  solver->setTimeout(coreSolverTimeout);
-  bool incomplete = state.addressSpace.resolve(state, solver, address, rl,
+  bool incomplete = false;
+
+  bool craftedResList = false;
+  if (PreferredResolution) { // use the base address stored in getelementptr to use the MemoryObject for resolution
+     llvm::errs() << "Checking if we can identify the single resolution candidate with PreferredResolution option!\n"; 
+       if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
+          std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
+          if (m.find(address) != m.end()) {
+             ref<Expr> mobase = m[address];
+             if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
+                std::map<ref<Expr>, const MemoryObject *> m2 = addressToMemObj[(long)&state];
+                if (m2.find(mobase) != m2.end()) {
+                   const MemoryObject *mres = m2[mobase];
+                   const ObjectState *ores = state.addressSpace.findObject(mres);
+                   if (mres && ores) {
+                      ObjectPair opres;
+                      opres.first = mres;
+                      opres.second = ores;
+                      rl.push_back(opres);
+                      craftedResList = true; 
+                      llvm::errs() << "Using mem obj with base " << mobase << " to resolve " << address << "\n";
+                   } 
+                }
+             }
+          }
+       }
+  }
+
+  if (!craftedResList) {
+    solver->setTimeout(coreSolverTimeout);
+    incomplete = state.addressSpace.resolve(state, solver, address, rl,
                                                0, coreSolverTimeout);
-  solver->setTimeout(0);
+    solver->setTimeout(0);
+  }
 
   // XXX there is some query wasteage here. who cares?
   ExecutionState *unbound = &state;
@@ -8110,6 +8160,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
     // bound can be 0 on failure or overlapped
     if (bound) {
+      
+      llvm::errs() << "inbound case MemObj base=" << mo->getBaseExpr() << " mo size=" << mo->size << " PC:\n";
+      ExprPPrinter::printConstraints(llvm::errs(), bound->constraints);
+
       if (isWrite) {
         if (os->readOnly) {
           terminateStateOnError(*bound, "memory error: object read only",
@@ -8169,9 +8223,11 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     if (incomplete) {
       terminateStateEarly(*unbound, "Query timed out (resolve).");
     } else {
-      #ifdef VB
-      llvm::outs() << "Offending address " << address << "\n";
-      #endif
+      //#ifdef VB
+      llvm::outs() << "Offending address for unbound" << address << "\n";
+      ExprPPrinter::printConstraints(llvm::errs(), unbound->constraints);
+      //#endif
+
       std::string s;
       llvm::raw_string_ostream ors(s);
       ors << (*target->inst) ;
@@ -8333,13 +8389,14 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
      std::string type_str;
      llvm::raw_string_ostream rso(type_str);
      at->print(rso);
+     llvm::errs() << "base type pointer=" << at << "\n";
      if (at->isPointerTy()) {
         at = at->getPointerElementType();
         bool singleInstance = false;
         int count = 1; // force symbolic init of pointers to array types
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
         //#ifdef VB
-        llvm::errs() << "arg " << ind << " type " << getTypeName(at) << " count=" << count << "\n";
+        llvm::errs() << "arg " << ind << " type " << getTypeName(at) << " pointer= " << at << " count=" << count << "\n";
         //#endif
         //if (lazyInitT) {
           /*
@@ -8890,8 +8947,10 @@ bool Executor::getSymbolicSolution(const ExecutionState &state,
   solver->setTimeout(0);
   if (!success) {
     klee_warning("unable to compute initial values (invalid constraints?)!");
-    ExprPPrinter::printQuery(llvm::errs(), state.constraints,
+    if (!SolverImpl::interrupted || !SolverImpl::forceOutput) 
+       ExprPPrinter::printQuery(llvm::errs(), state.constraints,
                              ConstantExpr::alloc(0, Expr::Bool));
+    else statesWithCorruptedPC.insert((long)&state);;
     return false;
   }
 

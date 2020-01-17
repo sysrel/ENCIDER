@@ -295,6 +295,7 @@ MetaSMTSolverImpl<SolverContext>::runAndGetCexForked(
   }
 
   if (pid == 0) {
+    ::signal(SIGINT, SIG_DFL);
     if (timeout) {
       ::alarm(0); /* Turn off alarm so we can safely set signal handler */
       ::signal(SIGALRM, metaSMTTimeoutHandler);
@@ -344,7 +345,7 @@ MetaSMTSolverImpl<SolverContext>::runAndGetCexForked(
     pid_t res;
 
     do {
-      res = waitpid(pid, &status, 0);
+       res = waitpid(pid, &status, 0);
     } while (res < 0 && errno == EINTR);
 
     if (res < 0) {

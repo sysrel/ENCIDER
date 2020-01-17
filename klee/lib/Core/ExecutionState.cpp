@@ -64,6 +64,8 @@ extern bool isLazyInit(Type *t, bool &single, int &count);
 extern bool isAllocTypeLazyInit(Type *t, bool &single, int &count);
 extern void cloneHighMemoryRegions(const ExecutionState &from, ExecutionState &to);
 extern void cloneLowMemoryRegions(const ExecutionState &from, ExecutionState &to);
+extern std::map<long, std::map<ref<Expr>, const MemoryObject *> > addressToMemObj;
+extern std::map<long, std::map<ref<Expr>, ref<Expr> > > symIndexToMemBase;
 /* SYSREL */
 
 /***/
@@ -120,6 +122,10 @@ ExecutionState::ExecutionState(KFunction *kf) :
   inEnclave = true;
   lastEnclaveFunction = "";
   secretDescendant = false;
+  std::map<ref<Expr>, ref<Expr> > em1;
+  symIndexToMemBase[(long)this] = em1;
+  std::map<ref<Expr>, const MemoryObject*> em2;
+  addressToMemObj[(long)this] = em2;
   /* SYSREL */  
 }
 
@@ -136,6 +142,10 @@ ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
   inEnclave = true;
   lastEnclaveFunction = "";
   secretDescendant = false;
+  std::map<ref<Expr>, ref<Expr> > em1;
+  symIndexToMemBase[(long)this] = em1;
+  std::map<ref<Expr>, const MemoryObject*> em2;
+  addressToMemObj[(long)this] = em2;
   /* SYSREL */  
 }
 
@@ -236,6 +246,10 @@ ExecutionState::ExecutionState(const ExecutionState& state):
   inEnclave = state.inEnclave;
   lastEnclaveFunction = state.lastEnclaveFunction;
   secretDescendant = state.secretDescendant;
+  if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end())
+    symIndexToMemBase[(long)this] = symIndexToMemBase[(long)&state];
+  if (addressToMemObj.find((long)&state) != addressToMemObj.end())
+    addressToMemObj[(long)this] = addressToMemObj[(long)&state];
   /* SYSREL */ 
 }
 
@@ -767,6 +781,7 @@ void ExecutionState::updateLCMState() {
 bool ExecutionState::lcmStepMovesWhenReturns(std::string fname) {
   return lcmState->stepMovesWhenReturns(fname);
 }
+
 
 
 Identifier::Identifier(std::string s) {

@@ -7,6 +7,9 @@
 //
 //===----------------------------------------------------------------------===//
 #include "klee/Config/config.h"
+
+
+
 #ifdef ENABLE_STP
 #include "STPSolver.h"
 #include "STPBuilder.h"
@@ -28,6 +31,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+
 namespace {
 
 llvm::cl::opt<bool> DebugDumpSTPQueries(
@@ -40,6 +44,7 @@ llvm::cl::opt<bool> IgnoreSolverFailures(
 }
 
 #define vc_bvBoolExtract IAMTHESPAWNOFSATAN
+
 
 static unsigned char *shared_memory_ptr;
 static int shared_memory_id = 0;
@@ -240,6 +245,8 @@ runAndGetCexForked(::VC vc, STPBuilder *builder, ::VCExpr q,
   }
 
   if (pid == 0) {
+    // This is to make sure the child can be killed with SIGINT 
+    //::signal(SIGINT, SIG_DFL);
     if (timeout) {
       ::alarm(0); /* Turn off alarm so we can safely set signal handler */
       ::signal(SIGALRM, stpTimeoutHandler);
@@ -263,9 +270,27 @@ runAndGetCexForked(::VC vc, STPBuilder *builder, ::VCExpr q,
     int status;
     pid_t res;
 
+  /* SYSREL extension */
+  if (SolverImpl::forceOutput) {
+    do {
+        while (1) {
+         //llvm::errs() << "Waiting for the child in STPSolver\n"; 
+         res = waitpid(pid, &status, WNOHANG);
+         if (SolverImpl::interrupted) {
+            llvm::errs() << "Premature return of solver due to interpreter shutdown!\n";
+            return SolverImpl::SOLVER_SHUT_DOWN;
+         }
+         //llvm::errs() << "DONE Waiting for the child in STPSolver\n"; 
+         if (res > 0 || (res < 0 && errno == EINTR))
+            break;
+      }
+    } while (res < 0 && errno == EINTR);
+  }
+  else { /* SYSREL extension */
     do {
       res = waitpid(pid, &status, 0);
     } while (res < 0 && errno == EINTR);
+  }
 
     if (res < 0) {
       klee_warning("waitpid() for STP failed");
