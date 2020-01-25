@@ -43,6 +43,8 @@ using namespace klee;
 // to be used when a symbolic size is passed to a malloc model
 #define MALLOC_CONC_SIZE 10000
 
+extern void recordMemObj(ExecutionState &state, const MemoryObject *mo);
+
 namespace {
   cl::opt<bool>
   ReadablePosix("readable-posix-inputs",
@@ -1259,6 +1261,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
              llvm::outs() << "Could not allocate memory object while handling anonymous alloc API!\n";
              return false;
           }
+          recordMemObj(state, mo);
           llvm::errs() << "Allocated memory object of size " << allocationSize << " at " << mo->getBaseExpr() << " to handle anonymous alloc " << par[5] << "\n"; 
 
           state.recordAlloc(mo->getBaseExpr());
@@ -1303,6 +1306,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
              llvm::outs() << "Could not allocate memory object while handling anonymous alloc API!\n";
              return false;
           }
+          recordMemObj(state, mo); 
           llvm::errs() << "Allocated memory object of size " << allocationSize << " at " << mo->getBaseExpr() << " to handle anonymous alloc " << par[5] << "\n"; 
           state.recordAlloc(mo->getBaseExpr());
           state.addSymbolDef(par[5], mo->getBaseExpr());
@@ -1412,6 +1416,7 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
        llvm::outs() << "Could not allocate memory object while handling alloc API!\n";
        return false;
     }
+    recordMemObj(state, mo);
     //llvm::outs() << "Allocated memory object at " << mo->getBaseExpr() << " to handle alloc API " << fname << "\n"; 
     state.recordAlloc(mo->getBaseExpr());
     state.addSymbolDef(par[5], mo->getBaseExpr());

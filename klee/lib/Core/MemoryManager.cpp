@@ -46,6 +46,23 @@ extern cl::opt<bool> PreferredResolution;
 #define SIZE_FOR_UNTYPED 8
 /* SYSREL EXTENSION */
 
+void recordMemObj(ExecutionState &state, const MemoryObject *mo) {
+    if (!mo) return;
+    if (PreferredResolution) {
+       std::map<ref<Expr>, const MemoryObject *> m;
+       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
+          m = addressToMemObj[(long)&state];
+          m[mo->getBaseExpr()] = mo;
+          addressToMemObj[(long)&state] = m; 
+       }
+       else {
+         m[mo->getBaseExpr()] = mo;
+         addressToMemObj[(long)&state] = m; 
+       }
+       llvm::errs() << "storing memobj " << mo->getBaseExpr() << " for state " << &state << "\n";
+    }
+}
+
 namespace {
 
 cl::opt<bool>
@@ -200,14 +217,7 @@ MemoryObject *MemoryManager::simulateMalloc(ExecutionState &state, ref<Expr> siz
     MemoryObject *mo = allocate(CE->getZExtValue(), false, /*isGlobal=*/false,
                           state.prevPC->inst, allocationAlignment);
     mo->name = "smalloc" + CE->getZExtValue();
-    if (PreferredResolution) {
-       std::map<ref<Expr>, const MemoryObject *> m;
-       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
-          m = addressToMemObj[(long)&state];
-          m[mo->getBaseExpr()] = mo;
-          addressToMemObj[(long)&state] = m; 
-       }
-     }
+    recordMemObj(state, mo);
     #ifdef VB
     llvm::outs() << "simulating allocation of size : " << CE->getZExtValue() << " at address " << mo->getBaseExpr() << "\n";
     #endif
@@ -310,14 +320,7 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbeddingSimple(Executio
      llvm::errs() << "allocation size: " << allocsize*count << " for type " << rso.str() << " address= " << allocType << "\n"; 
      //#endif
      mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
-     if (PreferredResolution) {
-       std::map<ref<Expr>, const MemoryObject *> m;
-       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
-          m = addressToMemObj[(long)&state];
-          m[mo->getBaseExpr()] = mo; 
-          addressToMemObj[(long)&state] = m; 
-       }
-     }
+     recordMemObj(state, mo);
      resaddr = mo->getBaseExpr();
      rallocType = allocType;
      llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
@@ -568,14 +571,7 @@ MemoryObject *MemoryManager::allocateForLazyInit(ExecutionState &state, llvm::In
  llvm::outs() << "allocation size: " << allocsize*count << " for type " << rso.str() << " address= " << allocType << "\n"; 
  //#endif 
  mo = allocate(allocsize*count, false, /*true*/false, inst, allocationAlignment);
- if (PreferredResolution) {
-       std::map<ref<Expr>, const MemoryObject *> m;
-       if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
-          m = addressToMemObj[(long)&state];
-          m[mo->getBaseExpr()] = mo; 
-          addressToMemObj[(long)&state] = m; 
-       }
- }
+ recordMemObj(state, mo);
  llvm::StructType *st = dyn_cast<llvm::StructType>(allocType);
  if (st) {
     std::string tname = getTypeName(allocType); 

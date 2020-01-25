@@ -46,6 +46,7 @@ namespace {
 }
 
 /* SYSREL */
+void recordMemObj(ExecutionState &state, const MemoryObject *mo);
 extern KModule *kmoduleExt;
 extern Interpreter *theInterpreter;
 int ExecutionState::counter=0;
@@ -250,6 +251,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     symIndexToMemBase[(long)this] = symIndexToMemBase[(long)&state];
   if (addressToMemObj.find((long)&state) != addressToMemObj.end())
     addressToMemObj[(long)this] = addressToMemObj[(long)&state];
+  llvm::errs() << "cloning state " << &state << " to " << this << "\n";
   /* SYSREL */ 
 }
 
@@ -1381,6 +1383,7 @@ ref<Expr> ExecutionState::addSymbolicReturnAsPublicOutput(std::string entry, std
    const llvm::DataLayout & dl = f->getParent()->getDataLayout();
    size_t allocationAlignment = 8;
    mo =  memory->allocate(dl.getTypeAllocSize(t), false, /*true*/false, NULL, allocationAlignment);
+   recordMemObj(*this, mo);
    mo->name = name;
    const Array *array = arrayCache.CreateArray(mo->name, mo->size);
    ObjectState *sos = ((Executor*)theInterpreter)->bindObjectInState(*this, mo, true, array);

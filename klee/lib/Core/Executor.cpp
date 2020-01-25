@@ -205,7 +205,7 @@ unsigned numSecretDependent=0;
 unsigned numSecretIndependent=0;
 bool pauseSecretIndependent = false;
 std::set<long> statesWithCorruptedPC;
-
+extern void recordMemObj(ExecutionState &state, const MemoryObject *mo);
 
 void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
   long sid = (long)&state;
@@ -1981,6 +1981,7 @@ void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
            }
            // assign the function address to the offset
            obj->write(e.first, Expr::createPointer((uint64_t)f));
+           llvm::errs() << "assigning function " << f->getName() << "to offset " << e.first << " of base address " << mo->getBaseExpr() << "\n";
         }
      }
   }
@@ -2834,6 +2835,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
       MemoryObject *mo = memory->allocate(size, /*isLocal=*/false,
                                           /*isGlobal=*/true, /*allocSite=*/v,
                                           /*alignment=*/globalObjectAlignment);
+      recordMemObj(state, mo);
       ObjectState *os = bindObjectInState(state, mo, false);
       globalObjects.insert(std::make_pair(v, mo));
       globalAddresses.insert(std::make_pair(v, mo->getBaseExpr()));
@@ -2873,6 +2875,7 @@ void Executor::initializeGlobals(ExecutionState &state) {
                                           /*alignment=*/globalObjectAlignment);
       if (!mo)
         llvm::report_fatal_error("out of memory");
+      recordMemObj(state, mo);
       ObjectState *os = bindObjectInState(state, mo, false);
       globalObjects.insert(std::make_pair(v, mo));
       globalAddresses.insert(std::make_pair(v, mo->getBaseExpr()));
@@ -3626,8 +3629,9 @@ void Executor::executeCall(ExecutionState &state,
         terminateStateOnExecError(state, "out of memory (varargs)");
         return;
       }
-
+   
       if (mo) {
+        recordMemObj(state, mo);
         if ((WordSize == Expr::Int64) && (mo->address & 15) &&
             requires16ByteAlignment) {
           // Both 64bit Linux/Glibc and 64bit MacOSX should align to 16 bytes.
@@ -4872,9 +4876,12 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
     if (PreferredResolution) {
        if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
-          std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
-          m[base] = origbase;
-          symIndexToMemBase[(long)&state] = m;
+             std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
+           if (base != origbase || m.find(base) == m.end()) { 
+              m[base] = origbase;
+              symIndexToMemBase[(long)&state] = m;
+              llvm::errs() << "recording mapping from geptr index " << base << " to " << origbase << " in state " << &state << "\n";
+          }
        }
     }
 
@@ -6917,6 +6924,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             Instruction *inst = &*(function->begin()->begin());
             const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
             MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
+            recordMemObj(state, mo);
             std::string name = function->getName();
             std::string uniqueName = name;
             if (argsH.find(ai) != argsH.end())
@@ -7159,6 +7167,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                   else {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
+                   recordMemObj(state, sm);
                    //#ifdef VB
                    llvm::errs() << "Symbolizing and marking argument " << ai << " of function " << function->getName() 
                                 << ", address=" << sm->getBaseExpr() << "\n";
@@ -7250,6 +7259,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                 if (asuccess) {
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
+                   recordMemObj(state, sm);
                    #ifdef VB
                    llvm::errs() << "Symbolizing argument of function " << function->getName() << ", address=" << sm->getBaseExpr() << "\n";
                    llvm::errs() << "base addres=" << base << "\n";
@@ -7513,7 +7523,7 @@ void Executor::executeAlloc(ExecutionState &state,
     MemoryObject *mo =
         memory->allocate(allocsize, isLocal, /*isGlobal=*/false,
                          allocSite, allocationAlignment);
-
+    recordMemObj(state, mo);
     //#ifdef VB
     if (isLocal)
        llvm::errs() << "Local alloc: " << (*target->inst) << " at address " << mo->getBaseExpr() << "\n"; 
@@ -8115,10 +8125,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   bool craftedResList = false;
   if (PreferredResolution) { // use the base address stored in getelementptr to use the MemoryObject for resolution
      llvm::errs() << "Checking if we can identify the single resolution candidate with PreferredResolution option!\n"; 
-       if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
+     if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
           std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
-          if (m.find(address) != m.end()) {
-             ref<Expr> mobase = m[address];
+          ref<Expr> addtocheck = address;
+          while (m.find(addtocheck) != m.end()) {
+             llvm::errs() << " checking mapping for " << addtocheck << "\n";
+             ref<Expr> mobase = m[addtocheck];
+             if (!isa<ConstantExpr>(mobase)) {
+                // non-constant; keep checking the address it gets mapped 
+                addtocheck = mobase;
+                continue;
+             }
              if (addressToMemObj.find((long)&state) != addressToMemObj.end()) {
                 std::map<ref<Expr>, const MemoryObject *> m2 = addressToMemObj[(long)&state];
                 if (m2.find(mobase) != m2.end()) {
@@ -8131,9 +8148,16 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                       rl.push_back(opres);
                       craftedResList = true; 
                       llvm::errs() << "Using mem obj with base " << mobase << " to resolve " << address << "\n";
+                      break;
                    } 
                 }
+                else { 
+                   if (addtocheck == mobase) break;
+                   llvm::errs() << "memobj for " << mobase << " in state " << &state << " not found \n"; 
+                   addtocheck = mobase;                   
+                }
              }
+             else break;
           }
        }
   }
@@ -8531,6 +8555,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         Instruction *inst = &*(entryFunc->begin()->begin());
         const llvm::DataLayout & dl = inst->getParent()->getParent()->getParent()->getDataLayout();
         MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
+        recordMemObj(state, mo);
         mo->name = getUniqueSymRegion(fname  + std::string("_arg_") + std::to_string(ind));
         llvm::errs() << "lazy init arg " << mo->name << "\n";
         // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
@@ -8680,6 +8705,8 @@ void Executor::runFunctionAsMain(Function *f,
  }
 
   ExecutionState *state = new ExecutionState(kmodule->functionMap[f]);
+  recordMemObj(*state, argvMO);
+
   #ifdef INFOFLOW
   initInfoFlowContext(*state);
   #endif
@@ -8779,7 +8806,7 @@ void Executor::runFunctionAsMain(Function *f,
                              /*allocSite=*/state->pc->inst, /*alignment=*/8);
         if (!arg)
           klee_error("Could not allocate memory for function arguments");
-
+        recordMemObj(*state, arg);
 
         ObjectState *os = bindObjectInState(*state, arg, false);
         for (j=0; j<len+1; j++)
