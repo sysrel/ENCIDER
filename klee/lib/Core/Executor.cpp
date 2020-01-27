@@ -294,6 +294,10 @@ InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to nu
 
 
 cl::opt<bool>
+BreakSelectStmt("fork-for-select", cl::desc("Fork states to simulate the select statement\n"),
+           cl::init(false));
+
+cl::opt<bool>
 PreferredResolution("use-one-for-resol", cl::desc("Use the candidate memory object stored for the relevant symbolic \ 
                                   address expression for symbolic address resolution!\n"), cl::init(false));
 std::map<long, std::map<ref<Expr>, const MemoryObject *> > addressToMemObj;
@@ -4466,14 +4470,37 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     // Special instructions
   case Instruction::Select: {
     // NOTE: It is not required that operands 1 and 2 be of scalar type.
-    ref<Expr> cond = eval(ki, 0, state).value;
-    ref<Expr> tExpr = eval(ki, 1, state).value;
-    ref<Expr> fExpr = eval(ki, 2, state).value;
-    ref<Expr> result = SelectExpr::create(cond, tExpr, fExpr);
-    bindLocal(ki, state, result);
-    #ifdef INFOFLOW
-    updateInfoFlowForBinary(state, getLocal(state, ki, 1), getLocal(state, ki, 2), ki);
-    #endif
+    if (BreakSelectStmt) {
+       ref<Expr> cond = eval(ki, 0, state).value;
+       Executor::StatePair branches = fork(state, cond, false, true);
+       recordMostRecentBranchInfo(state, i);
+       if (branches.first) {
+          ref<Expr> tExpr = eval(ki, 1, state).value;
+          bindLocal(ki, *branches.first, tExpr);
+          /* SYSREL side channel begin */
+          successorsPaths->insert(branches.first); // Keeping track of the new paths
+         /* SYSREL side channel end */
+          llvm::errs() << "True branch of select: " << (*ki->inst) << " condition " << cond << "\n";
+       }
+       if (branches.second) {
+          ref<Expr> fExpr = eval(ki, 2, state).value;
+          bindLocal(ki, *branches.second, fExpr);
+          /* SYSREL side channel begin */
+          successorsPaths->insert(branches.second); // Keeping track of the new paths
+          /* SYSREL side channel end */
+          llvm::errs() << "False branch of select: " << (*ki->inst) << " condition !" << cond << "\n";
+       }
+    }
+    else {
+       ref<Expr> cond = eval(ki, 0, state).value;
+       ref<Expr> tExpr = eval(ki, 1, state).value;
+       ref<Expr> fExpr = eval(ki, 2, state).value;
+       ref<Expr> result = SelectExpr::create(cond, tExpr, fExpr);
+       bindLocal(ki, state, result);
+       #ifdef INFOFLOW
+       updateInfoFlowForBinary(state, getLocal(state, ki, 1), getLocal(state, ki, 2), ki);
+       #endif
+    }
     break;
   }
 
@@ -5762,7 +5789,8 @@ void Executor::run(ExecutionState &initialState) {
       std::cerr << "\nGetting currentRD.\n";
       #endif
       /* SYSREL - branch tracking */
-      if ((ii->getOpcode()==Instruction::Br) | (ii->getOpcode()==Instruction::Switch)) {
+      if ((ii->getOpcode()==Instruction::Br) || (ii->getOpcode()==Instruction::Switch) 
+          || (ii->getOpcode()==Instruction::Select && BreakSelectStmt)) {
          isbranch = true;
          successorsPaths->erase(successorsPaths->begin(), successorsPaths->end());
          #ifdef VBSC
