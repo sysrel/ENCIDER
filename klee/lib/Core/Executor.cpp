@@ -7890,12 +7890,12 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
     //#endif
     /* SYSREL EXTENSION */
-    if (forcedOffset) {
-       offset = ConstantExpr::alloc(0, Expr::Int64);
-       #ifdef VB
+    //if (forcedOffset) {
+       //offset = ConstantExpr::alloc(0, Expr::Int64);
+       //#ifdef VB
        llvm::outs() << "(forced) offset for target address " << offset << "\n";
-      #endif
-    }
+      //#endif
+    //}
     /* SYSREL EXTENSION */
 
 
@@ -7911,10 +7911,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       terminateStateEarly(state, "Query timed out (bounds check).");
       return false;
     }
-    #ifdef VB
+    //#ifdef VB
     llvm::outs() << "bounds check expression " << mo->getBoundsCheckOffset(offset, bytes) << "\n";
     llvm::outs() << "in bounds? " << inBounds << "\n";
-    #endif
+    //#endif
 
     if (inBounds) {
       const ObjectState *os = op.second;
@@ -7926,7 +7926,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
           ObjectState *wos = state.addressSpace.getWriteable(mo, os);
           /* SYSREL EXTENSION */
           if (forcedOffset)
-             wos->write(ConstantExpr::alloc(0, Expr::Int64), value);
+             wos->write(offset/*ConstantExpr::alloc(0, Expr::Int64)*/, value);
           else
           /* SYSREL EXTENSION */
              // update info flow
@@ -8006,10 +8006,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //llvm::raw_string_ostream rso(type_str);
                //t->print(rso);
                std::string rsostr = getTypeName(t);
-               #ifdef VB 
+               //#ifdef VB 
                llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
-               #endif
+               //#endif
                if (lazyInitTemp) {
                   if (t->isPointerTy()) {
                      t = t->getPointerElementType();
@@ -8020,17 +8020,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   else
                      assert(false && "Expected a pointer type for lazy init");
-                 #ifdef VB
+                 //#ifdef VB
                   llvm::errs() << "Yes!\n";
                   llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
-                 #endif
+                 //#endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
-                  #endif
+                  //#endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
                   bool mksym;
@@ -8042,17 +8042,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   }
                   
 
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
-                  #endif
+                  //#endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
                   } 
-                  #ifdef VB
+                  //#ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
-                  #endif
+                  //#endif
                   forcedOffset = true;
                   executeMemoryOperation(state, -2, -2, true, address, laddr, target);
                   forcedOffset = false;
@@ -8106,10 +8106,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
        }
         /* SYSREL EXTENSION */
 
-        #ifdef VB
+        //#ifdef VB
         if (getDestCell(state, target).value.get())
          llvm::errs() << "address to be dest: " << getDestCell(state, target).value << "\n";
-        #endif
+        //#endif
 
         bindLocal(target, state, result);
 
@@ -8223,7 +8223,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         } else {
           ObjectState *wos = bound->addressSpace.getWriteable(mo, os);
           if (forcedOffset)
-             wos->write(ConstantExpr::alloc(0, Expr::Int64), value);
+             wos->write(mo->getOffsetExpr(address)/*ConstantExpr::alloc(0, Expr::Int64)*/, value);
           else {
              wos->write(mo->getOffsetExpr(address), value);
              #ifdef INFOFLOW
@@ -8241,7 +8241,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
         ref<Expr> result;
         //llvm::errs() << "on an error path in executeMem, going to read!\n";
         if (forcedOffset)
-           result = os->read(ConstantExpr::alloc(0, Expr::Int64), type);
+           result = os->read(mo->getOffsetExpr(address)/*ConstantExpr::alloc(0, Expr::Int64)*/, type);
         else {
            result = os->read(mo->getOffsetExpr(address), type);
            #ifdef INFOFLOW
