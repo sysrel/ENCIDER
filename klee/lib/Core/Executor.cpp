@@ -7553,8 +7553,63 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
     }
     if (allocType == retType)
        executeMemoryOperation(state, -2, -2, false, laddr, 0, target);
-    else
-       bindLocal(target, state, laddr);
+    else  { // return type is a pointer type
+       if (!nullReturnValue) {
+          bindLocal(target, state, laddr);
+       }
+       else { 
+
+       // first create a symbolic pointer
+       const MemoryObject *moptr = memory->allocate(kmodule->targetData->getTypeAllocSize(retType), false,
+                                          true, state.prevPC->inst,
+                                          kmodule->targetData->getPrefTypeAlignment(retType));
+       recordMemObj(state, moptr);
+       moptr->name = "%sym_retpointer_" + std::to_string(target->dest) + "_" + state.getUnique(function->getName().str());
+       // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
+       const Array *array = arrayCache.CreateArray(moptr->name, moptr->size);
+       ObjectState *sos = bindObjectInState(state, moptr, true, array);
+       ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(retType)); 
+       //llvm::errs() << "PC before symbolize return value for state " << &state << "\n";
+       //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
+       //llvm::errs() << "first assigning " << result << " to the return value\n";      
+       bindLocal(target,  state, result);
+       //ref<Expr> nullret = EqExpr::create(target, Expr::createPointer(0));
+       //llvm::errs() << "forking on null return value: " << nullret << "\n";
+       Executor::StatePair pair = fork(state, Expr::createIsZero(result), true);
+       //llvm::errs() << "result: " << result << " first: " << pair.first << " second: " << pair.second << "\n";
+       //llvm::errs() << "symbolize return value for : " << (*target->inst) << "\n";
+       //llvm::errs() << "PC for symbolize return value\n";
+       //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
+       if (pair.first && pair.second) {
+          // we need to enforce null pointer here or lazy initialization will assign a valid address upon memory access!
+          bindLocal(target, *pair.first, Expr::createPointer(0)); 
+          // make the not null case point to the symbolic memory of the base type
+          //llvm::errs() << "assigning " << laddr << " in symbolizereturn in state " << pair.second << " orig state=" << &state << "\n"; 
+          bindLocal(target, *pair.second, laddr);
+       }
+       else {
+          assert(pair.first == &state || pair.second == &state);
+          bool res;
+          solver->setTimeout(coreSolverTimeout);
+          bool success = solver->mustBeTrue(state, 
+                                      Expr::createIsZero(result),
+                                      res);
+          solver->setTimeout(0);
+          if (success) {
+             if (res) {
+                bindLocal(target, (pair.first ? *pair.first : *pair.second), Expr::createPointer(0));
+                //llvm::errs() << "assigning in single successor NULL for return value\n";
+             }
+             else {
+                bindLocal(target, (pair.first ? *pair.first : *pair.second) , laddr); 
+                //llvm::errs() << "assigning in single successor " << laddr << "for return value\n";
+             }
+          }
+          //else llvm::errs() << "keeping return value symbolic!!!\n"; 
+
+       }
+     }
+    }
 
     checkAndUpdateInfoFlow(state, function, args, mo);
     return mo;
