@@ -7551,11 +7551,14 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
        #endif
        executeMakeSymbolic(state, mo, mo->name, allocType, true);
     }
-    if (allocType == retType)
+    if (allocType == retType) {
        executeMemoryOperation(state, -2, -2, false, laddr, 0, target);
+       checkAndUpdateInfoFlow(state, function, args, mo);
+    }
     else  { // return type is a pointer type
        if (!nullReturnValue) {
           bindLocal(target, state, laddr);
+          checkAndUpdateInfoFlow(state, function, args, mo);
        }
        else { 
 
@@ -7586,6 +7589,9 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
           // make the not null case point to the symbolic memory of the base type
           //llvm::errs() << "assigning " << laddr << " in symbolizereturn in state " << pair.second << " orig state=" << &state << "\n"; 
           bindLocal(target, *pair.second, laddr);
+
+          checkAndUpdateInfoFlow(*pair.first, function, args, mo);
+          checkAndUpdateInfoFlow(*pair.second, function, args, mo);
        }
        else {
           assert(pair.first == &state || pair.second == &state);
@@ -7599,10 +7605,13 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
              if (res) {
                 bindLocal(target, (pair.first ? *pair.first : *pair.second), Expr::createPointer(0));
                 //llvm::errs() << "assigning in single successor NULL for return value\n";
+                checkAndUpdateInfoFlow((pair.first ? *pair.first : *pair.second), function, args, mo);
+
              }
              else {
                 bindLocal(target, (pair.first ? *pair.first : *pair.second) , laddr); 
                 //llvm::errs() << "assigning in single successor " << laddr << "for return value\n";
+                checkAndUpdateInfoFlow((pair.first ? *pair.first : *pair.second), function, args, mo);
              }
           }
           //else llvm::errs() << "keeping return value symbolic!!!\n"; 
@@ -7611,7 +7620,6 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
      }
     }
 
-    checkAndUpdateInfoFlow(state, function, args, mo);
     return mo;
 }
 
