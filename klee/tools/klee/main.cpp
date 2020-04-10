@@ -166,6 +166,7 @@ extern unsigned numSecretDependent;
 extern unsigned numSecretIndependent;
 extern bool pauseSecretIndependent;
 extern std::set<long> statesWithCorruptedPC;
+extern std::map<std::string, std::set<int> > ocallFuncPtrMap;
 unsigned watchdogGrace = 1;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
@@ -468,6 +469,9 @@ namespace {
 
   cl::opt<std::string>
   TimingObservationPoints("timing-obs-point", cl::desc("Specifies the functions that mark the points where attackers can take timing measurements, e.g., ocalls for SGX\n"));
+
+  cl::opt<std::string>
+  TimingObservationPointsFuncPtr("timing-obs-point-as-fptr", cl::desc("Specifies the function pointer types as type offset pairs to define the points where attackers can take timing measurements, e.g., ocalls for SGX\n"));
 
   //cl::opt<std::string>
   //MaxSmtQueryFileName("maxsmt-query-file", cl::desc("Specifies the file name to which the MaxSMT query to be written\n"));
@@ -1419,6 +1423,10 @@ void readTimingObservationPoints(const char *name) {
   cf.close();
 }
 
+
+
+
+
 void readSensitiveTypeRegions(const char *name) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
@@ -1619,6 +1627,35 @@ void readLazySingles(const char *name) {
   }
 }
 
+
+/*
+Syntax:
+  typename,the field index (as it would be used in a getelementptr instruction)
+*/
+void readTimingObservationPointsFuncPtr(const char * name) {
+    std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string   line;
+     llvm::outs() << "Timing observation points as function pointer fields:\n";
+     while (std::getline(cf,line)) { 
+         std::string tname, index;
+         line = ltrim(rtrim(line));
+         std::istringstream iss(line);
+         getline(iss, tname, ',');
+         tname = ltrim(rtrim(tname));
+         getline(iss,index, ',');
+         index = ltrim(rtrim(index));
+         int value = std::stoi(index);
+         std::set<int> set;
+         if (ocallFuncPtrMap.find(tname) != ocallFuncPtrMap.end())
+            set = ocallFuncPtrMap[tname];
+         set.insert(value);
+         ocallFuncPtrMap[tname]= set;    
+     }
+     cf.close();
+  }
+}
+
 /* 
   Syntax for setting to NULL:
   typename,offset_1,offset_2,...
@@ -1667,7 +1704,8 @@ void readLazyInitInitializers(const char * name) {
               ovm = lazyInitInitializersWValues[tname];
            ovm[ovalue] = dvalue;
            lazyInitInitializersWValues[tname] = ovm;
-           llvm::outs() << "lazy init type=" << tname << " offset " << ovalue << " to be set to " << dvalue << "\n";
+           llvm::outs() << "lazy init type=" << tname << " offset " << ovalue 
+               << " to be set to " << dvalue << "\n";
         } 
         else { 
          std::vector<unsigned int> offsets;
@@ -2384,6 +2422,10 @@ int main(int argc, char **argv, char **envp) {
 
   if (TimingObservationPoints != "")
      readTimingObservationPoints(TimingObservationPoints.c_str());
+
+  if (TimingObservationPointsFuncPtr != "")
+     readTimingObservationPointsFuncPtr(TimingObservationPointsFuncPtr.c_str());
+
 
   if (FuncArgTypeHints != "")
      readFuncArgTypeHints(FuncArgTypeHints.c_str());

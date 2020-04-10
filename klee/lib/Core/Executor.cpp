@@ -206,6 +206,96 @@ unsigned numSecretIndependent=0;
 bool pauseSecretIndependent = false;
 std::set<long> statesWithCorruptedPC;
 extern void recordMemObj(ExecutionState &state, const MemoryObject *mo);
+std::map<std::string, std::set<int> > ocallFuncPtrMap;
+std::set<std::string> timingObservationPointCaller;
+std::map<std::string, int> reachabilityTimingObservationPoints;
+
+std::string getTypeName(Type *t);
+
+bool isATimingObservationFuncPtr(std::string tname, int value) {
+   if (tname[0] == '%')
+      tname = tname.substr(1);
+   if (ocallFuncPtrMap.find(tname) == ocallFuncPtrMap.end())
+      return false;
+   if (ocallFuncPtrMap[tname].find(value) == ocallFuncPtrMap[tname].end())
+      return false;
+   return true;
+}
+
+void checkTimingObservationFuncPtr(Value *value) {
+   if (!isa<Instruction>(value)) return;
+   Instruction *inst = (Instruction*)value;
+   switch (inst->getOpcode()) {
+     case Instruction::BitCast:
+        checkTimingObservationFuncPtr(inst->getOperand(0));     
+     case Instruction::GetElementPtr: {
+        GetElementPtrInst *gep = static_cast<GetElementPtrInst*>(inst);
+        if (gep) {
+           //llvm::errs() << "gep: " << (*gep) << "\n";
+           int index = 0;
+           for(User::op_iterator oi = gep->idx_begin(), oe = gep->idx_end(); oi != oe; oi++, index++) {
+              if (index > 1) break;
+              else if (index == 0) continue; 
+              Value *v = oi->get();
+              if (llvm::ConstantInt* CI = dyn_cast<llvm::ConstantInt>(v)) {
+                 Type *t = gep->getSourceElementType();
+                 if (t) {
+                    if (t->isPointerTy()) 
+                       t = t->getPointerElementType();
+                    std::string tname = getTypeName(t);
+                    if (CI->getSExtValue() >= 0 && isATimingObservationFuncPtr(tname, CI->getSExtValue())) {
+                       llvm::errs() << "function " << inst->getParent()->getParent()->getName() << " calls timing observation point " << tname << " field " <<  CI->getSExtValue() << "\n";
+                       timingObservationPointCaller.insert(inst->getParent()->getParent()->getName());
+                       
+                    } 
+                 }
+              }
+           }
+        }     
+        break;
+     }
+     case Instruction::Load: {
+        LoadInst *linst = static_cast<LoadInst*>(inst);
+        checkTimingObservationFuncPtr(linst->getPointerOperand());
+     }
+     default:       
+        return;
+   }
+}
+
+
+bool isIndirectCall(CallSite *cs) {
+   const Value *V = cs->getCalledValue();
+   if (isa<Function>(V) || isa<Constant>(V))
+     return false;
+   if (const CallInst *CI = dyn_cast<CallInst>(V))
+     if (CI->isInlineAsm())
+       return false;
+  return true;
+}
+
+
+void extractFunctionsCallingTimingObservationPoints(KModule *kmodule) {
+    
+   for (Module::iterator F = kmodule->module->begin(); F != kmodule->module->end(); F++) {
+       for (Function::iterator bb = F->begin(), e = F->end(); bb != e; ++bb) {
+           for (BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
+               Instruction &ii = *i;
+               switch (ii.getOpcode()) {
+                 case Instruction::Invoke:
+                 case Instruction::Call: {
+                    CallSite cs(&ii);
+                    if (isIndirectCall(&cs)) {
+                       checkTimingObservationFuncPtr(cs.getCalledValue());
+                    }
+                    break;
+                 }
+                 default: continue;
+               }
+           }
+       }
+   }
+}
 
 void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
   long sid = (long)&state;
@@ -350,7 +440,6 @@ std::set<Type*> embeddedTypes;
 std::map<Type*, std::set<Type*> >  embeddingTypes;
 bool singleSuccessor = true;
 
-std::string getTypeName(Type *t);
 
 bool infoFlowSummaryMode = false;
 
@@ -5767,6 +5856,8 @@ void Executor::run(ExecutionState &initialState) {
   /* SYSREL side channel begin */
   bool isbranch = false;
    ExecutionState *lastState = NULL;
+  //extractFunctionsCallingTimingObservationPoints(kmodule);
+  //extractReachabilityOfTimingObservationPoints(kmodule,entryFunc);
   /* SYSREL side channel end */
   while (!states.empty() && !haltExecution) {
     ExecutionState &state = searcher->selectState();
@@ -8178,6 +8269,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                       llvm::errs() << "Using mem obj with base " << mobase << " to resolve " << address << "\n";
                       break;
                    } 
+                   else break;
                 }
                 else { 
                    if (addtocheck == mobase) break;
