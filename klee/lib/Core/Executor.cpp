@@ -209,8 +209,76 @@ extern void recordMemObj(ExecutionState &state, const MemoryObject *mo);
 std::map<std::string, std::set<int> > ocallFuncPtrMap;
 std::set<std::string> timingObservationPointCaller;
 std::map<std::string, int> reachabilityTimingObservationPoints;
+std::map<long, std::map<std::string, unsigned> > forkFreqMapTrue;
+std::map<long, std::map<std::string, unsigned> > forkFreqMapFalse;
+std::set<std::string> loopBoundExceptions;
+unsigned loopBound = 0;
 
 std::string getTypeName(Type *t);
+
+bool isLoopBoundExcluded(std::string s) {
+  for(auto se : loopBoundExceptions) {
+     if (s.find(se) != std::string::npos) return true; 
+  }
+  return false;
+}
+
+void addForkFreq(ExecutionState &state, std::string inst, bool isTrue) {
+  long s = (long)&state;
+  std::map<std::string, unsigned> m;
+  if (isTrue) {
+     if (forkFreqMapTrue.find(s) != forkFreqMapTrue.end()) 
+        m = forkFreqMapTrue[s];
+     if (m.find(inst) != m.end()) 
+        m[inst] = m[inst] + 1;
+     else 
+        m[inst] = 1;
+     forkFreqMapTrue[s] = m;
+  }
+  else {
+     if (forkFreqMapFalse.find(s) != forkFreqMapFalse.end()) 
+        m = forkFreqMapFalse[s];
+     if (m.find(inst) != m.end()) 
+        m[inst] = m[inst] + 1;
+     else 
+        m[inst] = 1;
+     forkFreqMapFalse[s] = m;  
+  }
+}
+
+unsigned getForkFreq(ExecutionState &state, std::string inst, bool isTrue) {
+  long s = (long)&state;
+  std::map<std::string, unsigned> m;
+  //llvm::errs() << "fork freq for " << inst << "\n";
+  if (isTrue) {
+     if (forkFreqMapTrue.find(s) != forkFreqMapTrue.end()) 
+        m = forkFreqMapTrue[s];
+     if (m.find(inst) != m.end()) 
+        return m[inst];
+     else return 0;
+  }
+  else {
+     if (forkFreqMapFalse.find(s) != forkFreqMapFalse.end()) 
+        m = forkFreqMapFalse[s];
+     if (m.find(inst) != m.end()) 
+        return m[inst];
+     else return 0; 
+  }
+}
+
+std::string getStackTrace(ExecutionState &state) {
+    std::string MsgString;
+    llvm::raw_string_ostream msg(MsgString);
+    state.dumpStack(msg);
+    return msg.str();
+}
+
+std::string getSouceWithContext(ExecutionState &state, KInstruction *ki) {
+   std::string swctx = getStackTrace(state);
+   llvm::errs() << "stack trace=" << swctx << "\n";
+   swctx = swctx + ki->getSourceLocation();
+   return swctx;
+}
 
 bool isATimingObservationFuncPtr(std::string tname, int value) {
    if (tname[0] == '%')
@@ -4111,37 +4179,131 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       if (statsTracker && state.stack.back().kf->trackCoverage)
         statsTracker->markBranchVisited(branches.first, branches.second);
 
-      if (branches.first) {
-        transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
-        /* SYSREL side channel begin */
-        successorsPaths->insert(branches.first); // Keeping track of the new paths
-        /* SYSREL side channel end */
-      }
-      if (branches.second) {
-        transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
-        /* SYSREL side channel begin */
-        successorsPaths->insert(branches.second); // Keeping track of the new paths
-        /* SYSREL side channel end */
-      }
-
       /* SYSREL extension */
-      if (branches.first && branches.second) {
-         singleSuccessor = false;
-         #ifdef VB
-         llvm::errs() << "executingPM on successor first\n";
-         #endif
-         bool abort = false;
-         branches.first->executePM(abort);
-         if (abort) {
-            terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+      unsigned tc, fc;
+      bool lbe = isLoopBoundExcluded(state.prevPC->getSourceLocation());
+      //llvm::errs() << "loop bound= " << loopBound  << " excl? " << lbe << "\n";
+      if (loopBound && !lbe) {
+         if (branches.first) {
+            addForkFreq(state,getSouceWithContext(state, state.prevPC), true);
          }
-         #ifdef VB
-         llvm::errs() << "executingPM on successor second\n";
-         #endif
-         branches.second->executePM(abort);
-         if (abort) {
-            terminateStateOnError(state, "Memory error", Ptr, NULL, "Possible use-after-free");
+
+         if (branches.second) {
+            addForkFreq(state,getSouceWithContext(state, state.prevPC), false);
          }
+         tc = getForkFreq(state, getSouceWithContext(state, state.prevPC), true);
+         fc = getForkFreq(state, getSouceWithContext(state, state.prevPC), false);
+         llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " true branch " << tc << " times\n";
+         llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " false branch " << fc << " times\n";
+         
+         if (branches.first && branches.second) {
+            if (fc > loopBound && tc > loopBound) {
+               // terminate state
+               llvm::errs() << "path terminated early due to reaching bound for both branches\n";
+               terminateStateEarly(state, "Loop Bound for both successors reached\n");
+            }
+            else if (tc > loopBound) {
+               llvm::errs() << "path terminated for the true branch\n";
+               terminateStateEarly(*branches.first, "Loop Bound for true successor reached\n");
+               transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second); 
+               /* SYSREL side channel begin */
+               successorsPaths->insert(branches.second); // Keeping track of the new paths
+               /* SYSREL side channel end */
+            }
+            else if (fc > loopBound) {
+               llvm::errs() << "path terminated for the false branch\n";
+               terminateStateEarly(*branches.second, "Loop Bound for false successor reached\n");
+               transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
+               /* SYSREL side channel begin */
+               successorsPaths->insert(branches.first); // Keeping track of the new paths
+               /* SYSREL side channel end */
+            }
+            else {
+               transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
+               /* SYSREL side channel begin */
+               successorsPaths->insert(branches.first); // Keeping track of the new paths
+               /* SYSREL side channel end */
+
+               transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
+               /* SYSREL side channel begin */
+               successorsPaths->insert(branches.second); // Keeping track of the new paths
+               /* SYSREL side channel end */
+
+               singleSuccessor = false;
+               bool abort = false;
+               ref<Expr> offendingAddress = Expr::createPointer(0);
+               branches.first->executePM(abort);
+               if (abort) {
+                  terminateStateOnError(state, "Memory error", Ptr, NULL, 
+                             getAddressInfo(*branches.first, offendingAddress));
+               }
+               llvm::errs() << "executingPM on successor second\n";
+               branches.second->executePM(abort);
+               if (abort) {
+                  terminateStateOnError(state, "Memory error", Ptr, NULL, 
+                             getAddressInfo(*branches.second, offendingAddress));
+               }  
+            }               
+         }         
+         else {
+            if (branches.first) {
+               if (tc > loopBound) {
+                  llvm::errs() << "branching to the false successor due to reaching loop bound for the true branch\n";
+                  transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.first);
+               }
+               else                   
+                  transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
+
+               /* SYSREL side channel begin */
+               successorsPaths->insert(branches.first); // Keeping track of the new paths
+               /* SYSREL side channel end */
+ 
+            }
+            if (branches.second) {
+               if (fc > loopBound) {
+                  llvm::errs() << "path terminated for the false branch\n";
+                  terminateStateEarly(*branches.second, "Loop Bound for false successor reached\n");                  
+               }
+               else {               
+                  transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
+
+                  /* SYSREL side channel begin */
+                  successorsPaths->insert(branches.second); // Keeping track of the new paths
+                  /* SYSREL side channel end */
+               }
+            }
+         }
+      }
+      else {
+         if (branches.first) {
+            transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
+            /* SYSREL side channel begin */
+            successorsPaths->insert(branches.first); // Keeping track of the new paths
+            /* SYSREL side channel end */
+         }
+         if (branches.second) {
+            transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
+            /* SYSREL side channel begin */
+            successorsPaths->insert(branches.second); // Keeping track of the new paths
+            /* SYSREL side channel end */
+         }
+
+         if (branches.first && branches.second) {
+            singleSuccessor = false;
+            bool abort = false;
+            ref<Expr> offendingAddress = Expr::createPointer(0);
+            branches.first->executePM(abort);
+            if (abort) {
+	       terminateStateOnError(state, "Memory error", Ptr, NULL, 
+                             getAddressInfo(*branches.first, offendingAddress));
+            }
+            llvm::errs() << "executingPM on successor second\n";
+            branches.second->executePM(abort);
+            if (abort) {
+	       terminateStateOnError(state, "Memory error", Ptr, NULL, 
+                             getAddressInfo(*branches.second, offendingAddress));
+            }  
+         } 
       }
       /* SYSREL extension */
 

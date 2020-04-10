@@ -168,6 +168,8 @@ extern bool pauseSecretIndependent;
 extern std::set<long> statesWithCorruptedPC;
 extern std::map<std::string, std::set<int> > ocallFuncPtrMap;
 unsigned watchdogGrace = 1;
+extern unsigned loopBound;
+extern std::set<std::string> loopBoundExceptions;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -503,6 +505,13 @@ namespace {
                                                     to map an undefined function to its model function\n"));
   cl::opt<bool>
   PauseSecretIndependent("pause-secret-indep", cl::desc("Pause states that are secret independent when there are active secret dependent states!\n"));
+
+  cl::opt<unsigned>
+  LoopBound("loop-bound", cl::desc("Maximum number of times a conditional branch case can be executed\n"));
+
+  cl::opt<std::string>
+  LoopBoundException("exclude-from-loop-bound", cl::desc("Name of the file that stores the file names to be excluded from loop bound enforcement\n"));
+
 
   cl::opt<bool>
   ForceOutput("force-output", cl::desc("Force output generation on termination \n"));
@@ -1613,6 +1622,19 @@ void readFrameworkDts(const char *name) {
   }
 }
 
+void readLoopBoundExceptions(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string   line;
+     while (std::getline(cf,line)) { 
+        std::string tline = ltrim(rtrim(line));
+        loopBoundExceptions.insert(tline);
+     }
+     cf.close();
+  }
+}
+
+
 void readLazySingles(const char *name) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
@@ -2498,6 +2520,14 @@ int main(int argc, char **argv, char **envp) {
 
   if (PauseSecretIndependent)
      pauseSecretIndependent = true;
+
+  if (LoopBound) {
+     loopBound = LoopBound;
+     llvm::errs() << "Loop bound is " << loopBound << "\n";
+     if (LoopBoundException != "") {
+        readLoopBoundExceptions(LoopBoundException.c_str());
+     }
+  }
 
   if (ForceOutput) 
      SolverImpl::forceOutput = true;
