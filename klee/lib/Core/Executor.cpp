@@ -7556,11 +7556,6 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
        checkAndUpdateInfoFlow(state, function, args, mo);
     }
     else  { // return type is a pointer type
-       if (!nullReturnValue) {
-          bindLocal(target, state, laddr);
-          checkAndUpdateInfoFlow(state, function, args, mo);
-       }
-       else { 
 
        // first create a symbolic pointer
        const MemoryObject *moptr = memory->allocate(kmodule->targetData->getTypeAllocSize(retType), false,
@@ -7615,9 +7610,7 @@ const MemoryObject *Executor::symbolizeReturnValue(ExecutionState &state,
              }
           }
           //else llvm::errs() << "keeping return value symbolic!!!\n"; 
-
        }
-     }
     }
 
     return mo;
