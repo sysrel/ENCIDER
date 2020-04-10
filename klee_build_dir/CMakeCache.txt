@@ -336,7 +336,7 @@ ZLIB_LIBRARY_RELEASE:FILEPATH=/usr/lib/x86_64-linux-gnu/libz.so
 kleaverExpr_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;
 
 //Dependencies for the target
-kleaverSolver_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;general;kleeBasic;general;kleaverExpr;general;kleeSupport;general;libstp;general;/usr/lib/libz3.so;
+kleaverSolver_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;general;kleeBasic;general;kleaverExpr;general;kleeSupport;general;stp;general;/usr/lib/libz3.so;
 
 //Dependencies for the target
 kleeBasic_LIB_DEPENDS:STATIC=general;/usr/lib/x86_64-linux-gnu/libz.so;general;/usr/lib/libtcmalloc.so;general;LLVMSupport;general;kleaverSolver;

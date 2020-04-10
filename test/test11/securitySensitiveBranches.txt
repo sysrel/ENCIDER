@@ -1,0 +1,8 @@
+/home/tuba/Documents/tools/pmguidedsymex/test/test11/test11.c 26:
+ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+
+/home/tuba/Documents/tools/pmguidedsymex/test/test11/test11.c 42:
+ (Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+

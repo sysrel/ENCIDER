@@ -1,0 +1,5125 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test15/klee-out-5"
+KLEE: Using STP solver backend
+Uncov init=825
+Couldn't open file 
+Using cache line mode (as default)!
+KLEE: WARNING: undefined reference to function: printf
+Storing size of %struct.mytest for max void cast size: 12 
+arg 0 type i8 count=32
+Symbolizing arg 0 of foo, address 56754560 size=384
+is arg 0 type i8* single instance? 0
+to be made symbolic? 1
+clearing foo_arg_0_0 from high
+high security regions from type def
+64,32
+setting symbolic region high: foo_arg_0_0
+recording address of foo_arg_0_0 56754560 as high security insensitive
+High symbolic regions:
+foo_arg_0_0
+Low symbolic regions:
+foo_arg_0_0
+Registering publicOutputReturningFName as foo
+clearing return_value from high
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %2 = alloca i8*, align 8
+next instruction:   %t = alloca %struct.mytest*, align 8
+next instruction:   store i8* %vt, i8** %2, align 8
+reached foo
+state=0x36e0000 memory operation (inside foo) 
+  store i8* %vt, i8** %2, align 8
+ address: 56424584
+executeMemoryOperation isWrite? 1
+storing value 56754560
+address for memop 56424584
+default offset for target address 0
+base memory address 56424584
+next instruction:   %3 = load i8*, i8** %2, align 8, !dbg !128
+state=0x36e0000 memory operation (inside foo) 
+  %3 = load i8*, i8** %2, align 8, !dbg !128
+ address: 56424584
+executeMemoryOperation isWrite? 0
+address for memop 56424584
+default offset for target address 0
+base memory address 56424584
+next instruction:   %4 = bitcast i8* %3 to %struct.mytest*, !dbg !129
+next instruction:   store %struct.mytest* %4, %struct.mytest** %t, align 8, !dbg !130
+state=0x36e0000 memory operation (inside foo) 
+  store %struct.mytest* %4, %struct.mytest** %t, align 8, !dbg !130
+ address: 56424664
+executeMemoryOperation isWrite? 1
+storing value 56754560
+address for memop 56424664
+default offset for target address 0
+base memory address 56424664
+next instruction:   %5 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !131
+state=0x36e0000 memory operation (inside foo) 
+  %5 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !131
+ address: 56424664
+executeMemoryOperation isWrite? 0
+address for memop 56424664
+default offset for target address 0
+base memory address 56424664
+next instruction:   %6 = getelementptr inbounds %struct.mytest, %struct.mytest* %5, i32 0, i32 2, !dbg !133
+next instruction:   %7 = load i32, i32* %6, align 4, !dbg !133
+state=0x36e0000 memory operation (inside foo) 
+  %7 = load i32, i32* %6, align 4, !dbg !133
+ address: 56754568
+executeMemoryOperation isWrite? 0
+address for memop 56754568
+default offset for target address 8
+base memory address 56754560
+next instruction:   %8 = icmp sgt i32 %7, 0, !dbg !134
+next instruction:   %9 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !135
+state=0x36e0000 memory operation (inside foo) 
+  %9 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !135
+ address: 56424664
+executeMemoryOperation isWrite? 0
+address for memop 56424664
+default offset for target address 0
+base memory address 56424664
+next instruction:   %10 = getelementptr inbounds %struct.mytest, %struct.mytest* %9, i32 0, i32 1, !dbg !138
+next instruction:   %11 = load i32, i32* %10, align 4, !dbg !138
+state=0x36e0000 memory operation (inside foo) 
+  %11 = load i32, i32* %10, align 4, !dbg !138
+ address: 56754564
+executeMemoryOperation isWrite? 0
+address for memop 56754564
+default offset for target address 4
+base memory address 56754560
+next instruction:   br i1 %8, label %12, label %28, !dbg !139
+Recorded most recent branch as   br i1 %8, label %12, label %28, !dbg !139
+Most recent branch:   br i1 %8, label %12, label %28, !dbg !139
+do ranges intersect: 64,95 AND 88,95
+ranges intersect: 64,95 AND 88,95
+do ranges intersect: 64,95 AND 80,87
+ranges intersect: 64,95 AND 80,87
+do ranges intersect: 64,95 AND 72,79
+ranges intersect: 64,95 AND 72,79
+do ranges intersect: 64,95 AND 64,71
+ranges intersect: 64,95 AND 64,71
+do ranges intersect: 32,63 AND 88,95
+do ranges intersect: 32,63 AND 80,87
+do ranges intersect: 32,63 AND 72,79
+do ranges intersect: 32,63 AND 64,71
+Projection on high
+
+>>>> Projection : (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+  br i1 %8, label %12, label %28, !dbg !139
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:27
+Most recent branch:   br i1 %8, label %12, label %28, !dbg !139
+do ranges intersect: 64,95 AND 88,95
+ranges intersect: 64,95 AND 88,95
+do ranges intersect: 64,95 AND 80,87
+ranges intersect: 64,95 AND 80,87
+do ranges intersect: 64,95 AND 72,79
+ranges intersect: 64,95 AND 72,79
+do ranges intersect: 64,95 AND 64,71
+ranges intersect: 64,95 AND 64,71
+do ranges intersect: 32,63 AND 88,95
+do ranges intersect: 32,63 AND 80,87
+do ranges intersect: 32,63 AND 72,79
+do ranges intersect: 32,63 AND 64,71
+Projection on high
+
+>>>> Projection : (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+  br i1 %8, label %12, label %28, !dbg !139
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:27
+next instruction:   %13 = icmp slt i32 %11, 1, !dbg !140
+next instruction:   %29 = icmp slt i32 %11, 0, !dbg !162
+next instruction:   br i1 %13, label %14, label %17, !dbg !141
+Recorded most recent branch as   br i1 %13, label %14, label %17, !dbg !141
+Most recent branch:   br i1 %13, label %14, label %17, !dbg !141
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Slt (ReadLSB w32 4 foo_arg_0_0)
+      1)
+Most recent branch:   br i1 %13, label %14, label %17, !dbg !141
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq false
+     (Slt (ReadLSB w32 4 foo_arg_0_0)
+          1))
+next instruction:   %15 = call i32 @loop(i32 3, i32 2), !dbg !142
+next instruction:   br i1 %29, label %30, label %53, !dbg !165
+Recorded most recent branch as   br i1 %29, label %30, label %53, !dbg !165
+Most recent branch:   br i1 %29, label %30, label %53, !dbg !165
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Slt (ReadLSB w32 4 foo_arg_0_0)
+      0)
+Most recent branch:   br i1 %29, label %30, label %53, !dbg !165
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq false
+     (Slt (ReadLSB w32 4 foo_arg_0_0)
+          0))
+next instruction:   %18 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !147
+state=0x36e0a00 memory operation (inside foo) 
+  %18 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !147
+ address: 56424664
+executeMemoryOperation isWrite? 0
+address for memop 56424664
+default offset for target address 0
+base memory address 56424664
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %31 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !166
+state=0x36e0500 memory operation (inside foo) 
+  %31 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !166
+ address: 56424664
+executeMemoryOperation isWrite? 0
+address for memop 56424664
+default offset for target address 0
+base memory address 56424664
+next instruction:   %54 = call i32 @loop(i32 10, i32 2), !dbg !201
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %result = alloca i32, align 4
+next instruction:   %i = alloca i32, align 4
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %19 = getelementptr inbounds %struct.mytest, %struct.mytest* %18, i32 0, i32 1, !dbg !149
+next instruction:   store i32 %ru, i32* %1, align 4
+reached loop
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56424720
+executeMemoryOperation isWrite? 1
+storing value 10
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56424792
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e0f00 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %result = alloca i32, align 4
+next instruction:   %20 = load i32, i32* %19, align 4, !dbg !149
+state=0x36e0a00 memory operation (inside foo) 
+  %20 = load i32, i32* %19, align 4, !dbg !149
+ address: 56754564
+executeMemoryOperation isWrite? 0
+address for memop 56754564
+default offset for target address 4
+base memory address 56754560
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %32 = getelementptr inbounds %struct.mytest, %struct.mytest* %31, i32 0, i32 2, !dbg !169
+next instruction:   %i = alloca i32, align 4
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56424784
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56424784
+default offset for target address 0
+base memory address 56424784
+next instruction:   %21 = icmp slt i32 %20, 5, !dbg !150
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56424856
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424856
+default offset for target address 0
+base memory address 56424856
+next instruction:   br label %4, !dbg !132
+next instruction:   br i1 %21, label %22, label %25, !dbg !151
+Recorded most recent branch as   br i1 %21, label %22, label %25, !dbg !151
+Most recent branch:   br i1 %21, label %22, label %25, !dbg !151
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Slt (ReadLSB w32 4 foo_arg_0_0)
+      5)
+Most recent branch:   br i1 %21, label %22, label %25, !dbg !151
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq false
+     (Slt (ReadLSB w32 4 foo_arg_0_0)
+          5))
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %26 = call i32 @loop(i32 5, i32 2), !dbg !157
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %23 = call i32 @loop(i32 4, i32 2), !dbg !152
+next instruction:   %33 = load i32, i32* %32, align 4, !dbg !169
+state=0x36e0500 memory operation (inside foo) 
+  %33 = load i32, i32* %32, align 4, !dbg !169
+ address: 56754568
+executeMemoryOperation isWrite? 0
+address for memop 56754568
+default offset for target address 8
+base memory address 56754560
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e0000 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56424856
+executeMemoryOperation isWrite? 0
+address for memop 56424856
+default offset for target address 0
+base memory address 56424856
+next instruction:   %34 = icmp sgt i32 %33, -10, !dbg !170
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %35 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !171
+state=0x36e0500 memory operation (inside foo) 
+  %35 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !171
+ address: 56424664
+executeMemoryOperation isWrite? 0
+address for memop 56424664
+default offset for target address 0
+base memory address 56424664
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %36 = getelementptr inbounds %struct.mytest, %struct.mytest* %35, i32 0, i32 1, !dbg !174
+next instruction:   %37 = load i32, i32* %36, align 4, !dbg !174
+state=0x36e0500 memory operation (inside foo) 
+  %37 = load i32, i32* %36, align 4, !dbg !174
+ address: 56754564
+executeMemoryOperation isWrite? 0
+address for memop 56754564
+default offset for target address 4
+base memory address 56754560
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %38 = icmp eq i32 %37, -1, !dbg !175
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %2 = alloca i32, align 4
+next instruction:   br i1 %34, label %39, label %46, !dbg !176
+Recorded most recent branch as   br i1 %34, label %39, label %46, !dbg !176
+Most recent branch:   br i1 %34, label %39, label %46, !dbg !176
+do ranges intersect: 64,95 AND 88,95
+ranges intersect: 64,95 AND 88,95
+do ranges intersect: 64,95 AND 80,87
+ranges intersect: 64,95 AND 80,87
+do ranges intersect: 64,95 AND 72,79
+ranges intersect: 64,95 AND 72,79
+do ranges intersect: 64,95 AND 64,71
+ranges intersect: 64,95 AND 64,71
+do ranges intersect: 32,63 AND 88,95
+do ranges intersect: 32,63 AND 80,87
+do ranges intersect: 32,63 AND 72,79
+do ranges intersect: 32,63 AND 64,71
+Projection on high
+
+>>>> Projection : (Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+  br i1 %34, label %39, label %46, !dbg !176
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+Most recent branch:   br i1 %34, label %39, label %46, !dbg !176
+do ranges intersect: 64,95 AND 88,95
+ranges intersect: 64,95 AND 88,95
+do ranges intersect: 64,95 AND 80,87
+ranges intersect: 64,95 AND 80,87
+do ranges intersect: 64,95 AND 72,79
+ranges intersect: 64,95 AND 72,79
+do ranges intersect: 64,95 AND 64,71
+ranges intersect: 64,95 AND 64,71
+do ranges intersect: 32,63 AND 88,95
+do ranges intersect: 32,63 AND 80,87
+do ranges intersect: 32,63 AND 72,79
+do ranges intersect: 32,63 AND 64,71
+Projection on high
+
+>>>> Projection : (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 8 foo_arg_0_0)))
+  br i1 %34, label %39, label %46, !dbg !176
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+next instruction:   br i1 %38, label %40, label %43, !dbg !177
+Recorded most recent branch as   br i1 %38, label %40, label %43, !dbg !177
+Most recent branch:   br i1 %38, label %40, label %43, !dbg !177
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq 4294967295
+     (ReadLSB w32 4 foo_arg_0_0))
+Most recent branch:   br i1 %38, label %40, label %43, !dbg !177
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 4 foo_arg_0_0)))
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56424376
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   %result = alloca i32, align 4
+next instruction:   br i1 %38, label %47, label %50, !dbg !188
+Recorded most recent branch as   br i1 %38, label %47, label %50, !dbg !188
+Most recent branch:   br i1 %38, label %47, label %50, !dbg !188
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq 4294967295
+     (ReadLSB w32 4 foo_arg_0_0))
+Most recent branch:   br i1 %38, label %47, label %50, !dbg !188
+do ranges intersect: 64,95 AND 56,63
+do ranges intersect: 64,95 AND 48,55
+do ranges intersect: 64,95 AND 40,47
+do ranges intersect: 64,95 AND 32,39
+do ranges intersect: 32,63 AND 56,63
+ranges intersect: 32,63 AND 56,63
+do ranges intersect: 32,63 AND 48,55
+ranges intersect: 32,63 AND 48,55
+do ranges intersect: 32,63 AND 40,47
+ranges intersect: 32,63 AND 40,47
+do ranges intersect: 32,63 AND 32,39
+ranges intersect: 32,63 AND 32,39
+Projection on low
+
+>>>> Projection : (Eq false
+     (Eq 4294967295
+         (ReadLSB w32 4 foo_arg_0_0)))
+next instruction:   %44 = call i32 @loop(i32 7, i32 2), !dbg !183
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e0000 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56424888
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %i = alloca i32, align 4
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56424968
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56424968
+default offset for target address 0
+base memory address 56424968
+next instruction:   %1 = alloca i32, align 4
+next instruction:   br label %4, !dbg !132
+next instruction:   %41 = call i32 @loop(i32 6, i32 2), !dbg !178
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0000 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %51 = call i32 @loop(i32 9, i32 2), !dbg !196
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %1 = alloca i32, align 4
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56424944
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424944
+default offset for target address 0
+base memory address 56424944
+next instruction:   %result = alloca i32, align 4
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0000 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424784
+executeMemoryOperation isWrite? 0
+address for memop 56424784
+default offset for target address 0
+base memory address 56424784
+next instruction:   %48 = call i32 @loop(i32 8, i32 2), !dbg !190
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %result = alloca i32, align 4
+next instruction:   %result = alloca i32, align 4
+next instruction:   br label %4, !dbg !145
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0000 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424376
+executeMemoryOperation isWrite? 0
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %i = alloca i32, align 4
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56425008
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %1 = alloca i32, align 4
+next instruction:   %i = alloca i32, align 4
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %result = alloca i32, align 4
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56425120
+executeMemoryOperation isWrite? 1
+storing value 7
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e0a00 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56424944
+executeMemoryOperation isWrite? 0
+address for memop 56424944
+default offset for target address 0
+base memory address 56424944
+next instruction:   %2 = alloca i32, align 4
+next instruction:   %result = alloca i32, align 4
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0000 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424856
+executeMemoryOperation isWrite? 0
+address for memop 56424856
+default offset for target address 0
+base memory address 56424856
+next instruction:   %i = alloca i32, align 4
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56425288
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56425352
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424376
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56425224
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56425064
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e1400 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56425224
+executeMemoryOperation isWrite? 0
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56425048
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   %i = alloca i32, align 4
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e1e00 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0000 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56425112
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   br label %4, !dbg !132
+next instruction:   %i = alloca i32, align 4
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56425168
+executeMemoryOperation isWrite? 1
+storing value 9
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56425328
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br label %4, !dbg !145
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56425200
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   store i32 %ru, i32* %1, align 4
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %ru, i32* %1, align 4
+ address: 56425184
+executeMemoryOperation isWrite? 1
+storing value 6
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   store i32 %base, i32* %2, align 4
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %base, i32* %2, align 4
+ address: 56424952
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424888
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   br label %4, !dbg !145
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e0500 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   br label %4, !dbg !132
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e2300 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0a00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0a00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424968
+executeMemoryOperation isWrite? 0
+address for memop 56424968
+default offset for target address 0
+base memory address 56424968
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0000 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0000 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424784
+executeMemoryOperation isWrite? 0
+address for memop 56424784
+default offset for target address 0
+base memory address 56424784
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0a00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425048
+executeMemoryOperation isWrite? 0
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e2300 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e1400 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56425272
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   br label %4, !dbg !132
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0a00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424944
+executeMemoryOperation isWrite? 0
+address for memop 56424944
+default offset for target address 0
+base memory address 56424944
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0000 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424376
+executeMemoryOperation isWrite? 0
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   br label %4, !dbg !132
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e0500 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %3 = load i32, i32* %2, align 4, !dbg !128
+state=0x36e1900 memory operation (inside loop) 
+  %3 = load i32, i32* %2, align 4, !dbg !128
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   store i32 %3, i32* %result, align 4, !dbg !129
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %3, i32* %result, align 4, !dbg !129
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 0, i32* %i, align 4, !dbg !130
+state=0x36e1900 memory operation (inside loop) 
+  store i32 0, i32* %i, align 4, !dbg !130
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1400 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1400 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425008
+executeMemoryOperation isWrite? 0
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   br label %4, !dbg !132
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0000 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424856
+executeMemoryOperation isWrite? 0
+address for memop 56424856
+default offset for target address 0
+base memory address 56424856
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425048
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1400 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425200
+executeMemoryOperation isWrite? 0
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   br label %4, !dbg !145
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424376
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   br label %4, !dbg !132
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0000 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1400 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425224
+executeMemoryOperation isWrite? 0
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424888
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0a00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425200
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br label %4, !dbg !145
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0000 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0000 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424784
+executeMemoryOperation isWrite? 0
+address for memop 56424784
+default offset for target address 0
+base memory address 56424784
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   br label %4, !dbg !145
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1400 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1400 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425008
+executeMemoryOperation isWrite? 0
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0000 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424376
+executeMemoryOperation isWrite? 0
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br label %4, !dbg !145
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0000 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424856
+executeMemoryOperation isWrite? 0
+address for memop 56424856
+default offset for target address 0
+base memory address 56424856
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0a00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424968
+executeMemoryOperation isWrite? 0
+address for memop 56424968
+default offset for target address 0
+base memory address 56424968
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0a00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425048
+executeMemoryOperation isWrite? 0
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424376
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1400 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425200
+executeMemoryOperation isWrite? 0
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0000 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0000 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424888
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0a00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424944
+executeMemoryOperation isWrite? 0
+address for memop 56424944
+default offset for target address 0
+base memory address 56424944
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0000 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424888
+executeMemoryOperation isWrite? 0
+address for memop 56424888
+default offset for target address 0
+base memory address 56424888
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0500 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0000 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424784
+executeMemoryOperation isWrite? 0
+address for memop 56424784
+default offset for target address 0
+base memory address 56424784
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 64
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1400 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425224
+executeMemoryOperation isWrite? 0
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0000 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424376
+executeMemoryOperation isWrite? 0
+address for memop 56424376
+default offset for target address 0
+base memory address 56424376
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e0000 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %16 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %15), !dbg !144
+treating as external function: printf
+KLEE: WARNING ONCE: calling external: printf(56424432, 16) at /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:30
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425048
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   store i32 1, i32* %1, align 4, !dbg !146
+state=0x36e0000 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !146
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   br label %56, !dbg !146
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425200
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e0000 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e0000 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   br label %4, !dbg !145
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1400 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1400 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425008
+executeMemoryOperation isWrite? 0
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0a00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0a00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424968
+executeMemoryOperation isWrite? 0
+address for memop 56424968
+default offset for target address 0
+base memory address 56424968
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1400 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425200
+executeMemoryOperation isWrite? 0
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0a00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425048
+executeMemoryOperation isWrite? 0
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0a00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424944
+executeMemoryOperation isWrite? 0
+address for memop 56424944
+default offset for target address 0
+base memory address 56424944
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1400 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425224
+executeMemoryOperation isWrite? 0
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425048
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425200
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   br label %4, !dbg !145
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br label %4, !dbg !145
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 128
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0a00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0a00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424968
+executeMemoryOperation isWrite? 0
+address for memop 56424968
+default offset for target address 0
+base memory address 56424968
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 6
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br label %4, !dbg !145
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1400 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1400 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425008
+executeMemoryOperation isWrite? 0
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1400 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425200
+executeMemoryOperation isWrite? 0
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1400 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425224
+executeMemoryOperation isWrite? 0
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 256
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425200
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0a00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425048
+executeMemoryOperation isWrite? 0
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0500 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 7
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br label %4, !dbg !145
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0a00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424944
+executeMemoryOperation isWrite? 0
+address for memop 56424944
+default offset for target address 0
+base memory address 56424944
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   br label %4, !dbg !145
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1400 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425048
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1400 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425008
+executeMemoryOperation isWrite? 0
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0a00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425112
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0a00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425112
+executeMemoryOperation isWrite? 0
+address for memop 56425112
+default offset for target address 0
+base memory address 56425112
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0a00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424968
+executeMemoryOperation isWrite? 0
+address for memop 56424968
+default offset for target address 0
+base memory address 56424968
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1400 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425200
+executeMemoryOperation isWrite? 0
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1400 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425224
+executeMemoryOperation isWrite? 0
+address for memop 56425224
+default offset for target address 0
+base memory address 56425224
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0a00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425048
+executeMemoryOperation isWrite? 0
+address for memop 56425048
+default offset for target address 0
+base memory address 56425048
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425200
+executeMemoryOperation isWrite? 1
+storing value 64
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1400 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425272
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   br label %4, !dbg !145
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   br label %4, !dbg !145
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e0a00 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %24 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %23), !dbg !154
+treating as external function: printf
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   store i32 1, i32* %1, align 4, !dbg !156
+state=0x36e0a00 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !156
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   br label %4, !dbg !145
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1400 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425272
+executeMemoryOperation isWrite? 0
+address for memop 56425272
+default offset for target address 0
+base memory address 56425272
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 512
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1400 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425008
+executeMemoryOperation isWrite? 0
+address for memop 56425008
+default offset for target address 0
+base memory address 56425008
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   br label %56, !dbg !156
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e0a00 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e0a00 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1400 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425200
+executeMemoryOperation isWrite? 0
+address for memop 56425200
+default offset for target address 0
+base memory address 56425200
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e1400 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %27 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %26), !dbg !159
+treating as external function: printf
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 2
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   store i32 1, i32* %1, align 4, !dbg !161
+state=0x36e1400 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !161
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   br label %56, !dbg !161
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e1400 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e1400 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0500 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 1024
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br label %4, !dbg !145
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 9
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br label %4, !dbg !145
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0f00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424792
+executeMemoryOperation isWrite? 0
+address for memop 56424792
+default offset for target address 0
+base memory address 56424792
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56424816
+executeMemoryOperation isWrite? 1
+storing value 2048
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0f00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424800
+executeMemoryOperation isWrite? 1
+storing value 10
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0f00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424800
+executeMemoryOperation isWrite? 0
+address for memop 56424800
+default offset for target address 0
+base memory address 56424800
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0f00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56424720
+executeMemoryOperation isWrite? 0
+address for memop 56424720
+default offset for target address 0
+base memory address 56424720
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0f00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56424816
+executeMemoryOperation isWrite? 0
+address for memop 56424816
+default offset for target address 0
+base memory address 56424816
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 16
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e0f00 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %55 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %54), !dbg !203
+treating as external function: printf
+next instruction:   store i32 1, i32* %1, align 4, !dbg !205
+state=0x36e0f00 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !205
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   br label %56, !dbg !205
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e0f00 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e0f00 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0500 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   br label %4, !dbg !145
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 3
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br label %4, !dbg !145
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0500 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   br label %4, !dbg !145
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 32
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 64
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 64
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 4
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 64
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 128
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e0500 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56424952
+executeMemoryOperation isWrite? 0
+address for memop 56424952
+default offset for target address 0
+base memory address 56424952
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425256
+executeMemoryOperation isWrite? 1
+storing value 128
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e0500 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425392
+executeMemoryOperation isWrite? 1
+storing value 6
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 6
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   br label %4, !dbg !145
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 64
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   br label %4, !dbg !145
+next instruction:   br label %4, !dbg !145
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 5
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e0500 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425392
+executeMemoryOperation isWrite? 0
+address for memop 56425392
+default offset for target address 0
+base memory address 56425392
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   br label %4, !dbg !145
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e0500 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425184
+executeMemoryOperation isWrite? 0
+address for memop 56425184
+default offset for target address 0
+base memory address 56425184
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1e00 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425064
+executeMemoryOperation isWrite? 0
+address for memop 56425064
+default offset for target address 0
+base memory address 56425064
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425208
+executeMemoryOperation isWrite? 1
+storing value 256
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e0500 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425256
+executeMemoryOperation isWrite? 0
+address for memop 56425256
+default offset for target address 0
+base memory address 56425256
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 128
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e0500 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %42 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %41), !dbg !180
+treating as external function: printf
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 1, i32* %1, align 4, !dbg !182
+state=0x36e0500 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !182
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1e00 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425312
+executeMemoryOperation isWrite? 1
+storing value 7
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   br label %56, !dbg !182
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e0500 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e0500 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+16
+32
+64
+2048
+128
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 6
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1e00 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425312
+executeMemoryOperation isWrite? 0
+address for memop 56425312
+default offset for target address 0
+base memory address 56425312
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1e00 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425120
+executeMemoryOperation isWrite? 0
+address for memop 56425120
+default offset for target address 0
+base memory address 56425120
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1e00 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425208
+executeMemoryOperation isWrite? 0
+address for memop 56425208
+default offset for target address 0
+base memory address 56425208
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e1e00 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %45 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %44), !dbg !185
+treating as external function: printf
+next instruction:   store i32 1, i32* %1, align 4, !dbg !187
+state=0x36e1e00 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !187
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 128
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   br label %56, !dbg !187
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e1e00 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e1e00 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 256
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 6
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br label %4, !dbg !145
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 7
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e1900 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425352
+executeMemoryOperation isWrite? 0
+address for memop 56425352
+default offset for target address 0
+base memory address 56425352
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 256
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 7
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425304
+executeMemoryOperation isWrite? 1
+storing value 512
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e1900 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56424992
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e1900 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56424992
+executeMemoryOperation isWrite? 0
+address for memop 56424992
+default offset for target address 0
+base memory address 56424992
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 512
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e1900 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425288
+executeMemoryOperation isWrite? 0
+address for memop 56425288
+default offset for target address 0
+base memory address 56425288
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e1900 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425304
+executeMemoryOperation isWrite? 0
+address for memop 56425304
+default offset for target address 0
+base memory address 56425304
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e1900 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %49 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %48), !dbg !193
+treating as external function: printf
+next instruction:   store i32 1, i32* %1, align 4, !dbg !195
+state=0x36e1900 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !195
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   br label %56, !dbg !195
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e1900 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e1900 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 8
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   %10 = load i32, i32* %2, align 4, !dbg !140
+state=0x36e2300 memory operation (inside loop) 
+  %10 = load i32, i32* %2, align 4, !dbg !140
+ address: 56425328
+executeMemoryOperation isWrite? 0
+address for memop 56425328
+default offset for target address 0
+base memory address 56425328
+next instruction:   %11 = mul nsw i32 %8, %10, !dbg !141
+next instruction:   store i32 %11, i32* %result, align 4, !dbg !142
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %11, i32* %result, align 4, !dbg !142
+ address: 56425176
+executeMemoryOperation isWrite? 1
+storing value 1024
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   %12 = load i32, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  %12 = load i32, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %13 = add nsw i32 %12, 1, !dbg !143
+next instruction:   store i32 %13, i32* %i, align 4, !dbg !143
+state=0x36e2300 memory operation (inside loop) 
+  store i32 %13, i32* %i, align 4, !dbg !143
+ address: 56425376
+executeMemoryOperation isWrite? 1
+storing value 9
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   br label %4, !dbg !145
+next instruction:   %5 = load i32, i32* %i, align 4, !dbg !133
+state=0x36e2300 memory operation (inside loop) 
+  %5 = load i32, i32* %i, align 4, !dbg !133
+ address: 56425376
+executeMemoryOperation isWrite? 0
+address for memop 56425376
+default offset for target address 0
+base memory address 56425376
+next instruction:   %6 = load i32, i32* %1, align 4, !dbg !136
+state=0x36e2300 memory operation (inside loop) 
+  %6 = load i32, i32* %1, align 4, !dbg !136
+ address: 56425168
+executeMemoryOperation isWrite? 0
+address for memop 56425168
+default offset for target address 0
+base memory address 56425168
+next instruction:   %7 = icmp slt i32 %5, %6, !dbg !137
+next instruction:   %8 = load i32, i32* %result, align 4, !dbg !138
+state=0x36e2300 memory operation (inside loop) 
+  %8 = load i32, i32* %result, align 4, !dbg !138
+ address: 56425176
+executeMemoryOperation isWrite? 0
+address for memop 56425176
+default offset for target address 0
+base memory address 56425176
+next instruction:   br i1 %7, label %9, label %14, !dbg !139
+Recorded most recent branch as   br i1 %7, label %9, label %14, !dbg !139
+next instruction:   ret i32 %8, !dbg !146
+state :0x36e2300 checking loop to see if an input function
+checking leak in loop with 4locals 
+checking done
+next instruction:   %52 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i32 %51), !dbg !198
+treating as external function: printf
+next instruction:   store i32 1, i32* %1, align 4, !dbg !200
+state=0x36e2300 memory operation (inside foo) 
+  store i32 1, i32* %1, align 4, !dbg !200
+ address: 56424632
+executeMemoryOperation isWrite? 1
+storing value 1
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   br label %56, !dbg !200
+next instruction:   %57 = load i32, i32* %1, align 4, !dbg !206
+state=0x36e2300 memory operation (inside foo) 
+  %57 = load i32, i32* %1, align 4, !dbg !206
+ address: 56424632
+executeMemoryOperation isWrite? 0
+address for memop 56424632
+default offset for target address 0
+base memory address 56424632
+next instruction:   ret i32 %57, !dbg !206
+state :0x36e2300 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 4locals 
+checking done
+256
+512
+1024
+Size of rdmap : 15
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %31 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !166
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+
+[ (Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Eq false
+          (Eq 4294967295
+              (ReadLSB w32 4 foo_arg_0_0)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 132 , 132 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Eq 4294967295
+              (ReadLSB w32 4 foo_arg_0_0)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 156 , 156 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:54
+  br i1 %38, label %47, label %50, !dbg !188
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:44
+  br i1 %38, label %40, label %43, !dbg !177
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %31 = load %struct.mytest*, %struct.mytest** %t, align 8, !dbg !166
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+
+[ (Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Eq 4294967295
+          (ReadLSB w32 4 foo_arg_0_0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 120 , 120 ]
+
+[ (Eq false
+     (Slt 4294967286
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq 4294967295
+          (ReadLSB w32 4 foo_arg_0_0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 144 , 144 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:54
+  br i1 %38, label %47, label %50, !dbg !188
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:44
+  br i1 %38, label %40, label %43, !dbg !177
+
+foo
+
+Predecessor : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+===============
+
+===============
+Found Violation at : 
+diff : 67
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Slt (ReadLSB w32 4 foo_arg_0_0)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (And (Eq false
+               (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+                    1))
+           (Slt N0 5))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 91 , 91 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 84
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Slt (ReadLSB w32 4 foo_arg_0_0)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 55
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Eq false
+     (Slt 0
+          (ReadLSB w32 8 foo_arg_0_0)))
+(And (Eq false
+          (Slt (ReadLSB w32 4 foo_arg_0_0)
+               0))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 158 , 158 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (And (Eq false
+               (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+                    1))
+           (Eq false (Slt N0 5)))
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 103 , 103 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 82
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 156 , 156 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 156 , 156 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 132 , 132 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 70
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 144 , 144 ]
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 24
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Eq false (Slt 4294967286 N0)))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 144 , 144 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 120 , 120 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 58
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq false (Eq 4294967295 N0))
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 132 , 132 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+===============
+Found Violation at : 
+diff : 46
+Instruction:
+  %1 = alloca i32, align 4
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+
+[ (Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+(And (Slt (ReadLSB w32 4 foo_arg_0_0)
+           1)
+      (Eq 1
+          (ReadLSB w32 0 return_value)))
+ ]   ---->  [ 74 , 74 ]
+
+[ (And (Eq false
+          (Slt 0
+               N0:(ReadLSB w32 8 foo_arg_0_0)))
+      (Slt 4294967286 N0))
+(And (Slt N0:(ReadLSB w32 4 foo_arg_0_0)
+           0)
+      (And (Eq 4294967295 N0)
+           (Eq 1
+               (ReadLSB w32 0 return_value))))
+ ]   ---->  [ 120 , 120 ]
+
+Successors : 
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:42
+  %29 = icmp slt i32 %11, 0, !dbg !162
+
+foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:28
+  %13 = icmp slt i32 %11, 1, !dbg !140
+
+foo
+
+Predecessor : 
+
+===============
+
+
+
+
+>>>> Listing violations :  
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:43
+	=====================
+
+	=====================
+	Function : foo
+
+	>>>> /home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c:26
+	=====================
+
+>>>> Found violations at  : 2 locations.
+Info Flow Summary for function 
+all high sym regions: 
+foo_arg_0_0
+offset=64, size=32
+all low sym regions: 
+foo_arg_0_0
+offset=32, size=32
+return_value
+offset=0, size=32
+ Code loc with leaks:
+
+KLEE: done: #Timing Side Channel  Locs = 2
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 74
+KLEE: done: maxInst = 159
+KLEE: done: HAncestors = 2
+KLEE: done: HLeaksOnStack = 0
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 835
+KLEE: done: completed paths = 8
+KLEE: done: generated tests = 8
+Lazy initialization is ON 
+lazy single spec file? 
+ mixed function foo arg 0

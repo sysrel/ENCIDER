@@ -1,0 +1,5 @@
+/home/tuba/Documents/tools/pmguidedsymex/test/test25/test25.c 64: 
+
+(ReadLSB w32 0 foo_high_1_0) 
+
+

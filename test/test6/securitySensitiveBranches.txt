@@ -1,0 +1,8 @@
+/home/tuba/Documents/tools/pmguidedsymex/test/test6/test6.c 32:
+ (Slt 0
+      (ReadLSB w32 0 %struct.data_t_0))
+
+/home/tuba/Documents/tools/pmguidedsymex/test/test6/test6.c 48:
+ (Slt 4294967286
+      (ReadLSB w32 0 %struct.data_t_0))
+

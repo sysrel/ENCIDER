@@ -99,9 +99,8 @@ bin/gen-random-bout: lib/libkleeSupport.a
 bin/gen-random-bout: /usr/lib/x86_64-linux-gnu/libz.so
 bin/gen-random-bout: /usr/lib/libtcmalloc.so
 bin/gen-random-bout: /usr/lib/llvm-3.8/lib/libLLVMSupport.a
-bin/gen-random-bout: /usr/local/lib/libstp.a
-bin/gen-random-bout: /usr/lib/x86_64-linux-gnu/libboost_program_options.a
-bin/gen-random-bout: /usr/local/lib/libminisat.a
+bin/gen-random-bout: /usr/local/lib/libstp.so.2.3
+bin/gen-random-bout: /usr/local/lib/libminisat.so
 bin/gen-random-bout: /usr/lib/libz3.so
 bin/gen-random-bout: tools/gen-random-bout/CMakeFiles/gen-random-bout.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable ../../bin/gen-random-bout"

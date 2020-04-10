@@ -96,9 +96,8 @@ bin/kleaver: lib/libkleaverSolver.a
 bin/kleaver: lib/libkleeBasic.a
 bin/kleaver: lib/libkleaverExpr.a
 bin/kleaver: lib/libkleeSupport.a
-bin/kleaver: /usr/local/lib/libstp.a
-bin/kleaver: /usr/lib/x86_64-linux-gnu/libboost_program_options.a
-bin/kleaver: /usr/local/lib/libminisat.a
+bin/kleaver: /usr/local/lib/libstp.so.2.3
+bin/kleaver: /usr/local/lib/libminisat.so
 bin/kleaver: /usr/lib/libz3.so
 bin/kleaver: /usr/lib/x86_64-linux-gnu/libz.so
 bin/kleaver: /usr/lib/libtcmalloc.so

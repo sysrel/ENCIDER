@@ -1,0 +1,8 @@
+/home/tuba/Documents/tools/pmguidedsymex/test/test14/test14.c 30:
+ (Slt 0
+      (ReadLSB w32 8 bar_0))
+
+/home/tuba/Documents/tools/pmguidedsymex/test/test14/test14.c 46:
+ (Slt 4294967286
+      (ReadLSB w32 8 bar_0))
+

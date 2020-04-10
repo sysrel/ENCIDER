@@ -1,0 +1,404 @@
+KLEE: output directory is "/home/tuba/Documents/tools/pmguidedsymex/test/test24/klee-out-0"
+KLEE: Using STP solver backend
+Uncov init=771
+Couldn't open file 
+Using cache line mode (as default)!
+init info flow context for 0x2d20000
+recording arg 0 and the register 0 as info flow relevant in foo
+recording arg 1 and the register 1 as info flow relevant in foo
+recording arg 2 and the register 2 as info flow relevant in foo
+recording arg 3 and the register 3 as info flow relevant in foo
+recording arg 4 and the register 4 as info flow relevant in foo
+recording arg 5 and the register 5 as info flow relevant in foo
+lazy init arg foo_arg_0_0
+arg 1 type i32 count=32
+Symbolizing arg 1 of foo, address 47689600 size=128
+is arg 1 type i32* single instance? 0
+to be made symbolic? 1
+lazy init arg foo_arg_2_0
+arg 3 type i32 count=32
+Symbolizing arg 3 of foo, address 47689344 size=128
+is arg 3 type i32* single instance? 0
+to be made symbolic? 1
+arg 4 type i32* count=32
+Symbolizing arg 4 of foo, address 46760960 size=256
+is arg 4 type i32** single instance? 0
+to be made symbolic? 1
+arg 5 type %struct.myst count=20
+Symbolizing arg 5 of foo, address 46334192 size=240
+is arg 5 type %struct.myst* single instance? 0
+to be made symbolic? 1
+High symbolic regions:
+Low symbolic regions:
+Registering publicOutputReturningFName as foo
+clearing return_value from high
+next instruction:   %1 = alloca i32, align 4
+recording register 6 as a local variable
+next instruction:   %2 = alloca i32*, align 8
+recording register 7 as a local variable
+next instruction:   %3 = alloca i32, align 4
+recording register 8 as a local variable
+next instruction:   %4 = alloca i32*, align 8
+recording register 9 as a local variable
+next instruction:   %5 = alloca i32**, align 8
+recording register 10 as a local variable
+next instruction:   %6 = alloca %struct.myst*, align 8
+recording register 11 as a local variable
+next instruction:   %E = alloca i32*, align 8
+recording register 12 as a local variable
+next instruction:   %temp = alloca i32, align 4
+recording register 13 as a local variable
+next instruction:   store i32 %A, i32* %1, align 4
+reached foo
+case 1: 0x2d17f60
+Info Flow For STORE register=0
+Adding info flow relevant source in STORE: 0x2c48030
+{0,[0:32]}
+setting target region 0:32to:
+{0,[0:32]}
+next instruction:   store i32* %B, i32** %2, align 8
+case 1: 0x2d160a0
+Info Flow For STORE register=1
+Adding info flow relevant source in STORE: 0x2c480a0
+{1,[0:64]}
+setting target region 0:64to:
+{1,[0:64]}
+next instruction:   store i32 %C, i32* %3, align 4
+case 1: 0x2d15c20
+Info Flow For STORE register=2
+Adding info flow relevant source in STORE: 0x2c48110
+{2,[0:32]}
+setting target region 0:32to:
+{2,[0:32]}
+next instruction:   store i32* %D, i32** %4, align 8
+case 1: 0x2d16b20
+Info Flow For STORE register=3
+Adding info flow relevant source in STORE: 0x2c48180
+{3,[0:64]}
+setting target region 0:64to:
+{3,[0:64]}
+next instruction:   store i32** %F, i32*** %5, align 8
+case 1: 0x2d143c0
+Info Flow For STORE register=4
+Adding info flow relevant source in STORE: 0x2c481f0
+{4,[0:64]}
+setting target region 0:64to:
+{4,[0:64]}
+next instruction:   store %struct.myst* %M, %struct.myst** %6, align 8
+case 1: 0x2d16a30
+Info Flow For STORE register=5
+Adding info flow relevant source in STORE: 0x2c48260
+{5,[0:64]}
+setting target region 0:64to:
+{5,[0:64]}
+next instruction:   %7 = load i32, i32* %1, align 4, !dbg !126
+Info Flow For LOAD register=6 offset=0 size=32
+Transferring info in LOAD: 0x2c86a98
+source register=6
+setting target region 0:32to:
+{0,[0:32]}
+next instruction:   %8 = load i32, i32* %3, align 4, !dbg !128
+Info Flow For LOAD register=8 offset=0 size=32
+Transferring info in LOAD: 0x2c86af8
+source register=8
+setting target region 0:32to:
+{2,[0:32]}
+next instruction:   %9 = add nsw i32 %7, %8, !dbg !129
+setting target region 0:32to:
+{0,[0:32]}
+exact match, expanding info flow:
+{2,[0:32]}
+into:
+{0,[0:32]
+2,[0:32]
+}
+next instruction:   %10 = icmp sgt i32 %9, 0, !dbg !130
+next instruction:   br i1 %10, label %11, label %13, !dbg !131
+cloning info flow context from 0x2d20000 to 0x2d20500
+next instruction:   %12 = load i32*, i32** %2, align 8, !dbg !132
+Info Flow For LOAD register=7 offset=0 size=64
+Transferring info in LOAD: 0x2c86b58
+source register=7
+setting target region 0:64to:
+{1,[0:64]}
+next instruction:   store i32* %12, i32** %E, align 8, !dbg !133
+case 1: 0x2d16100
+Info Flow For STORE register=25
+setting target region 0:64to:
+{1,[0:64]}
+saving info flow context for 0x2d20000
+switching to state 0x2d20500
+next instruction:   %14 = load i32*, i32** %4, align 8, !dbg !135
+Info Flow For LOAD register=9 offset=0 size=64
+Transferring info in LOAD: 0x2c86c18
+source register=9
+setting target region 0:64to:
+{3,[0:64]}
+saving info flow context for 0x2d20500
+switching to state 0x2d20000
+next instruction:   br label %15, !dbg !134
+next instruction:   %16 = load i32, i32* %1, align 4, !dbg !137
+Info Flow For LOAD register=6 offset=0 size=32
+Transferring info in LOAD: 0x2c86cd8
+source register=6
+setting target region 0:32to:
+{0,[0:32]}
+saving info flow context for 0x2d20000
+switching to state 0x2d20500
+next instruction:   store i32* %14, i32** %E, align 8, !dbg !136
+case 1: 0x2d142d0
+Info Flow For STORE register=28
+setting target region 0:64to:
+{3,[0:64]}
+next instruction:   br label %15
+next instruction:   %16 = load i32, i32* %1, align 4, !dbg !137
+Info Flow For LOAD register=6 offset=0 size=32
+Transferring info in LOAD: 0x2c86cd8
+source register=6
+exact match, setting region 0:32to:
+{0,[0:32]}
+next instruction:   %17 = load i32*, i32** %E, align 8, !dbg !138
+Info Flow For LOAD register=12 offset=0 size=64
+Transferring info in LOAD: 0x2c86d38
+source register=12
+setting target region 0:64to:
+{3,[0:64]}
+next instruction:   store i32 %16, i32* %17, align 4, !dbg !139
+case 1: 0x2d14390
+Info Flow For STORE register=31
+adding a point of indirection to 3,[0:64]
+{3,[0:64][0:32]}
+Adding info flow relevant destination from register in STORE: 0x2c48490
+{3,[0:64][0:32]}
+setting target region 0:32to:
+{0,[0:32]}
+RECORDING info flow to destination=3
+{0,[0:32]}
+===>
+3,[0:64][0:32]
+next instruction:   %18 = load i32**, i32*** %5, align 8, !dbg !140
+Info Flow For LOAD register=10 offset=0 size=64
+Transferring info in LOAD: 0x2c86d98
+source register=10
+setting target region 0:64to:
+{4,[0:64]}
+saving info flow context for 0x2d20500
+switching to state 0x2d20000
+next instruction:   %17 = load i32*, i32** %E, align 8, !dbg !138
+Info Flow For LOAD register=12 offset=0 size=64
+Transferring info in LOAD: 0x2c86d38
+source register=12
+exact match, setting region 0:64to:
+{1,[0:64]}
+saving info flow context for 0x2d20000
+switching to state 0x2d20500
+next instruction:   %19 = load i32*, i32** %18, align 8, !dbg !141
+Info Flow For LOAD register=34 offset=0 size=64
+Trying to fill uncovered 1 regions in LOAD after handling flow from memory
+region 0:64
+adding a point of indirection to 4,[0:64]
+{4,[0:64][0:64]}
+adj = 0,0
+setting target region 0:64to:
+{4,[0:64][0:64]}
+case 1: 0x2d16b80
+next instruction:   %20 = load i32, i32* %19, align 4, !dbg !142
+Info Flow For LOAD register=35 offset=0 size=32
+Trying to fill uncovered 1 regions in LOAD after handling flow from memory
+region 0:32
+adding a point of indirection to 4,[0:64][0:64]
+{4,[0:64][0:64][0:32]}
+adj = 0,0
+setting target region 0:32to:
+{4,[0:64][0:64][0:32]}
+next instruction:   store i32 %20, i32* %temp, align 4, !dbg !143
+case 1: 0x2d16eb0
+Info Flow For STORE register=36
+setting target region 0:32to:
+{4,[0:64][0:64][0:32]}
+next instruction:   %21 = load i32, i32* %temp, align 4, !dbg !144
+Info Flow For LOAD register=13 offset=0 size=32
+Transferring info in LOAD: 0x2c86eb8
+source register=13
+setting target region 0:32to:
+{4,[0:64][0:64][0:32]}
+saving info flow context for 0x2d20500
+switching to state 0x2d20000
+next instruction:   store i32 %16, i32* %17, align 4, !dbg !139
+case 1: 0x2d14390
+Info Flow For STORE register=31
+adding a point of indirection to 1,[0:64]
+{1,[0:64][0:32]}
+Adding info flow relevant destination from register in STORE: 0x2c48490
+{1,[0:64][0:32]}
+setting target region 0:32to:
+{0,[0:32]}
+RECORDING info flow to destination=1
+{0,[0:32]}
+===>
+1,[0:64][0:32]
+next instruction:   %18 = load i32**, i32*** %5, align 8, !dbg !140
+Info Flow For LOAD register=10 offset=0 size=64
+Transferring info in LOAD: 0x2c86d98
+source register=10
+exact match, setting region 0:64to:
+{4,[0:64]}
+saving info flow context for 0x2d20000
+switching to state 0x2d20500
+next instruction:   %22 = load %struct.myst*, %struct.myst** %6, align 8, !dbg !145
+Info Flow For LOAD register=11 offset=0 size=64
+Transferring info in LOAD: 0x2c86f18
+source register=11
+setting target region 0:64to:
+{5,[0:64]}
+next instruction:   %23 = getelementptr inbounds %struct.myst, %struct.myst* %22, i32 0, i32 2, !dbg !146
+setting target region 0:64to:
+{5,[0:64]}
+saving info flow context for 0x2d20500
+switching to state 0x2d20000
+next instruction:   %19 = load i32*, i32** %18, align 8, !dbg !141
+Info Flow For LOAD register=34 offset=0 size=64
+Trying to fill uncovered 1 regions in LOAD after handling flow from memory
+region 0:64
+adding a point of indirection to 4,[0:64]
+{4,[0:64][0:64]}
+adj = 0,0
+exact match, setting region 0:64to:
+{4,[0:64][0:64]}
+case 1: 0x2d16b80
+next instruction:   %20 = load i32, i32* %19, align 4, !dbg !142
+Info Flow For LOAD register=35 offset=0 size=32
+Trying to fill uncovered 1 regions in LOAD after handling flow from memory
+region 0:32
+adding a point of indirection to 4,[0:64][0:64]
+{4,[0:64][0:64][0:32]}
+adj = 0,0
+exact match, setting region 0:32to:
+{4,[0:64][0:64][0:32]}
+next instruction:   store i32 %20, i32* %temp, align 4, !dbg !143
+case 1: 0x2d16eb0
+Info Flow For STORE register=36
+setting target region 0:32to:
+{4,[0:64][0:64][0:32]}
+next instruction:   %21 = load i32, i32* %temp, align 4, !dbg !144
+Info Flow For LOAD register=13 offset=0 size=32
+Transferring info in LOAD: 0x2c86eb8
+source register=13
+exact match, setting region 0:32to:
+{4,[0:64][0:64][0:32]}
+next instruction:   %22 = load %struct.myst*, %struct.myst** %6, align 8, !dbg !145
+Info Flow For LOAD register=11 offset=0 size=64
+Transferring info in LOAD: 0x2c86f18
+source register=11
+exact match, setting region 0:64to:
+{5,[0:64]}
+saving info flow context for 0x2d20000
+switching to state 0x2d20500
+next instruction:   store i32 %21, i32* %23, align 4, !dbg !147
+case 1: 0x2d16fd0
+Info Flow For STORE register=38
+adding a point of indirection to 5,[0:64]
+{5,[0:64][8:32]}
+Adding info flow relevant destination from register in STORE: 0x2c48570
+{5,[0:64][8:32]}
+setting target region 8:32to:
+{4,[0:64][0:64][0:32]}
+RECORDING info flow to destination=5
+{4,[0:64][0:64][0:32]}
+===>
+5,[0:64][8:32]
+next instruction:   %24 = load i32, i32* %3, align 4, !dbg !148
+Info Flow For LOAD register=8 offset=0 size=32
+Transferring info in LOAD: 0x2c86f78
+source register=8
+setting target region 0:32to:
+{2,[0:32]}
+next instruction:   ret i32 %24, !dbg !149
+state :0x2d20500 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 11locals 
+checking done
+Info Flow for RETURN
+RECORDING info flow to destination=6
+{2,[0:32]}
+===>
+6,[0:32]
+saving info flow context for 0x2d20500
+switching to state 0x2d20000
+next instruction:   %23 = getelementptr inbounds %struct.myst, %struct.myst* %22, i32 0, i32 2, !dbg !146
+exact match, setting region 0:64to:
+{5,[0:64]}
+next instruction:   store i32 %21, i32* %23, align 4, !dbg !147
+case 1: 0x2d16fd0
+Info Flow For STORE register=38
+adding a point of indirection to 5,[0:64]
+{5,[0:64][8:32]}
+Adding info flow relevant destination from register in STORE: 0x2c48570
+{5,[0:64][8:32]}
+setting target region 8:32to:
+{4,[0:64][0:64][0:32]}
+RECORDING info flow to destination=5
+{4,[0:64][0:64][0:32]}
+===>
+5,[0:64][8:32]
+next instruction:   %24 = load i32, i32* %3, align 4, !dbg !148
+Info Flow For LOAD register=8 offset=0 size=32
+Transferring info in LOAD: 0x2c86f78
+source register=8
+exact match, setting region 0:32to:
+{2,[0:32]}
+next instruction:   ret i32 %24, !dbg !149
+state :0x2d20000 checking foo to see if an input function
+terminating state with foo
+checking leak in foo with 11locals 
+checking done
+Info Flow for RETURN
+RECORDING info flow to destination=6
+{2,[0:32]}
+===>
+6,[0:32]
+Size of rdmap : 3
+
+
+
+
+>>>> Listing violations :  
+
+>>>> Found violations at  : 0 locations.
+Info Flow Summary for function foo
+{0,[0:32]}
+	===>
+1,[0:64][0:32]
+
+{0,[0:32]}
+	===>
+3,[0:64][0:32]
+
+{4,[0:64][0:64][0:32]}
+	===>
+5,[0:64][8:32]
+
+{2,[0:32]}
+	===>
+6,[0:32]
+
+all high sym regions: 
+all low sym regions: 
+return_value
+offset=0, size=32
+ Code loc with leaks:
+
+KLEE: done: #Timing Side Channel  Locs = 0
+KLEE: done: #Cache Side Channel  Locs = 0
+KLEE: done: minInst = 34
+KLEE: done: maxInst = 35
+KLEE: done: HAncestors = 0
+KLEE: done: HLeaksOnStack = 0
+KLEE: done: HLMixedConstraints = 0
+KLEE: done: HVars= 0
+KLEE: done: LVars= 0
+KLEE: done: total instructions = 51
+KLEE: done: completed paths = 2
+KLEE: done: generated tests = 2
+Lazy initialization is ON 
+lazy single spec file? 

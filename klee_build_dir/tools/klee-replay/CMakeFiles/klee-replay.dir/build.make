@@ -179,9 +179,8 @@ bin/klee-replay: lib/libkleeSupport.a
 bin/klee-replay: /usr/lib/x86_64-linux-gnu/libz.so
 bin/klee-replay: /usr/lib/libtcmalloc.so
 bin/klee-replay: /usr/lib/llvm-3.8/lib/libLLVMSupport.a
-bin/klee-replay: /usr/local/lib/libstp.a
-bin/klee-replay: /usr/lib/x86_64-linux-gnu/libboost_program_options.a
-bin/klee-replay: /usr/local/lib/libminisat.a
+bin/klee-replay: /usr/local/lib/libstp.so.2.3
+bin/klee-replay: /usr/local/lib/libminisat.so
 bin/klee-replay: /usr/lib/libz3.so
 bin/klee-replay: tools/klee-replay/CMakeFiles/klee-replay.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable ../../bin/klee-replay"

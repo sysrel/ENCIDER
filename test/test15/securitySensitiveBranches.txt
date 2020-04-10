@@ -1,0 +1,10 @@
+/home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c 27:
+   br i1 %8, label %12, label %28, !dbg !139
+(Slt 0
+      (ReadLSB w32 8 foo_arg_0_0))
+
+/home/tuba/Documents/tools/pmguidedsymex/test/test15/test15.c 43:
+   br i1 %34, label %39, label %46, !dbg !176
+(Slt 4294967286
+      (ReadLSB w32 8 foo_arg_0_0))
+

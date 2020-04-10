@@ -111,9 +111,8 @@ bin/klee: lib/libkleeBasic.a
 bin/klee: lib/libkleaverSolver.a
 bin/klee: lib/libkleeBasic.a
 bin/klee: lib/libkleaverSolver.a
-bin/klee: /usr/local/lib/libstp.a
-bin/klee: /usr/lib/x86_64-linux-gnu/libboost_program_options.a
-bin/klee: /usr/local/lib/libminisat.a
+bin/klee: /usr/local/lib/libstp.so.2.3
+bin/klee: /usr/local/lib/libminisat.so
 bin/klee: /usr/lib/libz3.so
 bin/klee: lib/libkleaverExpr.a
 bin/klee: lib/libkleeSupport.a
