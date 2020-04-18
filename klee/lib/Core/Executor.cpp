@@ -4193,17 +4193,17 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          }
          tc = getForkFreq(state, getSouceWithContext(state, state.prevPC), true);
          fc = getForkFreq(state, getSouceWithContext(state, state.prevPC), false);
-         llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " true branch " << tc << " times\n";
-         llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " false branch " << fc << " times\n";
+         //llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " true branch " << tc << " times\n";
+         //llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " false branch " << fc << " times\n";
          
          if (branches.first && branches.second) {
             if (fc > loopBound && tc > loopBound) {
                // terminate state
-               llvm::errs() << "path terminated early due to reaching bound for both branches\n";
+               //llvm::errs() << "path terminated early due to reaching bound for both branches\n";
                terminateStateEarly(state, "Loop Bound for both successors reached\n");
             }
             else if (tc > loopBound) {
-               llvm::errs() << "path terminated for the true branch\n";
+               //llvm::errs() << "path terminated for the true branch\n";
                terminateStateEarly(*branches.first, "Loop Bound for true successor reached\n");
                transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second); 
                /* SYSREL side channel begin */
@@ -4211,7 +4211,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                /* SYSREL side channel end */
             }
             else if (fc > loopBound) {
-               llvm::errs() << "path terminated for the false branch\n";
+               //llvm::errs() << "path terminated for the false branch\n";
                terminateStateEarly(*branches.second, "Loop Bound for false successor reached\n");
                transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
                /* SYSREL side channel begin */
@@ -4248,7 +4248,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          else {
             if (branches.first) {
                if (tc > loopBound) {
-                  llvm::errs() << "branching to the false successor due to reaching loop bound for the true branch\n";
+                  //llvm::errs() << "branching to the false successor due to reaching loop bound for the true branch\n";
                   transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.first);
                }
                else                   
@@ -4261,8 +4261,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
             }
             if (branches.second) {
                if (fc > loopBound) {
-                  llvm::errs() << "path terminated for the false branch\n";
-                  terminateStateEarly(*branches.second, "Loop Bound for false successor reached\n");                  
+                  transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.second);
+                  /* SYSREL side channel begin */
+                  successorsPaths->insert(branches.second); // Keeping track of the new paths
+                  /* SYSREL side channel end */
                }
                else {               
                   transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
@@ -8465,7 +8467,8 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
      if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
           std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
           ref<Expr> addtocheck = address;
-          while (m.find(addtocheck) != m.end()) {
+          int i=0;
+          while (m.find(addtocheck) != m.end() && i++ < 3) {
              llvm::errs() << " checking mapping for " << addtocheck << "\n";
              ref<Expr> mobase = m[addtocheck];
              if (!isa<ConstantExpr>(mobase)) {
