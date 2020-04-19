@@ -213,8 +213,70 @@ std::map<long, std::map<std::string, unsigned> > forkFreqMapTrue;
 std::map<long, std::map<std::string, unsigned> > forkFreqMapFalse;
 std::set<std::string> loopBoundExceptions;
 unsigned loopBound = 0;
+std::map<std::string, std::map<unsigned, 
+         std::pair<unsigned, unsigned> > > dataConstraintMap;
 
 std::string getTypeName(Type *t);
+
+bool getDataConstraint(std::string tname, unsigned offset, 
+                                  std::pair<unsigned, unsigned> &fieldinfo) {
+     if (dataConstraintMap.find(tname) == dataConstraintMap.end())
+        return false;
+     for(auto mi : dataConstraintMap) {
+        if (mi.first.find(tname) != std::string::npos || 
+               tname.find(mi.first) != std::string::npos) {
+           std::map<unsigned, std::pair<unsigned, unsigned> > map = mi.second;
+           if (map.find(offset) != map.end()) {
+              fieldinfo = map[offset];
+              return true;
+           }
+           else return false;
+        }
+     }  
+     return false;
+}
+
+Type *getEnclosingObjectType(Instruction *inst) {
+   std::vector<Value *>  wl;
+   LoadInst *li = dyn_cast<LoadInst>(inst);
+   if (!li) assert(0 && "bitcast info must be computed for load instructions!");
+   Type *result = NULL;
+   std::set<Value*> seen;
+   wl.push_back(li);
+   while (wl.size() > 0) {
+      Value *val = wl.back();
+      seen.insert(val);
+      wl.pop_back();
+      Instruction *ti = dyn_cast<Instruction>(val);
+      if (!ti) continue;
+      //llvm::errs() << "traversing " << (*ti) << "\n";
+      switch (ti->getOpcode()) {
+        case Instruction::Load: {
+           if (ti != li) {
+              result = ti->getType();
+              if (result->isPointerTy()) {
+                 result = result->getPointerElementType();
+                 if (result->isPointerTy()) {
+                    result = result->getPointerElementType(); 
+                 }
+              }
+              StructType *st = dyn_cast<StructType>(result);
+              if (st) 
+                 return result; 
+              else return NULL;
+           }
+        }
+        default: {
+          for(unsigned int i=0; i<ti->getNumOperands(); i++) {
+             if (seen.find(ti->getOperand(i)) == seen.end())
+                wl.push_back(ti->getOperand(i));
+          }
+        }
+      }      
+   }
+   return result;
+}
+
 
 bool isLoopBoundExcluded(std::string s) {
   for(auto se : loopBoundExceptions) {
@@ -8360,6 +8422,22 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   if (mksym) {
                      executeMakeSymbolic(state, mo, mo->name, t, true);
                      //llvm::errs() <<  "Making lazy init object at " << laddr << " symbolic \n";
+                  }
+                  std::pair<unsigned, unsigned> fieldInfo;
+                  Type *enclosingType = getEnclosingObjectType(target->inst);
+                  if (enclosingType) { 
+                     llvm::errs() << "enclosing type inferred from IR: " << getTypeName(enclosingType) << "\n";
+                     std::string etname = getTypeName(enclosingType);
+                     if (klee::ConstantExpr *OCE = dyn_cast<klee::ConstantExpr>(offset)) {
+                        if (getDataConstraint(etname, OCE->getZExtValue(), fieldInfo)) {
+                           ref<Expr> lengthExp = op.second->read(fieldInfo.first,fieldInfo.second);
+                           ref<Expr> positiveExp = UgtExpr::create(lengthExp, ConstantExpr::create(0,lengthExp->getWidth()));
+                           ref<Expr> ltExp = UleExpr::create(lengthExp, ConstantExpr::create(count,lengthExp->getWidth()));
+                           ref<Expr> dcons = AndExpr::create(positiveExp,ltExp); 
+                           addConstraint(state, dcons);
+                           llvm::errs() << "Adding data constraint " << dcons << "\n"; 
+                        }
+                     }
                   } 
                   //#ifdef VB
                   llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";

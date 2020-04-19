@@ -170,6 +170,9 @@ extern std::map<std::string, std::set<int> > ocallFuncPtrMap;
 unsigned watchdogGrace = 1;
 extern unsigned loopBound;
 extern std::set<std::string> loopBoundExceptions;
+extern std::map<std::string, std::map<unsigned, 
+         std::pair<unsigned, unsigned> > > dataConstraintMap;
+
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -512,6 +515,8 @@ namespace {
   cl::opt<std::string>
   LoopBoundException("exclude-from-loop-bound", cl::desc("Name of the file that stores the file names to be excluded from loop bound enforcement\n"));
 
+  cl::opt<std::string>
+  TypeBasedDataConstraint("type-based-data-const", cl::desc("Name of the file that stores the struct types and the fields that relate to each other as the first field smaller than equal to the size of the memory region pointed by the second\n"));
 
   cl::opt<bool>
   ForceOutput("force-output", cl::desc("Force output generation on termination \n"));
@@ -1634,6 +1639,39 @@ void readLoopBoundExceptions(const char *name) {
   }
 }
 
+/*
+   Specifies the data constraints between two fields of the same struct (typename) 
+   in the form of size of the memory pointed by field at offset1 is <= the value 
+   stored in the field at offset2 of size size
+   Syntax: 
+   typename,offset1,offset2,size
+*/
+void readTypeBasedDataConstraints(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string line;
+     while (std::getline(cf,line)) { 
+       std::string tline = ltrim(rtrim(line));
+       std::istringstream iss(tline);
+       std::string token, tname;
+       unsigned offset1, size, offset2;
+       getline(iss, token, ',');
+       tname = token;
+       getline(iss, token, ',');
+       offset1 = std::stoi(token);
+       getline(iss, token, ',');
+       offset2 = std::stoi(token);
+       getline(iss, token, ',');
+       size = std::stoi(token);
+       std::map<unsigned, std::pair<unsigned,unsigned> > dcm;
+       if (dataConstraintMap.find(tname) != dataConstraintMap.end())
+          dcm = dataConstraintMap[tname];
+       dcm[offset1] = std::make_pair(offset2,size);
+       dataConstraintMap[tname] = dcm;      
+     }
+     cf.close();
+  }
+}
 
 void readLazySingles(const char *name) {
   std::fstream cf(name, std::fstream::in);
@@ -2527,6 +2565,10 @@ int main(int argc, char **argv, char **envp) {
      if (LoopBoundException != "") {
         readLoopBoundExceptions(LoopBoundException.c_str());
      }
+  }
+
+  if (TypeBasedDataConstraint != "") {
+     readTypeBasedDataConstraints(TypeBasedDataConstraint.c_str());
   }
 
   if (ForceOutput) 
