@@ -220,8 +220,6 @@ std::string getTypeName(Type *t);
 
 bool getDataConstraint(std::string tname, unsigned offset, 
                                   std::pair<unsigned, unsigned> &fieldinfo) {
-     if (dataConstraintMap.find(tname) == dataConstraintMap.end())
-        return false;
      for(auto mi : dataConstraintMap) {
         if (mi.first.find(tname) != std::string::npos || 
                tname.find(mi.first) != std::string::npos) {
