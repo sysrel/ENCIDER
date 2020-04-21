@@ -90,20 +90,19 @@ bool intersect(region r1,   std::vector<region> r2, std::vector<region> &rs) {
      return result;
 } 
 
-
+// assuming little endian
 void shiftLeft(std::vector<region> r1, std::vector<region> &rs, unsigned value, unsigned width) {
-  if (value == 0) return;
   region r;
-  r.offset = 0;
-  r.size = width - value * 8;
+  r.offset = value;
+  r.size = width - value;
   intersect(r, r1, rs);
 }
 
+// assuming little endian
 void shiftRight(std::vector<region> r1, std::vector<region> &rs, unsigned value, unsigned width) {
-  if (value == 0) return;
   region r;
-  r.offset = value * 8;
-  r.size = width - value * 8;
+  r.offset = 0;
+  r.size = width - value;
   intersect(r, r1, rs);
 }
 
@@ -458,9 +457,9 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
         else  {
            unsigned int value = CE->getZExtValue();
            if (cexpr->getKind() == Expr::Shl)
-             shiftLeft(r1, rs, value/8, cexpr->getWidth());
+             shiftLeft(r1, rs, value, cexpr->getWidth());
            else if (cexpr->getKind() == Expr::LShr || cexpr->getKind() == Expr::AShr)
-             shiftRight(r1, rs, value/8, cexpr->getWidth());
+             shiftRight(r1, rs, value, cexpr->getWidth());
            else assert(false);
            return rs;
         }        
