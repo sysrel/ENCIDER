@@ -5173,6 +5173,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
       /* SYSREL extension */ 
       /* side channel begin */
+      llvm::errs() << "Before checking security sensitive, inEnclave?" << state.inEnclave << "\n";
       if (state.inEnclave && exprHasSymRegion(state, index, true)) {
           llvm::errs() << "CRITICAL: Security sensitive index in GetElementPtr:\n";
           ki->inst->print(llvm::errs());
@@ -5233,10 +5234,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        // \exists high'. base >> L<> base[high'/high] >> L
        //llvm::errs() << "Checking for cache based side channel:\n";
        ref<Expr> rexpr = renameExpr(memory, base, true); 
-       //llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
+       llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
        ref<Expr> diffcachelines;
        if (cacheLineMode) {
-          //llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
+          llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
           ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
           ref<Expr> clexpr2 = LShrExpr::alloc(rexpr, ConstantExpr::alloc(cacheLineBits, 64));
           ref<Expr> cleqexpr = EqExpr::create(clexpr1, clexpr2);

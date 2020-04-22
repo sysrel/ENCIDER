@@ -532,7 +532,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
                mergeAndCoalesce(rtemp1, rtemp2, rtemp3);
                rtemp1 = rtemp3;
                rtemp3.clear();
-               llvm::errs() << "rtemp1.size=" << rtemp1.size() << " numsym= " << numsym << "\n";
+               llvm::errs() << "rtemp1.size=" << rtemp1.size() << "\n";
             }
             if (top && numsym == 0)
                return rs; 

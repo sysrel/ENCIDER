@@ -230,7 +230,7 @@ public:
 
   bool exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool high);
 
-  std::vector<region> extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, int &numsym, bool top, bool high);
+  std::vector<region> extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, int &numsym, bool concatSeen, bool top, bool high);
 
   ref<Expr> getProjectionOnRegion(ExecutionState &state, ref<Expr> cexpr, bool high, bool maybebitwise);
 
