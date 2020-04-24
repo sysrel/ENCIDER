@@ -4219,6 +4219,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   case Instruction::Br: {
     BranchInst *bi = cast<BranchInst>(i);
     if (bi->isUnconditional()) {
+      recordMostRecentBranchInfo(state, i);
+      state.lastCondition = EqExpr::create(ConstantExpr::create(0,32),ConstantExpr::create(0,32));
       transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), state);
     } else {
       // FIXME: Find a way that we don't have this hidden dependency.
@@ -6208,8 +6210,11 @@ void Executor::run(ExecutionState &initialState) {
    RD* rdd = getrdmap(&state);
    currentRD = rdd;
    currentRD->ru += getTimingCost(state, ii);
+   llvm::errs() << "inserting instruction " << (*ii) << " 's bb " << ii->getParent() << " to " << currentRD->stateid << "\n";  
+   currentRD->bbs.insert((long)ii->getParent());
 
    if (isbranch) {
+      llvm::errs() << "it was a branch instr!\n";
       isbranch = false;
       if (successorsPaths->size() > 1) {
       	 bool printsucc = false;
@@ -6224,19 +6229,21 @@ void Executor::run(ExecutionState &initialState) {
             assert(mrbfound && "Most recent branch of the state has not been recorded\n");
              bool hasHloc = exprHasSymRegion(state, r1, true);
              bool hasLloc = exprHasSymRegion(state, r1, false);
-             #ifdef VBSC
+             //#ifdef VBSC
 	            std::cerr << "\n>>>> Branch Condition : \n";
 		    r1->dump();
                     const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);
                     state.prevPC->inst->print(llvm::errs());
+                    llvm::errs() << "instruction in ii: " << (*ii) << "\n";
                     printInfo(iit);                    
                     llvm::errs() << "has high? " << hasHloc << "\n";
                     llvm::errs() << "has low? " << hasLloc << "\n";
-             #endif
+             //#endif
              if (hasHloc)
                 s->setSecretDescendant(true);
 
              RD* srd = newNode(s);
+             llvm::errs() << "instruction recorded to " << srd->stateid << " " << (*srd->i) << "\n";
 	     s->rdid = srd->stateid;
 	     rdmapinsert(s->rdid, srd);
              // initialize srd in case it does not satisfy any special case
@@ -6244,7 +6251,8 @@ void Executor::run(ExecutionState &initialState) {
              srd->HAset = currentRD->HAset;
              srd->HC = currentRD->HC;
              srd->LC = currentRD->LC;
-             srd->ru = currentRD->ru; 
+             srd->ru = currentRD->ru;
+             srd->bbs = currentRD->bbs;
 	     if (hasHloc && !hasLloc) {
 	     	ref<Expr> proj = getProjectionOnRegion(state, r1, true);
                 //llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
@@ -6264,6 +6272,8 @@ void Executor::run(ExecutionState &initialState) {
                    //Update currentstate
 		   if (!done) {
 		      rdd->isHBr = true;
+                      // also record the branch instruction for precise error reporting!
+                      rdd->i = ii;
 		      rdd->finalized = 0;
 		      rdd->numSucc = successorsPaths->size();
 		      done = true;

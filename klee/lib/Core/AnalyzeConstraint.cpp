@@ -367,7 +367,7 @@ bool Executor::exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool hig
   int ns = 0; 
   std::vector<region> r1 = extractRegion(state, cexpr,r,ns,false,true,high);
   if (r1.size() == 0) {
-     llvm::errs() << "empty region set!\n";
+     //llvm::errs() << "empty region set!\n";
      return false;
   }
   //for(unsigned int i=0; i<r1.size(); i++)
@@ -375,7 +375,7 @@ bool Executor::exprHasSymRegion(ExecutionState &state, ref<Expr> cexpr, bool hig
   for(unsigned int i=0; i<r1.size(); i++)
      if (r1[i].size > 0)
         return true;
-  llvm::errs() << "no sized region in the solution set!\n";
+  //llvm::errs() << "no sized region in the solution set!\n";
   return false;
 }
 
@@ -426,7 +426,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
                 r.offset = 0;
                 r.size = rexpr->getWidth();
              }      
-             llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
+             //llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
              rs.push_back(r);
              return rs;
          }
@@ -449,7 +449,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
           else if (r2.size() == 0) {
              return r1; 
           }
-          llvm::errs() << " concat merging..\n";
+          //llvm::errs() << " concat merging..\n";
           mergeAndCoalesce(r1, r2, rs);           
           return rs;
       }
@@ -517,22 +517,22 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
             int numsym1 = 0; 
             std::vector<region> rtemp1 = extractRegion(state, cexpr->getKid(0), range, numsym1, concatSeen, false, high);
             numsym += numsym1;
-            llvm::errs() << "child 0 " << cexpr->getKid(0) << " results (high=" << high << "): \n"; 
-            for(unsigned int i=0; i<rtemp1.size(); i++)
-               llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
+            //llvm::errs() << "child 0 " << cexpr->getKid(0) << " results (high=" << high << "): \n"; 
+            //for(unsigned int i=0; i<rtemp1.size(); i++)
+              // llvm::errs() << rtemp1[i].offset << "," << rtemp1[i].size << "\n";
             std::vector<region> rtemp3; 
             for(unsigned int i=1; i<cexpr->getNumKids(); i++) {
-               llvm::errs() << "child " << i << " " << cexpr->getKid(i) << "\n";
+               //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << "\n";
                int numsym2 = 0;
                std::vector<region> rtemp2 = extractRegion(state, cexpr->getKid(i), range, numsym2, concatSeen, false, high);
                numsym += numsym2;
-               llvm::errs() << "child " << i << " " << cexpr->getKid(i) << " results (high=" << high << "): \n";
-               for(unsigned int j=0; j<rtemp2.size(); j++)
-                  llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
+               //llvm::errs() << "child " << i << " " << cexpr->getKid(i) << " results (high=" << high << "): \n";
+               //for(unsigned int j=0; j<rtemp2.size(); j++)
+                 // llvm::errs() << rtemp2[j].offset << "," << rtemp2[j].size << "\n";
                mergeAndCoalesce(rtemp1, rtemp2, rtemp3);
                rtemp1 = rtemp3;
                rtemp3.clear();
-               llvm::errs() << "rtemp1.size=" << rtemp1.size() << " numsym= " << numsym << "\n";
+               //llvm::errs() << "rtemp1.size=" << rtemp1.size() << " numsym= " << numsym << "\n";
             }
             if (top && numsym == 0)
                return rs; 

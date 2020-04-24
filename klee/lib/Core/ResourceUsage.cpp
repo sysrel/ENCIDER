@@ -35,6 +35,32 @@ std::map<std::string, std::set<int> > dynamicLowLoc;
 
 std::map<std::string, unsigned int> timingModels;
 
+bool checkCacheLeakage(BBset a, BBset b, RD* rd, Executor* ex) {
+
+  if (a.size() > 0) {
+     llvm::errs() << "CACHE CODE BB diff: " << a.size() << "\n";
+     for(auto ai : a) {
+        llvm::BasicBlock *bb = (BasicBlock*)ai;
+        llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
+     }
+     llvm::errs() << " other set of BBs:\n";
+     for(auto bi : b) {
+        llvm::BasicBlock *bb = (BasicBlock*)bi;
+        llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
+     }     
+     const InstructionInfo &ii = ex->kmodule->infos->getInfo(rd->i);
+     llvm::errs() << "Instruction:\n";
+     llvm::errs() << "rd=" << rd->stateid << " " << (*rd->i) << "\n";
+     printInfo(ii);
+
+     return true;
+  }
+  else {
+     llvm::errs() << "No diff for BB!\n";
+     return false; 
+  }
+}
+
 unsigned int getTimingModel(std::string fname) {
   if (timingModels.find(fname) != timingModels.end()) {
      return timingModels[fname];
@@ -187,6 +213,11 @@ int updatesource(exhash exhash1, exhash exhash2, RD* rd) {
 	return 0;
 }
 
+RD* newNode(ExecutionState * s, Instruction *ii) {
+    RD *r = newNode(s);
+    r->i = ii;
+    return r;
+}
 
 RD* newNode(ExecutionState * s) {
 	RD* nrd = new RD();
@@ -218,6 +249,7 @@ RD* newNode(RD* rd) {
 	nrd->stateid = rd->stateid;
 	//rdid++;
 	nrd->copyRd = true;
+        nrd->bbs = rd->bbs;
 	return nrd;
 }
 
@@ -264,158 +296,107 @@ bool isTrue(ref<Expr> condition, Executor* ex) {
 }
 
 void printLeakage(RD* rd, Executor* ex) {
-	//llvm::errs() << "\nAt printLeakage: \n";
-	//llvm::errs() << "\nPrinting RU : \n";
-	std::vector<exhash> ruvec;
-	for(RU::iterator rit = rd->Ru->begin(); rit != rd->Ru->end(); ++rit) {
-		ruvec.push_back(rit->first);
+   //llvm::errs() << "\nAt printLeakage: \n";
+   //llvm::errs() << "\nPrinting RU : \n";
+   std::vector<exhash> ruvec;
+   for(RU::iterator rit = rd->Ru->begin(); rit != rd->Ru->end(); ++rit) {
+      ruvec.push_back(rit->first);
+   }
+
+   for(std::vector<exhash>::iterator rvit = ruvec.begin(); rvit != ruvec.end(); ++rvit) {
+      RU::iterator rit = rd->Ru->find(*rvit);
+      assert(rd->HE->find(rit->first) != rd->HE->end() && "ERROR : HCLC not found in ");
+      HCLC hclc = rd->HE->find(rit->first)->second;
+      exhash exhash1 = rd->HE->find(rit->first)->first;
+      ref<Expr> h1 = hclc.first;
+      ref<Expr> l1 = hclc.second;
+      range R1 = rit->second;
+      assert(rd->bbm.find(*rvit) != rd->bbm.end() && "basic block cov not recorded\n");
+      std::vector<exhash>::iterator rvit2 = rvit;
+      ++rvit2;
+      for(; rvit2 != ruvec.end(); ++rvit2) {
+	 RU::iterator rit2 = rd->Ru->find(*rvit2);
+         assert(rd->HE->find(rit2->first) != rd->HE->end() && "ERROR : HCLC not found in ");
+	 HCLC hclc2 = rd->HE->find(rit2->first)->second;
+	 exhash exhash2 = rd->HE->find(rit2->first)->first;
+	 ref<Expr> h2 = hclc2.first;
+	 bool sourcecheck = true;
+	 if (sourcecheck) {
+	    std::pair<exhash, exhash> exh1 = std::pair<exhash, exhash>(exhash1, exhash2);
+	    std::pair<exhash, exhash> exh2 = std::pair<exhash, exhash>(exhash2, exhash1);
+	    if (sourcev->find(exh1) != sourcev->end() || sourcev->find(exh2) != sourcev->end()) {
+	       continue;
+	    }
+         }
+
+         // check resource usage diff
+         range R2 = rit2->second;
+	 range r = combineRange(R1, R2);
+	 int diff = r.second - r.first;
+
+	 //if(diff > epsilon) {
+
+         ref<Expr> h1diffh2 = AndExpr::create(h1, Expr::createIsZero(h2));
+         ref<Expr> h2diffh1 = AndExpr::create(h2, Expr::createIsZero(h1));
+         // check if HC's differ on some assignmen
+         if (isTrue(h1diffh2,ex) || isTrue(h2diffh1,ex)) {
+	    ref<Expr> l2 = hclc2.second;
+	    ref<Expr> eval = AndExpr::create(l1, l2);
+            // check is LC's agree on some assignment
+	    if (isTrue(eval, ex)) {
+               assert(rd->bbm.find(*rvit2) != rd->bbm.end() && "basic block cov not recorded\n");
+               BBset bs1 = rd->bbm[*rvit];
+               BBset bs2 = rd->bbm[*rvit2];
+               BBset ds1, ds2;
+               set_difference(bs1.begin(), bs1.end(), bs2.begin(), bs2.end(), inserter(ds1, ds1.end()));  
+               set_difference(bs2.begin(), bs2.end(), bs1.begin(), bs1.end(), inserter(ds2, ds2.end()));  
+               if (ds1.size() > 0 || ds2.size() > 0) {
+                  bool lf1 = checkCacheLeakage(ds1, bs2, rd, ex);
+                  bool lf2 = checkCacheLeakage(ds2, bs1, rd, ex);
+               }
+                                   
+               if (diff > epsilon) {
+		  vc++;
+		  llvm::errs() << "\n===============\nFound Violation at : ";
+		  llvm::errs() << "\ndiff : " << diff << "\n";
+		  Instruction * inst = rd->i;
+		  const InstructionInfo &ii = ex->kmodule->infos->getInfo(inst);
+                  llvm::errs() << "Instruction:\n";
+                  llvm::errs() << (*inst) << "\n";
+		  printInfo(ii);
+		  vil->push_back(inst);
+		  if (sourcecheck) updatesource(exhash1, exhash2, rd);
+		     llvm::errs() << "\n[ "; h1->dump(); l1->dump(); llvm::errs() << " ] ";
+		     llvm::errs() << "  ---->  [ " << R1.first << " , " << R1.second << " ]\n";
+		     llvm::errs() << "\n[ "; h2->dump(); l2->dump(); llvm::errs() << " ] ";
+		     llvm::errs() << "  ---->  [ " << R2.first << " , " << R2.second << " ]\n";
+
+		     std::set<RD*>::iterator ssit = rd->succ->begin();
+		     llvm::errs() << "\nSuccessors : \n";
+		     for (; ssit!=rd->succ->end(); ++ssit) {
+		         llvm::Instruction* inst1 = (*ssit)->i;
+			 const InstructionInfo &ii1 = ex->kmodule->infos->getInfo(inst1);
+			 printInfo(ii1);
+			 inst1->dump();
+			 std::string n = inst1->getParent()->getParent()->getName();
+			 llvm::errs() << "\n" << n << "\n";
+		     }
+		     llvm::errs() << "\nPredecessor : \n";
+		     bool haspred = rd->HAset;
+		     RD* rdi = rd;
+		     if (haspred) {
+			rdi = rd->HA;
+		        haspred = rdi->HAset;
+			if(rdi == rd) break;
+			const InstructionInfo &ii1 = ex->kmodule->infos->getInfo(rdi->i);
+			printInfo(ii1);
+		     }
+		     llvm::errs() << "\n===============\n";
+                  }
+	       }
+	    }
+	  }
 	}
-
-	//for(RU::iterator rit = rd->Ru->begin(); rit != rd->Ru->end(); ++rit) {
-	for(std::vector<exhash>::iterator rvit = ruvec.begin(); rvit != ruvec.end(); ++rvit) {
-		RU::iterator rit = rd->Ru->find(*rvit);
-		if(rd->HE->find(rit->first) == rd->HE->end()) {
-			llvm::errs() << "ERROR : HCLC not found in " << rd->stateid << "\n";
-			assert(0);
-			exit(0);
-		}
-		HCLC hclc = rd->HE->find(rit->first)->second;
-		exhash exhash1 = rd->HE->find(rit->first)->first;
-		ref<Expr> h1 = hclc.first;
-		ref<Expr> l1 = hclc.second;
-		range R1 = rit->second;
-
-		/* Return value check */
-                /*
-		bool checkret = (rd->lrets->find(rit->first) != rd->lrets->end());
-		ref<Expr> rv1 = klee::ConstantExpr::create(true, 1);
-		if(checkret) {
-			rv1 = rd->lrets->find(rit->first)->second;
-		}*/
-		/* Return value check end */
-
-		//llvm::errs() << "\n[ "; h1->dump(); l1->dump(); llvm::errs() << " ] ";
-		//llvm::errs() << "  ---->  [ " << R1.first << " , " << R1.second << " ]\n";
-		//std::set<exhash> * done = new std::set<exhash>();
-		//for(RU::iterator rit2 = rd->Ru->begin(); rit2 != rd->Ru->end(); ++rit2) {
-		std::vector<exhash>::iterator rvit2 = rvit;
-		++rvit2;
-		for(; rvit2 != ruvec.end(); ++rvit2) {
-			RU::iterator rit2 = rd->Ru->find(*rvit2);
-			if(rd->HE->find(rit2->first) == rd->HE->end()) {
-				llvm::errs() << "ERROR : HCLC not found in " << rd->stateid << "\n";
-				assert(0);
-				exit(0);
-			}
-			HCLC hclc2 = rd->HE->find(rit2->first)->second;
-			exhash exhash2 = rd->HE->find(rit2->first)->first;
-			ref<Expr> h2 = hclc2.first;
-
-			//llvm::errs() << "\nh1 : "; h1->dump();
-			//llvm::errs() << "\nh2 : "; (*h2).dump();
-
-			//Source check
-			bool sourcecheck = true;
-			if(sourcecheck) {
-				std::pair<exhash, exhash> exh1 = std::pair<exhash, exhash>(exhash1, exhash2);
-				std::pair<exhash, exhash> exh2 = std::pair<exhash, exhash>(exhash2, exhash1);
-				if (sourcev->find(exh1) != sourcev->end() || sourcev->find(exh2) != sourcev->end()) {
-					continue;
-				}
-			}
-
-                        // check resource usage diff
-			range R2 = rit2->second;
-			range r = combineRange(R1, R2);
-			int diff = r.second - r.first;
-			if(diff > epsilon) {
-
-                           ref<Expr> h1diffh2 = AndExpr::create(h1, Expr::createIsZero(h2));
-                           ref<Expr> h2diffh1 = AndExpr::create(h2, Expr::createIsZero(h1));
-                           // check if HC's differ on some assignment
-			   if(isTrue(h1diffh2,ex) || isTrue(h2diffh1,ex)) {
-				/* Return value check */
-                                /*
-				bool checkret2 = (rd->lrets->find(rit2->first) != rd->lrets->end());
-				//llvm::errs() << "\ncheckret2 : " << checkret2 << "\n";
-				//llvm::errs() << "lrets size = " << " : " << rd->lrets->size() << "\n";
-				ref<Expr> rv2 = klee::ConstantExpr::create(true, 1);
-
-				if(checkret & checkret2) {
-					rv2 = rd->lrets->find(rit2->first)->second;
-					//llvm::errs() << "\nrv1 : "; rv1->dump();
-					//llvm::errs() << "\nrv2 : "; rv2->dump();
-					ref<Expr> eval = EqExpr::create(rv1, rv2);
-					//llvm::errs() << "\neval : \n"; eval->dump();
-					bool commonsolutionavailable = isTrue(eval, ex);
-					//exit(0);
-					if(!commonsolutionavailable) {
-						continue;
-					}
-				}*/
-				/* Return value check */
-
-				ref<Expr> l2 = hclc2.second;
-				ref<Expr> eval = AndExpr::create(l1, l2);
-				//llvm::errs() << "\neval : "; eval->dump();
-                                // check is LC's agree on some assignment
-				if(isTrue(eval, ex)) {
-						vc++;
-						llvm::errs() << "\n===============\nFound Violation at : ";
-						llvm::errs() << "\ndiff : " << diff << "\n";
-						/*
-						llvm::errs() << "\nh1: \n"; h1->dump();
-						llvm::errs() << "\nval1: \n"; rv1->dump();
-						llvm::errs() << "\nh2: \n"; h2->dump();
-						llvm::errs() << "\nval2: \n"; rv2->dump();
-						*/
-
-						//exit(0);
-						//rd->i->getParent()->dump();
-						//Instruction * inst = (*(rd->succ->begin()))->i;
-						Instruction * inst = rd->i;
-						const InstructionInfo &ii = ex->kmodule->infos->getInfo(inst);
-                                                llvm::errs() << "Instruction:\n";
-                                                llvm::errs() << (*inst) << "\n";
-						//inst->getParent()->dump();
-						printInfo(ii);
-						vil->push_back(inst);
-						if(sourcecheck) updatesource(exhash1, exhash2, rd);
-						//llvm::errs() << "\nIn Function : " << rd->i->getParent()->getParent()->getName();
-						//printResourceUsage(rd);
-						llvm::errs() << "\n[ "; h1->dump(); l1->dump(); llvm::errs() << " ] ";
-						llvm::errs() << "  ---->  [ " << R1.first << " , " << R1.second << " ]\n";
-						llvm::errs() << "\n[ "; h2->dump(); l2->dump(); llvm::errs() << " ] ";
-						llvm::errs() << "  ---->  [ " << R2.first << " , " << R2.second << " ]\n";
-
-						std::set<RD*>::iterator ssit = rd->succ->begin();
-						llvm::errs() << "\nSuccessors : \n";
-						for(; ssit!=rd->succ->end(); ++ssit) {
-							llvm::Instruction* inst1 = (*ssit)->i;
-							const InstructionInfo &ii1 = ex->kmodule->infos->getInfo(inst1);
-							printInfo(ii1);
-							inst1->dump();
-							std::string n = inst1->getParent()->getParent()->getName();
-							llvm::errs() << "\n" << n << "\n";
-						}
-						llvm::errs() << "\nPredecessor : \n";
-						bool haspred = rd->HAset;
-						RD* rdi = rd;
-						if(haspred) {
-							rdi = rd->HA;
-							haspred = rdi->HAset;
-							if(rdi == rd) break;
-							const InstructionInfo &ii1 = ex->kmodule->infos->getInfo(rdi->i);
-							printInfo(ii1);
-						}
-						llvm::errs() << "\n===============\n";
-						//exit(0);
-					}
-				}
-			}
-		}
-	}
-	//llvm::errs() << "\n : Printing RU end : \n";
 }
 
 void checkLeakage(RD* rd, Executor* ex) {
@@ -433,6 +414,13 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 	for(std::set<RD*>::iterator srit = rd->succ->begin();
 			srit != rd->succ->end(); ++srit) {
 			rd->finalized++; // TDOD: keep a lookout for this if multi-threaded
+                        llvm::errs() << (*srit)->stateid << "->" << rd->stateid << "\n";
+                        llvm::errs() << (*srit)->stateid << "isHBr? " << (*srit)->isHBr << "\n";
+                        BBset bs = (*srit)->bbs;
+                        for(auto bsi : bs) {
+                           BasicBlock *bb = (BasicBlock*)(bsi);
+                           llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
+                        }
 			propagate(*srit, ni, ex);
 	}
 
@@ -456,6 +444,10 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 		if(a->Ru->find(eh) != a->Ru->end()) {
 			R = a->Ru->find(eh)->second;
 		}
+                BBset bbs;
+                if (a->bbm.find(eh) != a->bbm.end())
+                   bbs = a->bbm[eh];
+
 		if(!rd->isHBr) {
 			range rr = combineRange(R, range(rd->ru, rd->ru));
 			a->Ru->insert(std::pair<exhash, range>(eh, rr));
@@ -466,6 +458,9 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 			for(HashRet::iterator hit = rd->lrets->begin(); hit != rd->lrets->end(); ++hit) {
 				a->lrets->insert(std::pair<exhash, ref<Expr> >(hit->first, hit->second));
 			}
+                        for(auto bsi : rd->bbs)
+                           bbs.insert(bsi);
+                        a->bbm[eh] = bbs;
 		}
 		else {
 			RU::iterator rit = rd->Ru->begin();
@@ -487,6 +482,10 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 				range rr = combineRange(R, Rs);
 				a->Ru->insert(std::pair<exhash, range>(eh2, rr));
 				a->HE->insert(std::pair<exhash, HCLC>(eh2, HCLC(HC, LC)));
+                                assert(rd->bbm.find(rit->first) != rd->bbm.end() && "Could not find relevant basic block cov info!\n");
+                                for(auto bsi : rd->bbm[rit->first])
+                                   bbs.insert(bsi);
+                                a->bbm.insert(std::pair<exhash, BBset>(eh2,bbs));
 				//if(!rd->isvoid) {
 				//	a->lrets->insert(std::pair<exhash, ref<Expr> >(eh2, rd->retval));
 				//}

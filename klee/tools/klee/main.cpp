@@ -1138,6 +1138,7 @@ static int initEnv(Module *mainModule) {
   if (!mainFn) {
     klee_error("'%s' function not found in module.", EntryPoint.c_str());
   }
+  else llvm::errs() << "entry point = " << entryFunctionName << "\n";
 
   if (mainFn->arg_size() < 2) {
     klee_error("Cannot handle ""--posix-runtime"" when main() has less than two arguments.\n");

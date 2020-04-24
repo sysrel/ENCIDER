@@ -12,13 +12,18 @@
 using namespace llvm;
 using namespace klee;
 
-
+typedef std::set<long> BBset;
 typedef std::pair<ref<Expr>, ref<Expr> > HCLC;
 typedef std::pair<int, int> range;
 typedef std::pair<unsigned, unsigned> exhash;
 typedef std::map<exhash, range> RU;
 typedef std::map<exhash, HCLC> HashExpr;
 typedef std::map<exhash, ref<Expr> > HashRet;
+typedef std::map<exhash, BBset> BS;
+
+// the basic blocks in a do not appear in set b
+// reports cache code leakage, if any
+bool checkCacheLeakage(BBset a, BBset b);
 
 unsigned int getTimingModel(std::string fname);
 
@@ -54,6 +59,8 @@ class RD {
 		bool Ruset = false;
 		HashExpr* HE = new HashExpr();  // Map of hash of expression to expression
 		bool copyRd = false;
+                BBset bbs;
+                BS bbm;
 		//InstructionInfo *info;
 		bool valid = true;
 		ref<Expr> retval; // For leaf nodes
@@ -70,6 +77,8 @@ class RD {
 void printResourceUsage(RD* s);
 
 int updatesource(exhash exhash1, exhash exhash2, RD* rd);
+
+RD* newNode(ExecutionState * s, Instruction *ii);
 
 RD* newNode(ExecutionState * s);
 
