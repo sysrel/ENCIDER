@@ -172,6 +172,9 @@ extern unsigned loopBound;
 extern std::set<std::string> loopBoundExceptions;
 extern std::map<std::string, std::map<unsigned, 
          std::pair<unsigned, unsigned> > > dataConstraintMap;
+extern std::map<unsigned, std::string> binaryMetadata;
+extern std::map<std::string, std::map<std::string, std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* >* >* > binaryAddresses;
 
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
@@ -517,6 +520,9 @@ namespace {
 
   cl::opt<std::string>
   TypeBasedDataConstraint("type-based-data-const", cl::desc("Name of the file that stores the struct types and the fields that relate to each other as the first field smaller than equal to the size of the memory region pointed by the second\n"));
+
+  cl::opt<std::string>
+  BinaryMetadata("binary-metadata", cl::desc("The file that includes binary metadata that maps source line info to virtual address ranges\n"));
 
   cl::opt<bool>
   ForceOutput("force-output", cl::desc("Force output generation on termination \n"));
@@ -1674,6 +1680,164 @@ void readTypeBasedDataConstraints(const char *name) {
   }
 }
 
+bool lookupAddressRangeNoFile(std::string func, unsigned line, 
+            std::set<std::pair<unsigned int, unsigned int> > *&p) {
+    for(auto bae : binaryAddresses) {
+       for(auto fe : (*bae.second)) {
+          if (fe.first == func) {
+             for(auto le : (*fe.second)) {
+                if (le.first == line) {
+                   p = le.second;
+                   return true;
+                }
+             }
+          }
+       }
+    }
+    return false;
+}
+
+bool lookupAddressRange(std::string file, std::string func, unsigned line, 
+            std::set<std::pair<unsigned int, unsigned int> > *&p) {
+     if (binaryAddresses.find(file) == binaryAddresses.end())
+        return false;
+     
+     std::map<std::string, std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* >* > *m1 = binaryAddresses[file];
+
+     if ((*m1).find(func) == (*m1).end())
+        return false;
+
+     std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* > *m2 = (*m1)[func];
+
+     if ((*m2).find(line) == (*m2).end())
+        return false;
+
+     p = (*m2)[line];
+     return true;
+}
+
+void recordBinaryMetadata(unsigned id1, unsigned id2, unsigned line, 
+         std::set<std::pair<unsigned int, unsigned int> > &s) {
+   
+   std::map<std::string, std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* >* > *m1 = NULL;
+
+   std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* > *m2 = NULL;
+
+   std::set<std::pair<unsigned int, unsigned int> > *so = NULL;
+   
+   std::string file, func;
+
+   if (binaryMetadata.find(id1) == binaryMetadata.end())
+      assert(0 && "Undefined binary metadata file index\n");
+   file = binaryMetadata[id1];
+
+   if (binaryAddresses.find(file) != binaryAddresses.end())
+      m1 = binaryAddresses[file];
+   else 
+      binaryAddresses[file] = m1 = new std::map<std::string, std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* >* >();
+   
+   if (binaryMetadata.find(id2) == binaryMetadata.end())
+      assert(0 && "Undefined binary metadata function index\n");
+
+   func = binaryMetadata[id2];
+
+   if (m1->find(func) != m1->end())
+      m2 = (*m1)[func];
+   else 
+      (*m1)[func] = m2 = new std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* >();
+
+   if (m2->find(line) != m2->end())
+      so = (*m2)[line];
+   else 
+      (*m2)[line] = so = new std::set<std::pair<unsigned int, unsigned int> >(); 
+   
+   for(auto si : s) 
+      so->insert(si);
+}
+
+void readBinaryMetadata(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string line;
+     std::string fptoken = "id,string";
+     std::string sptoken = "file_id,function_id,line,addresses";
+     while (std::getline(cf,line)) {
+         std::string tline = ltrim(rtrim(line));
+         if (tline.find(sptoken) != std::string::npos)
+            break;   
+         else if (tline.find(fptoken) != std::string::npos)
+            continue;
+         else if (tline.find("####") != std::string::npos)
+            continue;
+         else {
+            std::istringstream iss(tline);
+            std::string token;
+            unsigned id;
+            getline(iss, token, ',');
+            token = ltrim(rtrim(token));
+            id = std::stoi(token);
+            getline(iss, token, ',');
+            token = ltrim(rtrim(token));
+            unsigned pos = token.find_last_of("/");
+            if (pos != std::string::npos)
+               token = token.substr(pos+1);
+            assert(binaryMetadata.find(id) == binaryMetadata.end() && "Reusing any for binary metadata");
+            binaryMetadata[id] = token;
+         }
+     }
+     while (std::getline(cf,line)) {
+           std::string tline = ltrim(rtrim(line));
+           std::istringstream iss(tline);
+           std::string token, token2, token3;
+           unsigned id1, id2, line, first, second;
+           getline(iss, token, ',');
+           token = ltrim(rtrim(token));
+           id1 = std::stoi(token);
+           getline(iss, token, ',');
+           token = ltrim(rtrim(token));
+           id2 = std::stoi(token);
+           getline(iss, token, ',');
+           token = ltrim(rtrim(token));
+           line = std::stoi(token);
+           getline(iss, token, ',');
+           token = ltrim(rtrim(token));
+           //llvm::errs() << token << "\n";
+           assert(token.find("-") != std::string::npos && "format issue in address range"); 
+           std::istringstream iss2(token);
+           std::set<std::pair<unsigned int, unsigned int> > s;
+           while (getline(iss2, token2, '_')) {
+               std::istringstream iss3(token2);
+               getline(iss3, token3, '-');
+               token3 = ltrim(rtrim(token3));
+               std::stringstream ssmin;
+               ssmin << std::hex << token3;
+               ssmin >> first;
+               getline(iss3, token3, '-');
+               token3 = ltrim(rtrim(token3));
+               std::stringstream ssmax;
+               ssmax << std::hex << token3;
+               ssmax >> second; 
+               s.insert(std::make_pair(first,second));
+           }
+           llvm::errs() << "recording binary metadata " << 
+                id1 << "," << id2 << "," << line << "," ;
+           for(auto si : s)
+              llvm::errs() << si.first << "-" << si.second << " ";
+           llvm::errs() << "\n"; 
+           recordBinaryMetadata(id1, id2, line, s);           
+     }
+     cf.close();
+  }
+   
+}
+
+
 void readLazySingles(const char *name) {
   std::fstream cf(name, std::fstream::in);
   if (cf.is_open()) {
@@ -2570,6 +2734,10 @@ int main(int argc, char **argv, char **envp) {
 
   if (TypeBasedDataConstraint != "") {
      readTypeBasedDataConstraints(TypeBasedDataConstraint.c_str());
+  }
+
+  if (BinaryMetadata != "") {
+     readBinaryMetadata(BinaryMetadata.c_str());
   }
 
   if (ForceOutput) 

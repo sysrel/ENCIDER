@@ -4,7 +4,10 @@
 #include "ResourceUsage.h"
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "TimingSolver.h"
+#include "klee/Expr.h"
 #include "klee/util/ExprPPrinter.h"
+#include "llvm/IR/DebugLoc.h"
+#include "llvm/IR/DebugInfoMetadata.h"
 #include <fstream>
 #define ICost 1
 #define epsilon 0
@@ -35,7 +38,108 @@ std::map<std::string, std::set<int> > dynamicLowLoc;
 
 std::map<std::string, unsigned int> timingModels;
 
-bool checkCacheLeakage(BBset a, BBset b, RD* rd, Executor* ex) {
+std::map<unsigned, std::string> binaryMetadata;
+std::map<std::string, std::map<std::string, std::map<unsigned, 
+        std::set<std::pair<unsigned int, unsigned int> >* >* >* > binaryAddresses;
+std::set<std::pair<std::string, int>> codeCachelocs;
+
+extern unsigned long cacheLineBits;
+extern bool cacheLineMode;
+extern bool cacheBitmaskMode;
+extern unsigned int cacheBitmask;
+
+extern bool lookupAddressRange(std::string file, std::string func, unsigned line, 
+            std::set<std::pair<unsigned int, unsigned int> > *&p);
+
+extern bool lookupAddressRangeNoFile(std::string func, unsigned line, 
+            std::set<std::pair<unsigned int, unsigned int> > *&p);
+
+
+/* 
+   s1 represents the addresses in the difference and 
+   s2 represents the addresses in one of the paths 
+*/
+void checkCodeCacheSideChannel(Executor* ex, RD* rd, 
+       std::set<std::pair<unsigned int, unsigned int> > &s1, 
+         std::set<std::pair<unsigned int, unsigned int> > &s2) {
+
+
+       std::set<unsigned int> s1C, s2C;
+       
+       for(auto s2i: s2) { 
+          for(unsigned i=s2i.first; i <= s2i.second; i++) {
+             if (cacheLineMode) 
+                s2C.insert(i >> cacheLineBits);
+             else if (cacheBitmaskMode)
+                s2C.insert(i & cacheBitmask);    
+          }
+       }
+
+       std::set<unsigned int> codeCacheLines;
+       for(auto s1i : s1) {
+          for(unsigned i=s1i.first; i <= s1i.second; i++) {
+              if (cacheLineMode) {
+                 int j = i >> cacheLineBits;
+                 if  (s2C.find(j) == s2C.end())
+                     codeCacheLines.insert(i); 
+              }
+              else if (cacheBitmaskMode) {
+                 int j = i & cacheBitmask;
+                 if (s2C.find(j) == s2C.end())
+                    codeCacheLines.insert(i);  
+              }
+          }
+       }
+  
+       if (codeCacheLines.size() > 0) {
+          std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
+          llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
+          for(auto cc : codeCacheLines) {
+             std::stringstream ss;
+             ss << std::hex << cc << "\n";
+             llvm::errs() << ss.str();
+          }
+          rd->i->print(llvm::errs());
+          const InstructionInfo &ii = ex->kmodule->infos->getInfo(rd->i);
+          std::pair<std::string, int> p = std::pair<std::string, int>(ii.file, ii.line);
+          codeCachelocs.insert(p);
+       } 
+}
+
+void findSourceLocInfos(BasicBlock &bb, 
+           std::set<std::pair<unsigned int, unsigned int> > &pset) {
+   for(BasicBlock::iterator it = bb.begin(); it != bb.end(); it++) {
+      if (MDNode *N = it->getMetadata("dbg")) {
+         DILocation *Loc = cast<DILocation>(N);
+         std::string file = Loc->getFilename();
+         unsigned pos = file.find_last_of("/");
+         if (pos != std::string::npos)
+            file = file.substr(pos+1);
+         unsigned line = Loc->getLine();
+         std::string func = bb.getParent()->getName();
+         std::set<std::pair<unsigned int, unsigned int> > *p;
+         //llvm::errs() << file << "," << func << "," << line << " maps to? ";
+         //if (lookupAddressRange(file, func, line, p)) {
+         if (lookupAddressRangeNoFile(func, line, p)) {
+            for(auto pi : *p) {
+               pset.insert(pi);
+               //llvm::errs() << pi.first << "-" << pi.second;
+            }
+         }
+         //else llvm::errs() << "no match!";
+      }
+   }
+}
+
+void findVirtualAddresses(BBset &a,  
+         std::set<std::pair<unsigned int, unsigned int> > &aset) {
+     for(auto ab : a) {
+        BasicBlock *bb = (BasicBlock*)ab;
+        findSourceLocInfos(*bb, aset);
+     }
+}
+
+bool checkCacheLeakage(Executor *ex, RD* rd, BBset a, BBset b) {
 
   if (a.size() > 0) {
      llvm::errs() << "CACHE CODE BB diff: " << a.size() << "\n";
@@ -52,6 +156,11 @@ bool checkCacheLeakage(BBset a, BBset b, RD* rd, Executor* ex) {
      llvm::errs() << "Instruction:\n";
      llvm::errs() << "rd=" << rd->stateid << " " << (*rd->i) << "\n";
      printInfo(ii);
+
+     std::set<std::pair<unsigned int, unsigned int> > aset, bset;
+     findVirtualAddresses(a, aset);
+     findVirtualAddresses(b, bset);
+     checkCodeCacheSideChannel(ex, rd, aset, bset);
 
      return true;
   }
@@ -351,8 +460,8 @@ void printLeakage(RD* rd, Executor* ex) {
                set_difference(bs1.begin(), bs1.end(), bs2.begin(), bs2.end(), inserter(ds1, ds1.end()));  
                set_difference(bs2.begin(), bs2.end(), bs1.begin(), bs1.end(), inserter(ds2, ds2.end()));  
                if (ds1.size() > 0 || ds2.size() > 0) {
-                  bool lf1 = checkCacheLeakage(ds1, bs2, rd, ex);
-                  bool lf2 = checkCacheLeakage(ds2, bs1, rd, ex);
+                  bool lf1 = checkCacheLeakage(ex, rd, ds1, bs2);
+                  bool lf2 = checkCacheLeakage(ex, rd, ds2, bs1);
                }
                                    
                if (diff > epsilon) {

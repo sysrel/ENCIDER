@@ -123,6 +123,7 @@ std::map<std::string, unsigned int> externalFuncs;
 std::map<std::string, std::set<unsigned int> > externalFuncsSig;
 std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 extern std::set<std::pair<std::string, int>> cachelocs;
+extern std::set<std::pair<std::string, int>> codeCachelocs;
 extern unsigned long cacheLineBits;
 extern bool cacheLineMode;
 extern bool cacheBitmaskMode;
