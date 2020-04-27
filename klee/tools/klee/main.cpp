@@ -176,6 +176,7 @@ extern std::map<unsigned, std::string> binaryMetadata;
 extern std::map<std::string, std::map<std::string, std::map<unsigned, 
         std::set<std::pair<unsigned int, unsigned int> >* >* >* > binaryAddresses;
 
+extern std::set<std::pair<std::string, int>> codecachelocs;
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -224,6 +225,17 @@ void writeCacheSideChannels(const char *fname) {
   }
 }
 
+
+void writeCodeCacheSideChannels(const char *fname) {
+
+  std::fstream rc(fname, std::fstream::out);
+  if (rc.is_open()) {
+     for(auto s: codecachelocs) {
+        rc << s.first << "\nline=" << s.second << "\n\n";
+     }
+     rc.close();
+  }  
+}
 
 void writeSensitiveLeaksOnStack(const char *fname) {
   std::fstream rc(fname, std::fstream::out);
@@ -2967,6 +2979,7 @@ int main(int argc, char **argv, char **envp) {
   writeSensitiveLeaksOnStack("sensitiveLeaksOnStack.txt");
   writeSecuritySenstiveBranches("securitySensitiveBranches.txt");
   writeCacheSideChannels("cacheSideChannels.txt");
+  writeCodeCacheSideChannels("codeCacheSideChannels.txt");
 
   delete handler;
 
