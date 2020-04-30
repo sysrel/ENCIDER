@@ -10,6 +10,7 @@
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/CFG.h"
 #include <fstream>
+#include <iomanip>      
 #define ICost 1
 #define epsilon 0
 
@@ -67,12 +68,22 @@ extern bool lookupAddressRangeNoFile(std::string func, unsigned line,
             std::set<std::pair<unsigned int, unsigned int> > *&p);
 
 
+bool sameBB(BasicBlock *bb1, BasicBlock *bb2) {
+     Instruction &inst1 = (*(bb1->begin())); 
+     Instruction &inst2 = (*(bb2->begin()));      
+     return inst1.isIdenticalTo(&inst2);
+}
 
 void findPeerBBs(BasicBlock *tb, BBset &result) {
+     llvm::errs() << "finding peers of " << (*(tb->begin())) << "\n";
      for(BasicBlock *bbi : llvm::predecessors(tb)) {
         for(BasicBlock *pc : llvm::successors(bbi)) {
-           if (pc != tb)
+           if (!sameBB(pc,tb)) {
+              llvm::errs() << "different blocks:\n";
+              llvm::errs() << "1st inst in bb (" << pc << ") " << (*(pc->begin())) << "\n";
+              llvm::errs() << "1st inst in bb (" << tb << ") " << (*(tb->begin())) << "\n";
               result.insert((long)pc);
+           }
         }
      }
 }
@@ -100,18 +111,102 @@ void findBBAtDistance(Instruction *inst, unsigned int dist, BBset &result) {
 
 /* 
    s1 represents the addresses in the difference and 
-   s2 represents the addresses in one of the paths 
+   s2 represents the addresses in the other path 
 */
-void checkCodeCacheSideChannel(Executor* ex, RD* rd, 
+bool checkCodeCacheSideChannel(Executor* ex, RD* rd, 
        std::set<std::pair<unsigned int, unsigned int> > &s1, 
-         std::set<std::pair<unsigned int, unsigned int> > &s2) {
+         std::set<std::pair<unsigned int, unsigned int> > &s2, 
+           std::pair<std::string, int> &p, double &accuracy) {
+
+     if (s1.size() == 0 || s2.size() == 0) {
+        llvm::errs() << "diff addresses " << s1.size() << 
+                        " sibling addresses " << s2.size() << 
+                        " for branch " << (*rd->i) << "\n"; 
+        return false;
+     }
+
+
+     std::stringstream ss;
+
+     bool found = false;
+     unsigned num_total_regions, num_missing_regions;
+     num_total_regions = s1.size()*s2.size();
+     num_missing_regions = 0;
+     for(auto s1i : s1) {
+        std::set<unsigned int> s1C, s2C;        
+        for(auto s2i : s2) {
+          for(unsigned i=s2i.first; i <= s2i.second; i++) {
+             if (cacheLineMode) {
+                s2C.insert(i >> cacheLineBits);
+                llvm::errs() << "other branch cache line " << (i >> cacheLineBits) << "\n";         
+
+             }
+             else if (cacheBitmaskMode) {
+                s2C.insert(i & cacheBitmask);    
+                llvm::errs() << "other branch cache bitmask res " << (i & cacheBitmask) << "\n";
+             }
+          }
+        }
+
+        std::set<unsigned int> codeCacheLines, missingCL;
+        for(unsigned i=s1i.first; i <= s1i.second; i++) {              
+              if (cacheLineMode) {
+                 int j = i >> cacheLineBits;
+                 if  (s2C.find(j) == s2C.end()) {
+                     codeCacheLines.insert(i); 
+                     missingCL.insert(j);
+                     llvm::errs() << "missing branch cache line " << j << "\n";    
+                 }
+              }
+              else if (cacheBitmaskMode) {
+                 int j = i & cacheBitmask;
+                 if (s2C.find(j) == s2C.end())
+                    codeCacheLines.insert(i);
+                    missingCL.insert(j); 
+                    llvm::errs() << "missing branch cache bitmask " << j << "\n";    
+              }
+       }
+
+       if (codeCacheLines.size() > 0) {
+          num_missing_regions++;
+          found = true;
+          ss << "\n" << "missing addresses";
+          for(auto cc : codeCacheLines) {
+             ss << "\n" << std::hex << cc;
+          }
+          ss << "\n" << "missing cache lines";
+          for(auto cl : missingCL) {
+            ss << "\n" << cl;
+          }
+          ss << "\n" << "missing CL= " << missingCL.size();          
+       }
+
+     }
+
+     double ratio = ((double)100*num_missing_regions)/(num_total_regions);
+     ss << "\n" << "missing =" << num_missing_regions << " total=" << num_total_regions << 
+           "\n" << "accuracy=%" << ratio ;
+     accuracy = ratio;
+     p.first = p.first + "\n" + ss.str();
+
+     return found;
+}
+
+/*
+bool checkCodeCacheSideChannel1(Executor* ex, RD* rd, 
+       std::set<std::pair<unsigned int, unsigned int> > &s1, 
+         std::set<std::pair<unsigned int, unsigned int> > &s2, 
+           std::pair<std::string, int> &p) {
 
        llvm::errs() << "Virtual address matching begins\n";
 
        std::set<unsigned int> s1C, s2C;
-       
+       unsigned total = 0;
+
        for(auto s2i: s2) { 
+
           for(unsigned i=s2i.first; i <= s2i.second; i++) {
+             compared++;
              llvm::errs() << "other branch address " << i << "\n";
              if (cacheLineMode) {
                 s2C.insert(i >> cacheLineBits);
@@ -124,40 +219,52 @@ void checkCodeCacheSideChannel(Executor* ex, RD* rd,
           }
        }
 
-       std::set<unsigned int> codeCacheLines;
+       if (compared == 0) return false;
+
+       std::set<unsigned int> codeCacheLines, missingCL;
+       unsigned int total, missing, checked_regions;
+       total = missing = checked_regions = 0;
        for(auto s1i : s1) {
+          checked_regions++;
           for(unsigned i=s1i.first; i <= s1i.second; i++) {
+              total++;
               if (cacheLineMode) {
                  int j = i >> cacheLineBits;
                  if  (s2C.find(j) == s2C.end()) {
                      codeCacheLines.insert(i); 
+                     missingCL.insert(j);
+                     missing++;
                      llvm::errs() << "missing branch cache line " << j << "\n";    
                  }
               }
               else if (cacheBitmaskMode) {
                  int j = i & cacheBitmask;
                  if (s2C.find(j) == s2C.end())
-                    codeCacheLines.insert(i);  
+                    codeCacheLines.insert(i);
+                    missingCL.insert(j); 
+                    missing++; 
                     llvm::errs() << "missing branch cache bitmask " << j << "\n";    
               }
           }
        }
   
        if (codeCacheLines.size() > 0) {
-          std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
-          llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
           std::stringstream ss;
-          rd->i->print(llvm::errs());
+          double ratio = ((double)100*missing)/total;
+          ss <<"\n" << "#checked regions=" << checked_regions << 
+               "\n" << "#compared regions=" << compared_regions << 
+               "\n" << "missing CL= " << missingCL.size() << 
+               "\n" << "missing ADDR=" << missing << " total=" << total << 
+               "\n" << "size of compared=" << compared << "\n" << ratio ;
           for(auto cc : codeCacheLines) {
              ss << "\n" << std::hex << cc;
           }
-          llvm::errs() << ss.str() << "\n";
-          const InstructionInfo &ii = ex->kmodule->infos->getInfo(rd->i);
-          std::string desc = ii.file + "\n" + ss.str() + "\n";
-          std::pair<std::string, int> p = std::pair<std::string, int>(desc, ii.line);
-          codecachelocs.insert(p);
+          p.first = p.first + "\n" + ss.str();
+          return true;
        } 
+       return false;
 }
+*/
 
 void findSourceLocInfos(BasicBlock &bb, 
            std::set<std::pair<unsigned int, unsigned int> > &pset) {
@@ -184,6 +291,11 @@ void findSourceLocInfos(BasicBlock &bb,
    }
 }
 
+void findVirtualAddresses(BasicBlock *bb,  
+         std::set<std::pair<unsigned int, unsigned int> > &aset) {
+     findSourceLocInfos(*bb, aset);
+}
+
 void findVirtualAddresses(BBset &a,  
          std::set<std::pair<unsigned int, unsigned int> > &aset) {
      for(auto ab : a) {
@@ -192,48 +304,88 @@ void findVirtualAddresses(BBset &a,
      }
 }
 
-bool checkCacheLeakage(Executor *ex, RD* rd, BBset a, BBset b) {
 
-  if (a.size() > 0) {
-     llvm::errs() << "CACHE CODE BB diff: " << a.size() << "\n";
-     for(auto ai : a) {
+
+bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
+
+  if (diff.size() > 0) {
+     llvm::errs() << "CACHE CODE BB diff: " << diff.size() << "\n";
+     for(auto ai : diff) {
         llvm::BasicBlock *bb = (BasicBlock*)ai;
         llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
      }
      llvm::errs() << " other set of BBs:\n";
      for(auto bi : b) {
         llvm::BasicBlock *bb = (BasicBlock*)bi;
-        llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
+        llvm::errs() << "1st inst in bb (" << bb << ") " << &(*(bb->begin())) << " " << (*(bb->begin())) << "\n";
      }     
      const InstructionInfo &ii = ex->kmodule->infos->getInfo(rd->i);
      llvm::errs() << "Instruction:\n";
      llvm::errs() << "rd=" << rd->stateid << " " << (*rd->i) << "\n";
      printInfo(ii);
-
-     std::set<std::pair<unsigned int, unsigned int> > aset, bset;
-     findVirtualAddresses(a, aset);
-     BBset filter, temp;
-     if (BasicBlockDist || PeerBasicBlocks) {
-        if (PeerBasicBlocks)
-           findPeerBBs(b, filter);
+     std::pair<std::string, int> p;
+     p.first = "CODE BASED CACHE SIDE CHANNEL!\n";
+     std::set<long> diffLeakage;
+     double max_accuracy = 0;
+     bool found = false;
+     for(auto di : diff) {
+        std::set<std::pair<unsigned int, unsigned int> > diffset, aset, bset;
+        findVirtualAddresses((BasicBlock*)di, aset);
+        BBset filter, temp;
+        if (BasicBlockDist || PeerBasicBlocks) {
+           if (PeerBasicBlocks) {
+              findPeerBBs((BasicBlock*)di, filter);
+              assert(filter.size() > 0 && "Could not find peer BB!\n");
+           }
+           else 
+              findBBAtDistance(rd->i, BasicBlockDist, filter);
+           llvm::errs() << "filter set:\n";
+           for(auto bi : filter) {
+              llvm::BasicBlock *bb = (BasicBlock*)bi;
+              llvm::errs() << "1st inst in bb (" << bb << ") " << &(*(bb->begin())) << " " << (*(bb->begin())) << "\n";
+           }
+           for(auto bt : b) {
+              for(auto ft : filter) {
+                 if (sameBB((BasicBlock*)bt,(BasicBlock*)ft))
+                    temp.insert(bt);
+              }
+           } 
+           llvm::errs() << " other set of BBs after filtering:\n";
+           for(auto bi : temp) {
+              llvm::BasicBlock *bb = (BasicBlock*)bi;
+              llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
+           }  
+           findVirtualAddresses(temp, bset);       
+        }
         else 
-           findBBAtDistance(rd->i, BasicBlockDist, filter);
-
-        for(auto bt : b)
-           if (filter.find(bt) != filter.end())
-              temp.insert(bt);
-        llvm::errs() << " other set of BBs after filtering:\n";
-        for(auto bi : temp) {
-           llvm::BasicBlock *bb = (BasicBlock*)bi;
-           llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
-        }  
-        findVirtualAddresses(temp, bset);       
+           findVirtualAddresses(b, bset);
+        double accuracy; 
+        if (checkCodeCacheSideChannel(ex, rd, aset, bset, p, accuracy)) {
+           const InstructionInfo &ii = ex->kmodule->infos->getInfo(&(*((BasicBlock*)di)->begin()));
+           p.first = p.first + "\n1st inst of bb in file " + ii.file + 
+                            " at line " + std::to_string(ii.line) + "\n"; 
+           found = true;
+           diffLeakage.insert(di);
+           if (accuracy > max_accuracy)
+              max_accuracy = accuracy;
+        }
      }
-     else 
-        findVirtualAddresses(b, bset);
-     checkCodeCacheSideChannel(ex, rd, aset, bset);
-
-     return true;
+     if (found) {
+        std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
+        llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
+        rd->i->print(llvm::errs());
+        llvm::errs() << "\nHCdiff : " << f << "\n";
+        std::stringstream ss;
+        ss << "blocks with leakage=" << diffLeakage.size() << "\n";
+        const InstructionInfo &ii = ex->kmodule->infos->getInfo(rd->i);
+        ss << ii.file + "\n";
+        ss << "max accuracy=" << max_accuracy << "\n";
+        p.first = p.first + "\n" + ss.str();
+        p.second = ii.line;
+        codecachelocs.insert(p);
+        llvm::errs() << p.first << "\nLine=" << ii.line << "\n";
+     }
+     return found;
   }
   else {
      llvm::errs() << "No diff for BB!\n";
@@ -530,9 +682,10 @@ void printLeakage(RD* rd, Executor* ex) {
                BBset ds1, ds2;
                set_difference(bs1.begin(), bs1.end(), bs2.begin(), bs2.end(), inserter(ds1, ds1.end()));  
                set_difference(bs2.begin(), bs2.end(), bs1.begin(), bs1.end(), inserter(ds2, ds2.end()));  
+               llvm::errs() << "bbset sizes " << bs1.size() << " and " << bs2.size() << "\n";
                if (ds1.size() > 0 || ds2.size() > 0) {
-                  bool lf1 = checkCacheLeakage(ex, rd, ds1, bs2);
-                  bool lf2 = checkCacheLeakage(ex, rd, ds2, bs1);
+                  bool lf1 = checkCacheLeakage(ex, rd, ds1, bs2, h1diffh2);
+                  bool lf2 = checkCacheLeakage(ex, rd, ds2, bs1, h2diffh1);
                }
                                    
                if (diff > epsilon) {
@@ -594,13 +747,13 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 	for(std::set<RD*>::iterator srit = rd->succ->begin();
 			srit != rd->succ->end(); ++srit) {
 			rd->finalized++; // TDOD: keep a lookout for this if multi-threaded
-                        llvm::errs() << (*srit)->stateid << "->" << rd->stateid << "\n";
-                        llvm::errs() << (*srit)->stateid << "isHBr? " << (*srit)->isHBr << "\n";
-                        BBset bs = (*srit)->bbs;
-                        for(auto bsi : bs) {
-                           BasicBlock *bb = (BasicBlock*)(bsi);
-                           llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
-                        }
+                        //llvm::errs() << (*srit)->stateid << "->" << rd->stateid << "\n";
+                        //llvm::errs() << (*srit)->stateid << "isHBr? " << (*srit)->isHBr << "\n";
+                        //BBset bs = (*srit)->bbs;
+                        //for(auto bsi : bs) {
+                        //   BasicBlock *bb = (BasicBlock*)(bsi);
+                        //   llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
+                        //}
 			propagate(*srit, ni, ex);
 	}
 

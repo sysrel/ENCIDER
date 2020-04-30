@@ -1696,9 +1696,12 @@ bool lookupAddressRangeNoFile(std::string func, unsigned line,
             std::set<std::pair<unsigned int, unsigned int> > *&p) {
     for(auto bae : binaryAddresses) {
        for(auto fe : (*bae.second)) {
+          //llvm::errs() << "looking up for func " << func << "\n"; 
           if (fe.first == func) {
              for(auto le : (*fe.second)) {
+                //llvm::errs() << "looking up for line " << line << "\n";
                 if (le.first == line) {
+                   //llvm::errs() << "found!\n";
                    p = le.second;
                    return true;
                 }
