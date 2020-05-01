@@ -18,6 +18,7 @@ typedef std::pair<int, int> range;
 typedef std::pair<unsigned, unsigned> exhash;
 typedef std::map<exhash, range> RU;
 typedef std::map<exhash, HCLC> HashExpr;
+typedef std::map<exhash, unsigned> HashTerm;
 typedef std::map<exhash, ref<Expr> > HashRet;
 typedef std::map<exhash, BBset> BS;
 
@@ -68,6 +69,7 @@ class RD {
 		// For H-ancestors
 		HashRet* lrets = new HashRet();  // Map of hash of expression to expression. Stores the return values of each path. Since returns are public.
 		bool pathterminated = false; // For leaf nodes keeps track of path termination info.
+                HashTerm terminated; // keep track of number of terminated descendants
                 static int numHAncestors;
                 static int numHLMixedConstraints;
 };

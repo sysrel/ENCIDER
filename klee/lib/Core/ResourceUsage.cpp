@@ -146,10 +146,10 @@ bool checkCodeCacheSideChannel(Executor* ex, RD* rd,
                 llvm::errs() << "other branch cache bitmask res " << (i & cacheBitmask) << "\n";
              }
           }
-        }
+        
 
-        std::set<unsigned int> codeCacheLines, missingCL;
-        for(unsigned i=s1i.first; i <= s1i.second; i++) {              
+          std::set<unsigned int> codeCacheLines, missingCL;
+          for(unsigned i=s1i.first; i <= s1i.second; i++) {              
               if (cacheLineMode) {
                  int j = i >> cacheLineBits;
                  if  (s2C.find(j) == s2C.end()) {
@@ -165,24 +165,24 @@ bool checkCodeCacheSideChannel(Executor* ex, RD* rd,
                     missingCL.insert(j); 
                     llvm::errs() << "missing branch cache bitmask " << j << "\n";    
               }
-       }
-
-       if (codeCacheLines.size() > 0) {
-          num_missing_regions++;
-          found = true;
-          ss << "\n" << "missing addresses";
-          for(auto cc : codeCacheLines) {
-             ss << "\n" << std::hex << cc;
           }
-          ss << "\n" << "missing cache lines";
-          for(auto cl : missingCL) {
-            ss << "\n" << cl;
-          }
-          ss << "\n" << "missing CL= " << missingCL.size();          
-       }
 
+          if (codeCacheLines.size() > 0) {
+             num_missing_regions++;
+             found = true;
+             ss << "\n" << "missing addresses";
+             for(auto cc : codeCacheLines) {
+                ss << "\n" << std::hex << cc;
+             }
+             ss << "\n" << "missing cache lines";
+             for(auto cl : missingCL) {
+                ss << "\n" << cl;
+             }
+             ss << "\n" << "missing CL= " << missingCL.size();          
+          }
+
+       }
      }
-
      double ratio = ((double)100*num_missing_regions)/(num_total_regions);
      ss << "\n" << "missing =" << num_missing_regions << " total=" << num_total_regions << 
            "\n" << "accuracy=%" << ratio ;
@@ -335,7 +335,7 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
         if (BasicBlockDist || PeerBasicBlocks) {
            if (PeerBasicBlocks) {
               findPeerBBs((BasicBlock*)di, filter);
-              assert(filter.size() > 0 && "Could not find peer BB!\n");
+              //assert(filter.size() > 0 && "Could not find peer BB!\n");
            }
            else 
               findBBAtDistance(rd->i, BasicBlockDist, filter);
@@ -360,7 +360,7 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
         else 
            findVirtualAddresses(b, bset);
         double accuracy; 
-        if (checkCodeCacheSideChannel(ex, rd, aset, bset, p, accuracy)) {
+        if (bset.size() > 0  && checkCodeCacheSideChannel(ex, rd, aset, bset, p, accuracy)) {
            const InstructionInfo &ii = ex->kmodule->infos->getInfo(&(*((BasicBlock*)di)->begin()));
            p.first = p.first + "\n1st inst of bb in file " + ii.file + 
                             " at line " + std::to_string(ii.line) + "\n"; 
@@ -630,14 +630,18 @@ bool isTrue(ref<Expr> condition, Executor* ex) {
 void printLeakage(RD* rd, Executor* ex) {
    //llvm::errs() << "\nAt printLeakage: \n";
    //llvm::errs() << "\nPrinting RU : \n";
+
+
    std::vector<exhash> ruvec;
    for(RU::iterator rit = rd->Ru->begin(); rit != rd->Ru->end(); ++rit) {
       ruvec.push_back(rit->first);
    }
 
+
    for(std::vector<exhash>::iterator rvit = ruvec.begin(); rvit != ruvec.end(); ++rvit) {
       RU::iterator rit = rd->Ru->find(*rvit);
       assert(rd->HE->find(rit->first) != rd->HE->end() && "ERROR : HCLC not found in ");
+      unsigned numterm1 = rd->terminated[rit->first];
       HCLC hclc = rd->HE->find(rit->first)->second;
       exhash exhash1 = rd->HE->find(rit->first)->first;
       ref<Expr> h1 = hclc.first;
@@ -646,9 +650,11 @@ void printLeakage(RD* rd, Executor* ex) {
       assert(rd->bbm.find(*rvit) != rd->bbm.end() && "basic block cov not recorded\n");
       std::vector<exhash>::iterator rvit2 = rvit;
       ++rvit2;
+
       for(; rvit2 != ruvec.end(); ++rvit2) {
 	 RU::iterator rit2 = rd->Ru->find(*rvit2);
          assert(rd->HE->find(rit2->first) != rd->HE->end() && "ERROR : HCLC not found in ");
+         unsigned numterm2 = rd->terminated[rit2->first];
 	 HCLC hclc2 = rd->HE->find(rit2->first)->second;
 	 exhash exhash2 = rd->HE->find(rit2->first)->first;
 	 ref<Expr> h2 = hclc2.first;
@@ -674,6 +680,7 @@ void printLeakage(RD* rd, Executor* ex) {
          if (isTrue(h1diffh2,ex) || isTrue(h2diffh1,ex)) {
 	    ref<Expr> l2 = hclc2.second;
 	    ref<Expr> eval = AndExpr::create(l1, l2);
+            llvm::errs() << "difference in HCs\n";
             // check is LC's agree on some assignment
 	    if (isTrue(eval, ex)) {
                assert(rd->bbm.find(*rvit2) != rd->bbm.end() && "basic block cov not recorded\n");
@@ -688,7 +695,7 @@ void printLeakage(RD* rd, Executor* ex) {
                   bool lf2 = checkCacheLeakage(ex, rd, ds2, bs1, h2diffh1);
                }
                                    
-               if (diff > epsilon) {
+               if ((!onlycompletedpaths || (numterm1 > 0 && numterm2 > 0)) && diff > epsilon) {
 		  vc++;
 		  llvm::errs() << "\n===============\nFound Violation at : ";
 		  llvm::errs() << "\ndiff : " << diff << "\n";
@@ -735,10 +742,11 @@ void printLeakage(RD* rd, Executor* ex) {
 void checkLeakage(RD* rd, Executor* ex) {
 	for(std::set<RD*>::iterator srit = rd->succ->begin();
 			srit != rd->succ->end(); ++srit) {
-		checkLeakage(*srit, ex);
+	    checkLeakage(*srit, ex);
 	}
+        //llvm::errs() << "RU size=" << rd->Ru->size()  << " " << (*rd->i) << "\n";
 	if(rd->Ru->size() > 1){
-		printLeakage(rd, ex);
+	   printLeakage(rd, ex);
 	}
 }
 
@@ -761,11 +769,14 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 		return 0; //Only let leaf nodes perform the following operations
 	}
 
-	if(onlycompletedpaths){
-		if(!rd->pathterminated){
-			return 0;
-		}
-	}
+        // we will keep propagating and deal with termination in printLeakage
+	//if(onlycompletedpaths){
+	//	if(!rd->pathterminated){
+	//		return 0;
+	//	}
+	//}
+
+
 	//llvm::errs() << indent << rd->stateid;// << "\n";
 	//if(rd->HAset) {
 	while(rd->HAset) {
@@ -794,6 +805,12 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
                         for(auto bsi : rd->bbs)
                            bbs.insert(bsi);
                         a->bbm[eh] = bbs;
+                        if (rd->pathterminated) {
+                           unsigned numterm = 0;
+                           if (a->terminated.find(eh) != a->terminated.end())
+                              numterm = a->terminated[eh];
+                           a->terminated[eh] = numterm + 1;
+                        }
 		}
 		else {
 			RU::iterator rit = rd->Ru->begin();
@@ -815,6 +832,10 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 				range rr = combineRange(R, Rs);
 				a->Ru->insert(std::pair<exhash, range>(eh2, rr));
 				a->HE->insert(std::pair<exhash, HCLC>(eh2, HCLC(HC, LC)));
+                                unsigned numterm = 0;
+                                if (a->terminated.find(eh2) != a->terminated.end())
+                                   numterm = a->terminated[eh2];
+                                a->terminated[eh2] = numterm + rd->terminated[rit->first];
                                 assert(rd->bbm.find(rit->first) != rd->bbm.end() && "Could not find relevant basic block cov info!\n");
                                 for(auto bsi : rd->bbm[rit->first])
                                    bbs.insert(bsi);

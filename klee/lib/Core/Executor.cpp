@@ -2175,7 +2175,7 @@ void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
      tname = tname.substr(pos);       
      //llvm::errs() << "checking initializers for type " << tname << "!\n";
      if (lazyInitInitializersWValues.find(tname) != lazyInitInitializersWValues.end()) {
-       //llvm::errs() << "initializer found!\n"; 
+       //llvm::errs() << "initializer found! for type " << tname << "\n"; 
         std::map<unsigned int, int> offsets = lazyInitInitializersWValues[tname];
         for(auto offset : offsets) {
            ref<Expr> ve = klee::ConstantExpr::alloc(offset.second, Expr::Int32); 
