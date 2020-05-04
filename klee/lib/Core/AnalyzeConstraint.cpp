@@ -403,7 +403,8 @@ bool exprHasSymRegion(ref<Expr> cexpr, bool high) {
 }
 */
 
-std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, int &numsym, bool concatSeen, bool top, bool high) {
+std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cexpr, region range, 
+      int &numsym, bool concatSeen, bool top, bool high) {
    std::vector<region> rs;
    //llvm::errs() << "extracting region from " << cexpr << "\n";
    switch (cexpr->getKind()) {
@@ -411,6 +412,11 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
           if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), false, high)) 
              numsym++;
+          // also check the index to see if secret dependent
+          int nsi = 0;
+          std::vector<region> ri = extractRegion(state, rexpr->index, range, nsi, false, true, high);
+          if (ri.size() > 0)
+             numsym++;   
           ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
           if (!CE) { // approximating symbolic offset/index based on the possible range!
              rs.push_back(range);

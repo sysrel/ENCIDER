@@ -690,6 +690,16 @@ void printLeakage(RD* rd, Executor* ex) {
                set_difference(bs1.begin(), bs1.end(), bs2.begin(), bs2.end(), inserter(ds1, ds1.end()));  
                set_difference(bs2.begin(), bs2.end(), bs1.begin(), bs1.end(), inserter(ds2, ds2.end()));  
                llvm::errs() << "bbset sizes " << bs1.size() << " and " << bs2.size() << "\n";
+               llvm::errs() << "path1:\n";
+               for(auto bsi : bs1) {
+                  BasicBlock *bb = (BasicBlock*)(bsi);
+                  llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
+               }
+               llvm::errs() << "path2:\n";
+               for(auto bsi : bs2) {
+                  BasicBlock *bb = (BasicBlock*)(bsi);
+                  llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
+               }
                if (ds1.size() > 0 || ds2.size() > 0) {
                   bool lf1 = checkCacheLeakage(ex, rd, ds1, bs2, h1diffh2);
                   bool lf2 = checkCacheLeakage(ex, rd, ds2, bs1, h2diffh1);

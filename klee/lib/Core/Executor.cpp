@@ -5263,6 +5263,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           const InstructionInfo &ii = kmodule->infos->getInfo(ki->inst);
           std::pair<std::string, int> p = std::pair<std::string, int>(ii.file, ii.line);
           cachelocs.insert(p);
+          llvm::errs() << "Stack trace for the code loc " << ii.file << " " << ii.line << "\n";
+          llvm::errs() << getStackTrace(state) << "\n";
+
        }
     }
     #ifdef INFOFLOW
@@ -6256,20 +6259,20 @@ void Executor::run(ExecutionState &initialState) {
              srd->bbs = currentRD->bbs;
 	     if (hasHloc && !hasLloc) {
 	     	ref<Expr> proj = getProjectionOnRegion(state, r1, true);
-                //llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
+                llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
                 // check if the projection is consistent with the path condition
                 bool result;
                 bool success = solver->mayBeTrue(*s, proj, result);
                 assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
                 if (result) {
-                   #ifdef VBSC
-                          std::cerr << "Projection on high\n";
+                   //#ifdef VBSC
+                          std::cerr << "Projection on high consistent with PC\n";
     	                  std::cerr << "\n>>>> Projection : ";
 	                  proj->dump();
-                          const InstructionInfo &ii = kmodule->infos->getInfo(state.prevPC->inst);
-                          state.prevPC->inst->print(llvm::errs());
-                          printInfo(ii);
-                   #endif
+                          //const InstructionInfo &ii = kmodule->infos->getInfo(state.prevPC->inst);
+                          //state.prevPC->inst->print(llvm::errs());
+                          //printInfo(ii);
+                   //#endif
                    //Update currentstate
 		   if (!done) {
 		      rdd->isHBr = true;
@@ -6289,6 +6292,7 @@ void Executor::run(ExecutionState &initialState) {
                       ss << ros.str() ;
                       ss << proj << "\n";
                       securitySensitiveBranches.insert(ss.str());
+                      llvm::errs() << "recorded security sensitive branch " << ss.str() << "\n";
 	           }
 	   	   srd->HA = currentRD;
 		   srd->HAset = true;
