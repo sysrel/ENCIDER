@@ -49,6 +49,10 @@ static void report_internal_error(const char *msg, ...) {
   }
 }
 
+void klee_make_symbolic_and_label(void *array, size_t nbytes, const char *name, const char *label) {
+  klee_make_symbolic(array, nbytes, name);  
+}
+
 void klee_make_symbolic(void *array, size_t nbytes, const char *name) {
   static int rand_init = -1;
 

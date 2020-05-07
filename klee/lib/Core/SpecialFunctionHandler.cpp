@@ -73,6 +73,11 @@ extern std::string getTypeName(llvm::Type*);
 extern bool isLazyInit(Type *t, bool &single, int &count);
 extern bool isAllocTypeLazyInit(Type *t, bool &single, int &count) ;
 
+extern void setHighMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs);
+extern void setHighSymRegion(std::string name, std::vector<region> rs);
+extern void setLowMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> rs);
+extern void setLowSymRegion(std::string name, std::vector<region> rs);
+
 inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
 {
     s.erase(0, s.find_first_not_of(t));
@@ -146,6 +151,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
 #endif
   add("klee_is_symbolic", handleIsSymbolic, true),
   add("klee_make_symbolic", handleMakeSymbolic, false),
+  add("klee_make_symbolic_and_label", handleMakeSymbolicAndLabel, false),
   add("klee_mark_global", handleMarkGlobal, false),
   add("klee_open_merge", handleOpenMerge, false),
   add("klee_close_merge", handleCloseMerge, false),
@@ -811,6 +817,84 @@ void SpecialFunctionHandler::handleDefineFixedObject(ExecutionState &state,
   executor.bindObjectInState(state, mo, false);
   mo->isUserSpecified = true; // XXX hack;
 }
+
+void SpecialFunctionHandler::handleMakeSymbolicAndLabel(ExecutionState &state,
+                                                KInstruction *target,
+                                                std::vector<ref<Expr> > &arguments) {
+
+  std::string name, label;
+
+  // FIXME: For backwards compatibility. We should eventually enforce the
+  // correct arguments and types.
+  switch (arguments.size()) {
+    case 3:
+      klee_warning("klee_make_symbolic: deprecated number of arguments (2 instead of 3)");
+      break;
+    case 4: {
+      name = readStringAtAddress(state, arguments[2]);
+      label = readStringAtAddress(state, arguments[3]);
+      break;
+    }
+    default:
+      executor.terminateStateOnError(state, "illegal number of arguments to klee_make_symbolic_and_label(void*, size_t, char*)", Executor::User);
+      return;
+  }
+  if (name.length() == 0) {
+    name = "unnamed";
+    klee_warning("klee_make_symbolic: renamed empty name to \"unnamed\"");
+  }
+  Executor::ExactResolutionList rl;
+  executor.resolveExact(state, arguments[0], rl, "make_symbolic");
+  
+  for (Executor::ExactResolutionList::iterator it = rl.begin(), 
+         ie = rl.end(); it != ie; ++it) {
+    const MemoryObject *mo = it->first.first;
+    mo->setName(name);
+    
+    const ObjectState *old = it->first.second;
+    ExecutionState *s = it->second;
+
+    if (old->readOnly) {
+      executor.terminateStateOnError(*s, "cannot make readonly object symbolic",
+                                     Executor::User);
+      return;
+    } 
+
+    // FIXME: Type coercion should be done consistently somewhere.
+    bool res;
+    bool success __attribute__ ((unused)) =
+      executor.solver->mustBeTrue(*s, 
+                                  EqExpr::create(ZExtExpr::create(arguments[1],
+                                                                  Context::get().getPointerWidth()),
+                                                 mo->getSizeExpr()),
+                                  res);
+    assert(success && "FIXME: Unhandled solver failure");
+    
+    if (res) {
+      executor.executeMakeSymbolic(*s, mo, name);
+      std::vector<region> rs;
+      region r;
+      r.offset = 0;
+      if (ConstantExpr *CE = dyn_cast<ConstantExpr>(arguments[1])) 
+          r.size = CE->getZExtValue();
+      else assert(0);
+      rs.push_back(r);
+      llvm::errs() << "labeling " << name  << " with " << label <<  "region offset= " << r.offset << " size=" << r.size << "\n";
+      if (label == "high") {
+         setHighMemoryRegion(*s, mo->getBaseExpr(), rs);
+         setHighSymRegion(name, rs);
+      }
+      else if (label == "low") {
+         setLowMemoryRegion(*s, mo->getBaseExpr(), rs);
+         setLowSymRegion(name, rs);
+      }
+    } else {      
+      executor.terminateStateOnError(*s, 
+                                     "wrong size given to klee_make_symbolic[_name]", 
+                                     Executor::User);
+    }
+  }
+}    
 
 void SpecialFunctionHandler::handleMakeSymbolic(ExecutionState &state,
                                                 KInstruction *target,

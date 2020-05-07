@@ -360,6 +360,7 @@ namespace klee {
     HANDLER(handleGetValue);
     HANDLER(handleIsSymbolic);
     HANDLER(handleMakeSymbolic);
+    HANDLER(handleMakeSymbolicAndLabel);
     HANDLER(handleMalloc);
     HANDLER(handleMarkGlobal);
     HANDLER(handleOpenMerge);

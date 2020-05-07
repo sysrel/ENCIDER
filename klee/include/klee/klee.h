@@ -41,6 +41,20 @@ extern "C" {
    */
   void klee_make_symbolic(void *addr, size_t nbytes, const char *name);
 
+
+
+  /* klee_make_symbolic - Make the contents of the object pointer to by \arg
+   * addr symbolic and label it with label.
+   *
+   * \arg addr - The start of the object.
+   * \arg nbytes - The number of bytes to make symbolic; currently this *must*
+   * be the entire contents of the object.
+   * \arg name - An optional name, used for identifying the object in messages,
+   * output files, etc.
+   * \label - Label to be used for information flow tracking
+   */
+  void klee_make_symbolic_and_label(void *addr, size_t nbytes, const char *name, const char *label);
+
   /* klee_range - Construct a symbolic value in the signed interval
    * [begin,end).
    *
