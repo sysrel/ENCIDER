@@ -578,7 +578,10 @@ bool singleSuccessor = true;
 bool infoFlowSummaryMode = false;
 
 
+
+
 //#ifdef INFOFLOW
+
 /* InfoFlowSummarization */
 
 region adjustment(region r1, region r2);
@@ -8338,24 +8341,13 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
              // if value is labeled high and rExpr is labeled low, report violation 
              bool hasHloc = exprHasSymRegion(state, value, true);
+             //ref<Expr> rExpr = os->read(offset, type);
+             //bool hasLloc = exprHasSymRegion(state, rExpr, false);             
   
-             bool  leakage = false;
+             if (hasHloc)
+                llvm::errs() << "HIGH SOURCE DETECTED!\n";
 
-             ConstantExpr *CO = dyn_cast<ConstantExpr>(offset);
-
-             if (hasHloc && CO && (os->isByteConcrete(CO->getZExtValue()) || 
-                                os->isByteKnownSymbolic(CO->getZExtValue()))) {
-                ref<Expr> rExpr = os->read(offset, type);
-                if (exprHasSymRegion(state, rExpr, false))  {
-                   leakage = true;                
-                   llvm::errs() << "source: " << value << "\n";
-                   llvm::errs() << "dest: " << rExpr << "\n";
-                }
-             }   
-             /*if (hasHloc && isLowMemoryRegion(state, mo->getBaseExpr())) 
-                leakage = true;  */
-
-             if (leakage) {
+             if (hasHloc && isLowMemoryRegion(state, mo->getBaseExpr())) {
                 llvm::errs() << " INFORMATION FLOW ERROR: HIGH FLOWS INTO LOW!!!\n";
                 const InstructionInfo &ii = kmodule->infos->getInfo(target->inst);
                 target->inst->print(llvm::errs());

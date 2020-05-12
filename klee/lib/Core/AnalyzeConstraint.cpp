@@ -409,33 +409,42 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
    //llvm::errs() << "extracting region from " << cexpr << "\n";
    switch (cexpr->getKind()) {
       case Expr::Read: {
+          bool marked = false;
           ReadExpr *rexpr = dyn_cast<ReadExpr>(cexpr);             
-          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), false, high)) 
+          if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), false, high))  {
              numsym++;
+             marked = true;
+             llvm::errs() << "symvar " << rexpr->updates.root->name << " marked high/low (" << high << ")\n"; 
+          }
           // also check the index to see if secret dependent
           int nsi = 0;
           std::vector<region> ri = extractRegion(state, rexpr->index, range, nsi, false, true, high);
-          if (ri.size() > 0)
-             numsym++;   
-          ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
-          if (!CE) { // approximating symbolic offset/index based on the possible range!
-             rs.push_back(range);
-             return rs;
+          if (ri.size() > 0) {
+             numsym++;  
+             marked = true;
+             llvm::errs() << "index of read " << rexpr->index << " marked high/low\n";  
           }
-          else  {
-             region r;
-             if (concatSeen) {
-                r.offset = CE->getZExtValue() * rexpr->getWidth();
-                r.size = rexpr->getWidth();
+          if (marked) {
+             ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
+             if (!CE) { // approximating symbolic offset/index based on the possible range!
+                rs.push_back(range);
+                return rs;
              }
-             else {
-                r.offset = 0;
-                r.size = rexpr->getWidth();
-             }      
-             //llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
-             rs.push_back(r);
-             return rs;
-         }
+             else  {
+                region r;
+                if (concatSeen) {
+                   r.offset = CE->getZExtValue() * rexpr->getWidth();
+                   r.size = rexpr->getWidth();
+                }
+                else {
+                   r.offset = 0;
+                   r.size = rexpr->getWidth();
+                }      
+                llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
+                rs.push_back(r);
+             }
+          }
+          return rs;
       } 
       case Expr::Concat: {
           //llvm::errs() << "in concat: \n";
