@@ -178,6 +178,9 @@ extern std::set<std::string> prefixRedact;
 std::set<RD*> resourceTreeRootList;
 RD *root;
 RD *currentRD;
+// Instr* -> HA (RD*) -> FuncName -> {rdd1, rdd2, ...}, 
+// where each rdd1 represents a timing observation point
+std::map<long, std::map<long, std::map<std::string, std::set<long> > > > timingObsPointsMap;
 std::vector<ExecutionState *> addedStates_copy;
 std::vector<ExecutionState *> removedStates_copy;
 bool fset = false;
@@ -216,10 +219,18 @@ std::set<std::string> loopBoundExceptions;
 unsigned loopBound = 0;
 std::map<std::string, std::map<unsigned, 
          std::pair<unsigned, unsigned> > > dataConstraintMap;
+std::map<std::string, std::set<unsigned> > zeroInitArrayTypeBased; 
 
 std::string getTypeName(Type *t);
 
 bool isLowMemoryRegion(ExecutionState &state, ref<Expr> a);
+
+bool getZeroInitArray(std::string tname, unsigned offset) {
+     if (zeroInitArrayTypeBased.find(tname) == zeroInitArrayTypeBased.end())
+        return false;
+     std::set<unsigned> s = zeroInitArrayTypeBased[tname];
+     return s.find(offset) != s.end();
+}
 
 bool getDataConstraint(std::string tname, unsigned offset, 
                                   std::pair<unsigned, unsigned> &fieldinfo) {
@@ -539,6 +550,7 @@ extern std::vector<std::string> enabledFunc;
 extern APIHandler *apiHandler;
 extern bool progModel;
 extern std::map<std::string, std::map<unsigned int, int> > lazyInitInitializersWValues;
+extern std::map<std::string, std::map<unsigned int, unsigned int> > lazyInitInitializersWValuesSize;
 extern std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
 extern std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
 
@@ -1508,6 +1520,53 @@ bool isInputFunction(Function *function) {
 
 
 void timeSideChannelAnalysis(Executor *executor) {
+ // For each top H-ancestor choose the timing observation point that yields the max diff
+ std::set<long> finalTops; 
+ for(auto im : timingObsPointsMap) {  
+   unsigned maxdiff = 0;
+   std::string fname = "";
+   long ha = 0;
+   std::set<long> topsCandidate; 
+   for(auto topm : im.second) {
+    // if this H-ancestor has an H-ancestor skip it 
+    // to decide based on the highest level (global picture)
+    if (((RD*)topm.first)->HA != NULL)
+       continue;
+    for(auto frs : topm.second) {
+       long int min=LONG_MAX, max=0;
+       for(auto rdd : frs.second) {
+          if (((RD*)rdd)->ru < min)
+             min = ((RD*)rdd)->ru;
+          if (((RD*)rdd)->ru > max)
+             max = ((RD*)rdd)->ru;
+       }
+       if (max - min > maxdiff) {
+          maxdiff = max - min;
+          fname = frs.first;
+          ha = topm.first;
+          topsCandidate = frs.second; 
+       } 
+    }
+   }
+   for(auto t : topsCandidate) 
+      finalTops.insert(t);
+
+    llvm::errs() << "Timing observation point for H-ancestor " << (*((Instruction*)im.first)) 
+                 << fname << "\n";
+ }
+ // remove timing observation points that do not yield the max diff
+ for(auto im : timingObsPointsMap) {
+   for(auto topm : im.second) {
+       for(auto frs : topm.second) {
+          for(auto rdd : frs.second) {
+             if (finalTops.find(rdd) == finalTops.end()) {
+                ((RD*)rdd)->HA = NULL;
+                ((RD*)rdd)->HAset = false;
+             }
+          }
+       }
+    }
+ }
  for(rroot : resourceTreeRootList) {
     propagate(rroot, "", executor);
     checkLeakage(rroot, executor);
@@ -2043,17 +2102,19 @@ bool isASymRegion(std::string symname, bool high) {
 
 bool Executor::isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed,  
       bool high) {
-  //llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
+  llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
   if (high) {
      if (highSymRegions.find(symname) == highSymRegions.end()) 
         return false;
      std::vector<region> rs = highSymRegions[symname];    
+     llvm::errs() << "Yes, now checking region is ok\n";
      return isInRegion(state, rs, offset, offsetType, type, computed);
   }
   else {
      if (lowSymRegions.find(symname) == lowSymRegions.end()) 
         return false;
      std::vector<region> rs = lowSymRegions[symname];
+     llvm::errs() << "Yes, now checking region is ok\n";
      return isInRegion(state, rs, offset, offsetType, type, computed);
   }
 }
@@ -2195,8 +2256,14 @@ void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
      if (lazyInitInitializersWValues.find(tname) != lazyInitInitializersWValues.end()) {
        //llvm::errs() << "initializer found! for type " << tname << "\n"; 
         std::map<unsigned int, int> offsets = lazyInitInitializersWValues[tname];
+        std::map<unsigned int, unsigned int> sizes = lazyInitInitializersWValuesSize[tname];
         for(auto offset : offsets) {
-           ref<Expr> ve = klee::ConstantExpr::alloc(offset.second, Expr::Int32); 
+           ref<Expr> ve;
+           if (sizes[offset.first] == 32)
+              ve = klee::ConstantExpr::alloc(offset.second, Expr::Int32);
+           else if (sizes[offset.first] == 64)
+              ve = klee::ConstantExpr::alloc(offset.second, Expr::Int64); 
+           else assert(0 && "unhandled size in lazy init initializers!");
            llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset.first << " to value " << ve << " at base address " << mo->getBaseExpr() << "\n";
            obj->write(offset.first, ve); 
         }
@@ -4011,6 +4078,84 @@ static inline const llvm::fltSemantics * fpWidthToSemantics(unsigned width) {
   }
 }
 
+// Records the timing observation point for the relevant top-most H-ancestors 
+void Executor::recordTimingObservationPoint(void* rddtermp, void *hap, std::string fname) {
+   if (!hap || fname == "") 
+      return;
+   RD* rddterm = (RD*)rddtermp;
+   RD* ha = (RD*)hap;
+   if (!ha->HA) {
+      std::map<long, std::map<std::string, std::set<long> > > m1;
+      std::map<std::string, std::set<long> > m2;
+      std::set<long> s;
+      if (timingObsPointsMap.find((long)ha->i) != timingObsPointsMap.end())
+         m1 = timingObsPointsMap[(long)ha->i];
+      if (m1.find((long)ha) != m1.end())
+         m2 = m1[(long)ha];
+      if (m2.find(fname) != m2.end())
+         s = m2[fname];
+      s.insert((long)rddterm);
+      m2[fname] = s;
+      m1[(long)ha] = m2;
+     timingObsPointsMap[(long)ha->i] = m1;    
+   }
+   else recordTimingObservationPoint(rddterm, ha->HA, fname);
+}
+
+void Executor::handleTimingObservationPoint(ExecutionState &state, bool restart, std::string fname) {
+   // First create a branch to be terminated to simulate the fact the that attacker can detect o$
+   ExecutionState *tobeterm = state.branch();
+   tobeterm->timingObservationPoint = true;
+   addedStates.push_back(tobeterm);
+   state.ptreeNode->data = 0;
+   std::pair<PTree::Node*, PTree::Node*> res = processTree->split(state.ptreeNode, tobeterm, &state);
+   tobeterm->ptreeNode = res.first;
+   state.ptreeNode = res.second;
+   llvm::errs() << "copy of state " << &state << " to be terminated: " << tobeterm << "\n"; 
+   RD *rdd = getrdmap(&state);
+   RD *rddterm = newNode(tobeterm);
+   rddterm->isHBr = rdd->isHBr;
+   rddterm->HAset = rdd->HAset;
+   rddterm->HA = rdd->HA;
+   rddterm->HC = rdd->HC;
+   rddterm->LC = rdd->LC;
+   rddterm->ru = rdd->ru;
+   rddterm->i = rdd->i;
+   rddterm->bbs = rdd->bbs;
+   tobeterm->rdid = rddterm->stateid;
+   rdmapinsert(tobeterm->rdid, rddterm);
+   rdd->succ->insert(rddterm);
+   rddterm->pathterminated = true;
+   rddterm->timingObservationPoint = true;
+   rddterm->topsLoc = fname;
+   //llvm::errs() << "rdd " << rddterm->stateid << " path terminated\n";
+   recordTimingObservationPoint(rddterm, rddterm->HA, fname);
+   /*if (rddterm->HA && fname != "") {
+      std::map<long, std::map<std::string, std::set<long> > > m1;
+      std::map<std::string, std::set<long> > m2;
+      std::set<long> s;
+      if (timingObsPointsMap.find((long)rddterm->HA->i) != timingObsPointsMap.end())
+         m1 = timingObsPointsMap[(long)rddterm->HA->i];
+      if (m1.find((long)rddterm->HA) != m1.end())
+         m2 = m1[(long)rddterm->HA];
+      if (m2.find(fname) != m2.end())
+         s = m2[fname];
+      s.insert((long)rddterm);
+      m2[fname] = s;
+      m1[(long)rddterm->HA] = m2;
+      timingObsPointsMap[(long)rddterm->HA->i] = m1; 
+   }*/
+   terminateStateOnExit(*tobeterm);
+   if (restart) {
+      RD *rddreset =  newNode(&state);
+      state.rdid = rddreset->stateid;
+      rdmapinsert(state.rdid, rddreset);
+      // This ensures that time side channel analysis can be started from this node as well
+      resourceTreeRootList.insert(rddreset);
+      rdd->succ->insert(rddreset);
+   }
+}
+
 void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
   Instruction *i = ki->inst;
@@ -4609,13 +4754,47 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
     /* begin SYSREL extension */
     /* side channel begin */
+
+    if (f) {
+       if (state.reachedFunctions.find(f->getName()) == state.reachedFunctions.end()) {
+          // possible timing observation point; terminate a copy 
+          RD* rdd = getrdmap(&state);
+          if (rdd->HA) {
+             llvm::errs() << " Terminating path at timing observation point " << f->getName() 
+                          << " with resource usage " << rdd->ru 
+                          << " high ancestor at " << (*rdd->HA->i) << "\n"; 
+
+             const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);
+             state.prevPC->inst->print(llvm::errs());
+             llvm::errs() << "Source line info for timing observation point:\n";
+             printInfo(iit);                    
+
+             std::string MsgString;
+             llvm::raw_string_ostream msg(MsgString);
+             state.dumpStack(msg);
+             llvm::errs() << "STACK:\n" << msg.str() << "\n";
+             //handleTimingObservationPoint(state, false, f->getName());
+             handleTimingObservationPoint(state, false, msg.str());
+          }
+       }
+       state.reachedFunctions.insert(f->getName());
+    }
+
+
     // making an 
     if (state.inEnclave && f && std::find(untrusted->begin(), untrusted->end(), f->getName()) != untrusted->end()) {
        // First create a branch to be terminated to simulate the fact the that attacker can detect ocalls and measure the elapsed time
+       
+       std::string MsgString;
+       llvm::raw_string_ostream msg(MsgString);
+       state.dumpStack(msg);
+       handleTimingObservationPoint(state, true, msg.str());
+       /*
        ExecutionState *tobeterm = state.branch();
        addedStates.push_back(tobeterm);
        state.ptreeNode->data = 0;
-       std::pair<PTree::Node*, PTree::Node*> res = processTree->split(state.ptreeNode, tobeterm, &state);
+       std::pair<PTree::Node*, PTree::Node*> res = processTree->split(state.ptreeNode, 
+             tobeterm, &state);
        tobeterm->ptreeNode = res.first;
        state.ptreeNode = res.second;
        llvm::errs() << "copy of state " << &state << " to be terminated: " << tobeterm << "\n"; 
@@ -4631,6 +4810,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        rdd->succ->insert(rddterm);
        rdd->succ->insert(rddreset);
        terminateStateOnExit(*tobeterm);
+       */ 
        llvm::errs() << "making ocall " << f->getName() << " from " << ((Function*)i->getParent()->getParent())->getName() << "\n";
        state.setLastEnclaveFunction(((Function*)i->getParent()->getParent())->getName());
        state.inEnclave = false;
@@ -6024,8 +6204,8 @@ void Executor::run(ExecutionState &initialState) {
     ExecutionState *lastState = 0;
     while (!seedMap.empty()) {
       if (haltExecution) {
+        llvm::errs() << "Halting execution (seedmap not empty)!!!\n";        
         doDumpStates();
-        llvm::errs() << "Halting execution!!!\n";
         return;
       }
 
@@ -6092,6 +6272,7 @@ void Executor::run(ExecutionState &initialState) {
     }
 
     if (OnlySeed) {
+      llvm::errs() << "Halting execution (only seed) !!!\n";
       doDumpStates();
       return;
     }
@@ -6408,8 +6589,10 @@ void Executor::run(ExecutionState &initialState) {
   searcher = 0;
   // SYSREL side channel
   std::cerr << "Size of rdmap : " << rdmap->size() << "\n";
-  if (!SolverImpl::interrupted || !SolverImpl::forceOutput)
+  if (!SolverImpl::interrupted || !SolverImpl::forceOutput) {
+    llvm::errs() << "Halting execution from regular loop!\n";
     doDumpStates();
+  }
   /* SYSREL side channel begin */
   timeSideChannelAnalysis(this);
   if (leakageWMaxSat)
@@ -6539,6 +6722,8 @@ void Executor::terminateState(ExecutionState &state) {
      maxInstCount = state.instCount;
   RD* rdd = getrdmap(&state);
   if (rdd) {
+     if (state.timingObservationPoint)
+        rdd->timingObservationPoint = true;
      if (rdd->ru < minInstCount && rdd->ru != 0)
         minInstCount = rdd->ru; 
      if (rdd->ru > maxInstCount)
@@ -7392,6 +7577,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
       argsM = mixedFunctionArgsRet[fname];
    if (argsH.find(ai) != argsH.end()) {
       std::vector<region> rs; 
+      llvm::errs() << "base address of high marked memory: " <<  sm->getBaseExpr() << "\n";
       if (highTypeRegions.find(btname) != highTypeRegions.end()) {
          rs = highTypeRegions[btname];
       }
@@ -8343,9 +8529,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
              ConstantExpr *CO = dyn_cast<ConstantExpr>(offset);
 
+             if (hasHloc)
+                llvm::errs() << "HIGH expr: " << value << " const offset?" << CO << "\n";
+
+
              if (hasHloc && CO && (os->isByteConcrete(CO->getZExtValue()) || 
                                 os->isByteKnownSymbolic(CO->getZExtValue()))) {
                 ref<Expr> rExpr = os->read(offset, type);
+                llvm::errs() << "going to check low label!\n";
                 if (exprHasSymRegion(state, rExpr, false))  {
                    leakage = true;                
                    llvm::errs() << "source: " << value << "\n";
@@ -8506,6 +8697,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                            ref<Expr> dcons = AndExpr::create(positiveExp,ltExp); 
                            addConstraint(state, dcons);
                            llvm::errs() << "Adding data constraint " << dcons << "\n"; 
+                        }
+                        llvm::errs() << "Checking if type " << etname << " to be zero init at offset " << OCE->getZExtValue() << "\n";
+                        if (getZeroInitArray(etname, OCE->getZExtValue())) {
+                           const ObjectState *mos = state.addressSpace.findObject(mo);
+                           if (mos) {
+                              llvm::errs() << "Zeroing array at offset " << OCE->getZExtValue() 
+                                           << " of type " << etname << "\n";
+                              ObjectState *wos = state.addressSpace.getWriteable(mo, mos);
+                              for(unsigned index = 0; index<mo->size; index++)
+                                 wos->write8(index,0);
+                           }
                         }
                      }
                   } 

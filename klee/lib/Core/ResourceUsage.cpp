@@ -14,6 +14,7 @@
 #define ICost 1
 #define epsilon 0
 
+
 using namespace llvm;
 using namespace klee;
 
@@ -75,13 +76,17 @@ bool sameBB(BasicBlock *bb1, BasicBlock *bb2) {
 }
 
 void findPeerBBs(BasicBlock *tb, BBset &result) {
+     #ifdef CDSCA
      llvm::errs() << "finding peers of " << (*(tb->begin())) << "\n";
+     #endif
      for(BasicBlock *bbi : llvm::predecessors(tb)) {
         for(BasicBlock *pc : llvm::successors(bbi)) {
            if (!sameBB(pc,tb)) {
+              #ifdef CDSCA
               llvm::errs() << "different blocks:\n";
               llvm::errs() << "1st inst in bb (" << pc << ") " << (*(pc->begin())) << "\n";
               llvm::errs() << "1st inst in bb (" << tb << ") " << (*(tb->begin())) << "\n";
+              #endif
               result.insert((long)pc);
            }
         }
@@ -98,7 +103,9 @@ void findBBAtDistance(BasicBlock *bb, unsigned int current, unsigned int dist,
       BBset &result) {
    if (current > dist) return;
    for(BasicBlock *bbi : llvm::successors(bb)) {
+       #ifdef CDSCA
        llvm::errs() << "current=" << current << " including bb of inst (" << bbi << ") " << (*(bbi->begin())) << "\n";
+       #endif
        result.insert((long)bbi);
        findBBAtDistance(bbi, current+1, dist, result); 
    }
@@ -118,10 +125,12 @@ bool checkCodeCacheSideChannel(Executor* ex, RD* rd,
          std::set<std::pair<unsigned int, unsigned int> > &s2, 
            std::pair<std::string, int> &p, double &accuracy) {
 
-     if (s1.size() == 0 || s2.size() == 0) {
+     if (s1.size() == 0 || s2.size() == 0) { 
+        #ifdef CDSCA
         llvm::errs() << "diff addresses " << s1.size() << 
                         " sibling addresses " << s2.size() << 
                         " for branch " << (*rd->i) << "\n"; 
+        #endif
         return false;
      }
 
@@ -138,12 +147,15 @@ bool checkCodeCacheSideChannel(Executor* ex, RD* rd,
           for(unsigned i=s2i.first; i <= s2i.second; i++) {
              if (cacheLineMode) {
                 s2C.insert(i >> cacheLineBits);
+                #ifdef CDSCA
                 llvm::errs() << "other branch cache line " << (i >> cacheLineBits) << "\n";         
-
+                #endif
              }
              else if (cacheBitmaskMode) {
                 s2C.insert(i & cacheBitmask);    
+                #ifdef CDSCA
                 llvm::errs() << "other branch cache bitmask res " << (i & cacheBitmask) << "\n";
+                #endif
              }
           }
         
@@ -155,15 +167,19 @@ bool checkCodeCacheSideChannel(Executor* ex, RD* rd,
                  if  (s2C.find(j) == s2C.end()) {
                      codeCacheLines.insert(i); 
                      missingCL.insert(j);
+                     #ifdef CDSCA
                      llvm::errs() << "missing branch cache line " << j << "\n";    
+                     #endif
                  }
               }
               else if (cacheBitmaskMode) {
                  int j = i & cacheBitmask;
                  if (s2C.find(j) == s2C.end())
                     codeCacheLines.insert(i);
-                    missingCL.insert(j); 
+                    missingCL.insert(j);
+                    #ifdef CDSCA 
                     llvm::errs() << "missing branch cache bitmask " << j << "\n";    
+                    #endif
               }
           }
 
@@ -309,19 +325,29 @@ void findVirtualAddresses(BBset &a,
 bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
 
   if (diff.size() > 0) {
+     #ifdef CDSCA 
      llvm::errs() << "CACHE CODE BB diff: " << diff.size() << "\n";
+     #endif
      for(auto ai : diff) {
         llvm::BasicBlock *bb = (BasicBlock*)ai;
+        #ifdef CDSCA 
         llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
+        #endif
      }
+     #ifdef CDSCA
      llvm::errs() << " other set of BBs:\n";
+     #endif
      for(auto bi : b) {
         llvm::BasicBlock *bb = (BasicBlock*)bi;
+        #ifdef CDSCA
         llvm::errs() << "1st inst in bb (" << bb << ") " << &(*(bb->begin())) << " " << (*(bb->begin())) << "\n";
+        #endif
      }     
      const InstructionInfo &ii = ex->kmodule->infos->getInfo(rd->i);
+     #ifdef CDSCA
      llvm::errs() << "Instruction:\n";
      llvm::errs() << "rd=" << rd->stateid << " " << (*rd->i) << "\n";
+     #endif
      printInfo(ii);
      std::pair<std::string, int> p;
      p.first = "CODE BASED CACHE SIDE CHANNEL!\n";
@@ -339,10 +365,14 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
            }
            else 
               findBBAtDistance(rd->i, BasicBlockDist, filter);
+           #ifdef CDSCA
            llvm::errs() << "filter set:\n";
+           #endif
            for(auto bi : filter) {
               llvm::BasicBlock *bb = (BasicBlock*)bi;
+              #ifdef CDSCA
               llvm::errs() << "1st inst in bb (" << bb << ") " << &(*(bb->begin())) << " " << (*(bb->begin())) << "\n";
+              #endif
            }
            for(auto bt : b) {
               for(auto ft : filter) {
@@ -350,10 +380,14 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
                     temp.insert(bt);
               }
            } 
+           #ifdef CDSCA
            llvm::errs() << " other set of BBs after filtering:\n";
+           #endif
            for(auto bi : temp) {
               llvm::BasicBlock *bb = (BasicBlock*)bi;
+              #ifdef CDSCA
               llvm::errs() << "1st inst in bb (" << bb << ") " << (*(bb->begin())) << "\n";
+              #endif
            }  
            findVirtualAddresses(temp, bset);       
         }
@@ -372,7 +406,7 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
      }
      if (found) {
         std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
-        llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
+         llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
         rd->i->print(llvm::errs());
         llvm::errs() << "\nHCdiff : " << f << "\n";
         std::stringstream ss;
@@ -582,6 +616,7 @@ RD* newNode(RD* rd) {
 	//rdid++;
 	nrd->copyRd = true;
         nrd->bbs = rd->bbs;
+        nrd->timingObservationPoint = rd->timingObservationPoint;
 	return nrd;
 }
 
@@ -647,6 +682,7 @@ void printLeakage(RD* rd, Executor* ex) {
       ref<Expr> h1 = hclc.first;
       ref<Expr> l1 = hclc.second;
       range R1 = rit->second;
+      std::set<long> rset1 = rd->RDSet[*rvit];
       assert(rd->bbm.find(*rvit) != rd->bbm.end() && "basic block cov not recorded\n");
       std::vector<exhash>::iterator rvit2 = rvit;
       ++rvit2;
@@ -670,6 +706,7 @@ void printLeakage(RD* rd, Executor* ex) {
          // check resource usage diff
          range R2 = rit2->second;
 	 range r = combineRange(R1, R2);
+         std::set<long> rset2 = rd->RDSet[*rvit2];
 	 int diff = r.second - r.first;
 
 	 //if(diff > epsilon) {
@@ -693,18 +730,22 @@ void printLeakage(RD* rd, Executor* ex) {
                llvm::errs() << "path1:\n";
                for(auto bsi : bs1) {
                   BasicBlock *bb = (BasicBlock*)(bsi);
+                  #ifdef CDSCA
                   llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
+                  #endif
                }
                llvm::errs() << "path2:\n";
                for(auto bsi : bs2) {
                   BasicBlock *bb = (BasicBlock*)(bsi);
+                  #ifdef CDSCA
                   llvm::errs() << "1st instr of " << bb << " : " << (*(bb->begin())) << "\n";
+                  #endif
                }
                if (ds1.size() > 0 || ds2.size() > 0) {
                   bool lf1 = checkCacheLeakage(ex, rd, ds1, bs2, h1diffh2);
                   bool lf2 = checkCacheLeakage(ex, rd, ds2, bs1, h2diffh1);
                }
-                                   
+               llvm::errs() << "numterm1=" << numterm1 << " numterm2=" << numterm2 << "\n";
                if ((!onlycompletedpaths || (numterm1 > 0 && numterm2 > 0)) && diff > epsilon) {
 		  vc++;
 		  llvm::errs() << "\n===============\nFound Violation at : ";
@@ -742,7 +783,44 @@ void printLeakage(RD* rd, Executor* ex) {
 			printInfo(ii1);
 		     }
 		     llvm::errs() << "\n===============\n";
-                  }
+
+                   bool tobs1 = false;
+                   for(auto rde1 : rset1)
+                      if (((RD*)rde1)->timingObservationPoint) {
+                         tobs1 = true;
+                      }
+
+                   bool tobs2 = false;
+                   for(auto rde2 : rset2)
+                      if (((RD*)rde2)->timingObservationPoint) {
+                         tobs2 = true;
+                      }
+
+                   llvm::errs() << "Timing observation point? " << (tobs1 && tobs2) 
+                                << "(path1=" << tobs1 << ")"
+                                << " (path2=" << tobs2 << ")\n";
+                   if (tobs1 && tobs2) {
+                      unsigned max = 0;
+                      std::string locs = "";
+                      for(auto rde1: rset1) {
+                         for(auto rde2: rset2) {
+                            if (((RD*)rde1)->timingObservationPoint && 
+                                ((RD*)rde2)->timingObservationPoint &&
+                                ((RD*)rde1)->topsLoc == ((RD*)rde2)->topsLoc) {
+                                unsigned diff = (((RD*)rde1)->ru > ((RD*)rde2)->ru) ? 
+                                      (((RD*)rde1)->ru - ((RD*)rde2)->ru) : 
+                                      (((RD*)rde2)->ru - ((RD*)rde1)->ru); 
+                                if (diff > max) {
+                                   max = diff;
+                                   locs = ((RD*)rde1)->topsLoc;
+                                }
+                                                                     
+                            }  
+                         }
+                      } 
+                      llvm::errs() << "max diff: " << max << "\at loc:\n " << locs << "\n";
+                    }
+                 }
 	       }
 	    }
 	  }
@@ -775,6 +853,7 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 			propagate(*srit, ni, ex);
 	}
 
+        llvm::errs() << "rdd " << rd->stateid << " succ size " << rd->succ->size() << "\n";
 	if(rd->succ->size() > 0) {
 		return 0; //Only let leaf nodes perform the following operations
 	}
@@ -806,6 +885,11 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 			range rr = combineRange(R, range(rd->ru, rd->ru));
 			a->Ru->insert(std::pair<exhash, range>(eh, rr));
 			a->HE->insert(std::pair<exhash, HCLC>(eh, HCLC(rd->HC, rd->LC)));
+                        std::set<long> rset;
+                        if (a->RDSet.find(eh) != a->RDSet.end())
+                           rset = a->RDSet[eh];
+                        rset.insert((long)rd);
+                        a->RDSet[eh] = rset;
 			if(!rd->isvoid) {
 				a->lrets->insert(std::pair<exhash, ref<Expr> >(eh, rd->retval));
 			}
@@ -815,7 +899,11 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
                         for(auto bsi : rd->bbs)
                            bbs.insert(bsi);
                         a->bbm[eh] = bbs;
+                        llvm::errs() << "rdd " << rd->stateid  << "is terminated? " 
+                                    << rd->pathterminated << "\n";
                         if (rd->pathterminated) {
+                           llvm::errs() << "rdd " << rd->stateid 
+                                << " terminated and propagated to " << a->stateid << "\n";
                            unsigned numterm = 0;
                            if (a->terminated.find(eh) != a->terminated.end())
                               numterm = a->terminated[eh];
@@ -842,10 +930,19 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 				range rr = combineRange(R, Rs);
 				a->Ru->insert(std::pair<exhash, range>(eh2, rr));
 				a->HE->insert(std::pair<exhash, HCLC>(eh2, HCLC(HC, LC)));
+                                std::set<long> rset, cset;
+                                if (a->RDSet.find(eh2) != a->RDSet.end())
+                                   rset = a->RDSet[eh2];
+                                cset = rd->RDSet[eh2];
+                                for(auto rde : cset) 
+                                   rset.insert(rde);
+                                a->RDSet[eh2] = rset;
                                 unsigned numterm = 0;
                                 if (a->terminated.find(eh2) != a->terminated.end())
                                    numterm = a->terminated[eh2];
                                 a->terminated[eh2] = numterm + rd->terminated[rit->first];
+                                llvm::errs() << "rdd " << rd->stateid 
+                                   << " terminated count propagated to " << a->stateid << "\n";
                                 assert(rd->bbm.find(rit->first) != rd->bbm.end() && "Could not find relevant basic block cov info!\n");
                                 for(auto bsi : rd->bbm[rit->first])
                                    bbs.insert(bsi);

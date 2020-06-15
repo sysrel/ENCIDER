@@ -220,6 +220,8 @@ public:
   // for tracking security sensitive object fields
   //std::set<ref<Expr> > highAddresses;
   //std::set<ref<Expr> > lowAddresses;
+  std::set<std::string> reachedFunctions;
+  bool timingObservationPoint;
   std::map<ref<Expr>,int> lockModel;
   std::map<ref<Expr>,int> stateModel;
   std::map<ref<Expr>, ref<Expr> > assocModel; 

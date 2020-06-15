@@ -876,7 +876,7 @@ void SpecialFunctionHandler::handleMakeSymbolicAndLabel(ExecutionState &state,
       region r;
       r.offset = 0;
       if (ConstantExpr *CE = dyn_cast<ConstantExpr>(arguments[1])) 
-          r.size = CE->getZExtValue();
+          r.size = 8*CE->getZExtValue();
       else assert(0);
       rs.push_back(r);
       llvm::errs() << "labeling " << name  << " with " << label <<  "region offset= " << r.offset << " size=" << r.size << "\n";

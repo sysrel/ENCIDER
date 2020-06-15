@@ -132,6 +132,7 @@ ExecutionState::ExecutionState(KFunction *kf) :
   std::map<std::string, unsigned> fm;
   forkFreqMapTrue[(long)this] = fm;
   forkFreqMapFalse[(long)this] = fm;
+  timingObservationPoint = false;
   /* SYSREL */  
 }
 
@@ -155,6 +156,7 @@ ExecutionState::ExecutionState(const std::vector<ref<Expr> > &assumptions)
   std::map<std::string, unsigned> fm;
   forkFreqMapTrue[(long)this] = fm;
   forkFreqMapFalse[(long)this] = fm;
+  timingObservationPoint = false;
   /* SYSREL */  
 }
 
@@ -263,6 +265,8 @@ ExecutionState::ExecutionState(const ExecutionState& state):
      forkFreqMapTrue[(long)this] = forkFreqMapTrue[(long)&state];
   if (forkFreqMapFalse.find((long)&state) != forkFreqMapFalse.end())
      forkFreqMapFalse[(long)this] = forkFreqMapFalse[(long)&state];
+  reachedFunctions = state.reachedFunctions;
+  timingObservationPoint = state.timingObservationPoint;
   llvm::errs() << "cloning state " << &state << " to " << this << "\n";
   /* SYSREL */ 
 }

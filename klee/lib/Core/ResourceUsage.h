@@ -21,6 +21,7 @@ typedef std::map<exhash, HCLC> HashExpr;
 typedef std::map<exhash, unsigned> HashTerm;
 typedef std::map<exhash, ref<Expr> > HashRet;
 typedef std::map<exhash, BBset> BS;
+typedef std::map<exhash, std::set<long> > RDSET;
 
 // the basic blocks in a do not appear in set b
 // reports cache code leakage, if any
@@ -72,6 +73,9 @@ class RD {
                 HashTerm terminated; // keep track of number of terminated descendants
                 static int numHAncestors;
                 static int numHLMixedConstraints;
+                bool timingObservationPoint = false;
+                std::string topsLoc = "";
+                RDSET RDSet;
 };
 
 //

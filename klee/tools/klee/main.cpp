@@ -97,6 +97,7 @@ std::vector<std::string> lazyInits;
 std::set<std::string> lazyInitSingles;
 std::map<std::string, int> lazyInitNumInstances;
 std::map<std::string, std::map<unsigned int, int> > lazyInitInitializersWValues;
+std::map<std::string, std::map<unsigned int, unsigned int> > lazyInitInitializersWValuesSize;
 std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
 std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
 bool progModel = false;
@@ -177,6 +178,8 @@ extern std::map<std::string, std::map<std::string, std::map<unsigned,
         std::set<std::pair<unsigned int, unsigned int> >* >* >* > binaryAddresses;
 
 extern std::set<std::pair<std::string, int>> codecachelocs;
+
+extern std::map<std::string, std::set<unsigned> > zeroInitArrayTypeBased; 
 /*
 RegistrationAPIHandler  *regAPIHandler = NULL;
 ResourceAllocReleaseAPIHandler *resADAPIHandler = NULL;
@@ -535,6 +538,9 @@ namespace {
 
   cl::opt<std::string>
   BinaryMetadata("binary-metadata", cl::desc("The file that includes binary metadata that maps source line info to virtual address ranges\n"));
+
+  cl::opt<std::string>
+  ZeroInitArray("zero-init-array", cl::desc("Zeroize the content of a lazy init array based on the embedding type and offset info\n"));
 
   cl::opt<bool>
   ForceOutput("force-output", cl::desc("Force output generation on termination \n"));
@@ -1658,6 +1664,28 @@ void readLoopBoundExceptions(const char *name) {
   }
 }
 
+void readZeroInitArray(const char *name) {
+  std::fstream cf(name, std::fstream::in);
+  if (cf.is_open()) {
+     std::string line;
+     while (std::getline(cf,line)) { 
+       std::string tline = ltrim(rtrim(line));
+       std::istringstream iss(tline);
+       std::string tname, offset;
+       getline(iss, tname, ',');
+       tname = ltrim(rtrim(tname));
+       getline(iss, offset, ',');
+       offset = ltrim(rtrim(offset));
+       std::set<unsigned> s;
+       if (zeroInitArrayTypeBased.find(tname) != zeroInitArrayTypeBased.end())
+          s = zeroInitArrayTypeBased[tname];
+       s.insert(std::stoi(offset));
+       zeroInitArrayTypeBased[tname] = s;
+     }
+     cf.close();
+  }
+}
+
 /*
    Specifies the data constraints between two fields of the same struct (typename) 
    in the form of size of the memory pointed by field at offset1 is <= the value 
@@ -1901,6 +1929,8 @@ void readTimingObservationPointsFuncPtr(const char * name) {
   typename,offset_1,offset_2,...
   Syntax for setting a function pointer to a function
   typename,fptr,offset,functionname
+  Syntax for initializing a field to a specific value
+  typename,data,offset,value,size 
 */
 void readLazyInitInitializers(const char * name) {
  
@@ -1939,13 +1969,22 @@ void readLazyInitInitializers(const char * name) {
            getline(iss, offset, ',');
            offset = ltrim(rtrim(offset));
            int dvalue = std::stoi(offset);
+           getline(iss, offset, ',');
+           offset = ltrim(rtrim(offset));
+           assert(offset != "" && "Must specify size of the data field in lazy init initializers spec!");
+           int size = std::stoi(offset);
            std::map<unsigned int, int> ovm;
            if (lazyInitInitializersWValues.find(tname) != lazyInitInitializersWValues.end())
               ovm = lazyInitInitializersWValues[tname];
            ovm[ovalue] = dvalue;
            lazyInitInitializersWValues[tname] = ovm;
+           std::map<unsigned int, unsigned int> szm;
+           if (lazyInitInitializersWValuesSize.find(tname) != lazyInitInitializersWValuesSize.end())
+              szm = lazyInitInitializersWValuesSize[tname];
+           szm[ovalue] = size;
+           lazyInitInitializersWValuesSize[tname] = szm;
            llvm::outs() << "lazy init type=" << tname << " offset " << ovalue 
-               << " to be set to " << dvalue << "\n";
+               << " to be set to " << dvalue << " for size " << size << "\n";
         } 
         else { 
          std::vector<unsigned int> offsets;
@@ -2749,6 +2788,10 @@ int main(int argc, char **argv, char **envp) {
 
   if (TypeBasedDataConstraint != "") {
      readTypeBasedDataConstraints(TypeBasedDataConstraint.c_str());
+  }
+
+  if (ZeroInitArray != "") {
+     readZeroInitArray(ZeroInitArray.c_str());
   }
 
   if (BinaryMetadata != "") {

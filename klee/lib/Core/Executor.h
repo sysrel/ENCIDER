@@ -155,6 +155,10 @@ public:
   TimingSolver *solver;
   MemoryManager *memory;
  
+  void recordTimingObservationPoint(void* rddterm, void *ha, std::string fname) ;
+
+  void handleTimingObservationPoint(ExecutionState &state, bool restart, std::string fname="");
+
   const llvm::Function *getFunctionFromAddress(ref<Expr> addr);
 
   unsigned int getTimingCost(ExecutionState &state, llvm::Instruction *inst);

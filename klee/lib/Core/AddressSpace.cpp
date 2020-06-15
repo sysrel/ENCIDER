@@ -138,8 +138,7 @@ bool AddressSpace::resolveOne(ExecutionState &state,
       const MemoryObject *mo = oi->first;
 
       bool mustBeTrue;
-      llvm::errs() << "address width " << address->getWidth()
-                   << "basex expr width " << mo->getBaseExpr()->getWidth() << "\n";
+      llvm::errs() << "resolving " << mo->getBaseExpr() << "\n";
 
       if (!solver->mustBeTrue(state, 
                               UltExpr::create(address, mo->getBaseExpr()),
