@@ -181,6 +181,7 @@ RD *currentRD;
 // Instr* -> HA (RD*) -> FuncName -> {rdd1, rdd2, ...}, 
 // where each rdd1 represents a timing observation point
 std::map<long, std::map<long, std::map<std::string, std::set<long> > > > timingObsPointsMap;
+std::map<long, long> timingObsPointProducerMap;
 std::vector<ExecutionState *> addedStates_copy;
 std::vector<ExecutionState *> removedStates_copy;
 bool fset = false;
@@ -1560,8 +1561,12 @@ void timeSideChannelAnalysis(Executor *executor) {
        for(auto frs : topm.second) {
           for(auto rdd : frs.second) {
              if (finalTops.find(rdd) == finalTops.end()) {
+                llvm::errs() << "removing candidate timign observation point " 
+                       << ((RD*)rdd)->stateid << " with inst " << (*((RD*)rdd)->i) << "\n";
                 ((RD*)rdd)->HA = NULL;
                 ((RD*)rdd)->HAset = false;
+                long prod = timingObsPointProducerMap[rdd];
+                ((RD*)prod)->succ->erase(((RD*)rdd));
              }
           }
        }
@@ -4125,10 +4130,11 @@ void Executor::handleTimingObservationPoint(ExecutionState &state, bool restart,
    tobeterm->rdid = rddterm->stateid;
    rdmapinsert(tobeterm->rdid, rddterm);
    rdd->succ->insert(rddterm);
+   timingObsPointProducerMap[(long)rddterm] = (long)rdd;
    rddterm->pathterminated = true;
    rddterm->timingObservationPoint = true;
    rddterm->topsLoc = fname;
-   //llvm::errs() << "rdd " << rddterm->stateid << " path terminated\n";
+   llvm::errs() << "Candidate tops " << rddterm->stateid << " with inst " << (*rddterm->i) << "\n";
    recordTimingObservationPoint(rddterm, rddterm->HA, fname);
    /*if (rddterm->HA && fname != "") {
       std::map<long, std::map<std::string, std::set<long> > > m1;
@@ -4761,7 +4767,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           RD* rdd = getrdmap(&state);
           if (rdd->HA) {
              llvm::errs() << " Terminating path at timing observation point " << f->getName() 
-                          << " with resource usage " << rdd->ru 
+                          << " with resource usage " << rdd->ru << " and inst " << (*rdd->i) 
                           << " high ancestor at " << (*rdd->HA->i) << "\n"; 
 
              const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);

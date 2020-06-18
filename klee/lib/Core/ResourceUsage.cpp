@@ -818,8 +818,56 @@ void printLeakage(RD* rd, Executor* ex) {
                             }  
                          }
                       } 
-                      llvm::errs() << "max diff: " << max << "\at loc:\n " << locs << "\n";
+                      llvm::errs() << "max diff: " << max << " \n at loc:\n " << locs << "\n";
                     }
+
+                    bool term1 = false;
+                    for(auto rde1 : rset1)
+                      if (((RD*)rde1)->pathterminated) {  
+                         term1 = true;
+                         break;
+                      }
+
+                    bool term2 = false;
+                    for(auto rde2 : rset2)
+                      if (((RD*)rde2)->pathterminated) {  
+                         term2 = true;
+                         break;
+                      }
+
+                   llvm::errs() << "Normal termination? " << (term1 && term2) 
+                                << "(path1=" << term1 << ")"
+                                << " (path2=" << term2 << ")\n";
+                   if (term1 && term2) {
+                      unsigned max = 0;
+                      long p1=0 , p2 = 0;
+                      for(auto rde1: rset1) {
+                         for(auto rde2: rset2) {
+                            if (((RD*)rde1)->pathterminated && 
+                                ((RD*)rde2)->pathterminated &&
+                                !((RD*)rde1)->timingObservationPoint && 
+                                !((RD*)rde2)->timingObservationPoint) {
+                                unsigned diff = (((RD*)rde1)->ru > ((RD*)rde2)->ru) ? 
+                                      (((RD*)rde1)->ru - ((RD*)rde2)->ru) : 
+                                      (((RD*)rde2)->ru - ((RD*)rde1)->ru); 
+                                if (diff > max) {
+                                   max = diff;
+                                   p1 = rde1; p2 = rde2; 
+                                }                                                                     
+                            }  
+                         }
+                      } 
+                      if (p1 && p2) {
+                         const InstructionInfo &ii1 = ex->kmodule->infos->getInfo(((RD*)p1)->i);
+                         const InstructionInfo &ii2 = ex->kmodule->infos->getInfo(((RD*)p2)->i);
+                         llvm::errs() << "max diff: " << max << "\n last branch locs:\n "; 
+                         llvm::errs() << (*((RD*)p1)->i) << "\n";
+                         printInfo(ii1);
+                         llvm::errs() << (*((RD*)p2)->i) << "\n";
+                         printInfo(ii2);
+                      }
+                   }
+
                  }
 	       }
 	    }
@@ -832,7 +880,7 @@ void checkLeakage(RD* rd, Executor* ex) {
 			srit != rd->succ->end(); ++srit) {
 	    checkLeakage(*srit, ex);
 	}
-        //llvm::errs() << "RU size=" << rd->Ru->size()  << " " << (*rd->i) << "\n";
+        llvm::errs() << "RU size=" << rd->Ru->size()  << " " << (*rd->i) << "\n";
 	if(rd->Ru->size() > 1){
 	   printLeakage(rd, ex);
 	}
@@ -853,7 +901,7 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
 			propagate(*srit, ni, ex);
 	}
 
-        llvm::errs() << "rdd " << rd->stateid << " succ size " << rd->succ->size() << "\n";
+        llvm::errs() << "rdd " << rd->stateid << " " << (*rd->i) << " succ size " << rd->succ->size() << "\n";
 	if(rd->succ->size() > 0) {
 		return 0; //Only let leaf nodes perform the following operations
 	}
