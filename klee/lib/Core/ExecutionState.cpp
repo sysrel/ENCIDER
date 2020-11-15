@@ -267,7 +267,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
      forkFreqMapFalse[(long)this] = forkFreqMapFalse[(long)&state];
   reachedFunctions = state.reachedFunctions;
   timingObservationPoint = state.timingObservationPoint;
-  llvm::errs() << "cloning state " << &state << " to " << this << "\n";
+  //llvm::errs() << "cloning state " << &state << " to " << this << "\n";
   /* SYSREL */ 
 }
 

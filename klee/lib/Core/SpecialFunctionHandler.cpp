@@ -40,6 +40,8 @@
 using namespace llvm;
 using namespace klee;
 
+#undef VB
+
 // to be used when a symbolic size is passed to a malloc model
 #define MALLOC_CONC_SIZE 10000
 
@@ -58,6 +60,11 @@ namespace {
                    cl::desc("Silently terminate paths with an infeasible "
                             "condition given to klee_assume() rather than "
                             "emitting an error (default=false)"));
+
+  cl::opt<unsigned>
+  UseForSymbolicAllocSize("use-for-symbolic-size", 
+           cl::desc("Size value to be used when a symbolic value is used\n"));
+                           
 }
 
 
@@ -1481,10 +1488,14 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
            bool ret = false;
            bool success = ((Executor*)(theInterpreter))->solver->mayBeTrue(state, primeq, ret);
            if(!success || !ret) {
-             llvm::errs() << "Terminating path due to a symbolic size for AllocAPIHandler!\n";	
-             ((Executor*)(theInterpreter))->terminateStateOnError(state, "concretized symbolic size",
+             if (UseForSymbolicAllocSize) 
+                 allocationSize = UseForSymbolicAllocSize;
+             else {
+                llvm::errs() << "Terminating path due to a symbolic size for AllocAPIHandler!\n";	
+                ((Executor*)(theInterpreter))->terminateStateOnError(state, "concretized symbolic size",
                                 Executor::Model, NULL, "A symbolic size is passed to an AllocAPIHandler"); 
-             return false;
+                return false;
+             }
            }
            else  {
               llvm::errs() << "Using " << primArraySize << " for the symbolic size expression \ 
@@ -2181,9 +2192,9 @@ bool APIHandler::handle(ExecutionState &state,
         llvm::outs() << "WARNING: api both branching and requesting not to symbolize the return value!\n";
 
      if (symbolizeRetValueOK) {
-        //#ifdef VB
+        #ifdef VB
         llvm::errs() << "symbolizing ret value in handler for function " << function->getName() << "\n";
-        //#endif
+        #endif
         ((Executor*)(theInterpreter))->symbolizeReturnValue(state, arguments, target, function, abort);
         if (abort) return false;
         ref<Expr> ret_value = ((Executor*)(theInterpreter))->getDestCell(state, target).value;

@@ -106,18 +106,11 @@ using namespace klee;
 
 /* SYSREL extension */
 
-std::fstream datacacheos;
-std::fstream secretdependentos;
-std::fstream timingos;
-std::fstream normaltermtimingos;
-std::fstream inferredtimingos;
-std::fstream codecacheos;
-
 bool symbolizeInlineAssembly = false;
 
 bool skipOptimizingSensitiveRegionCheck = false;
 
-#undef INFOFLOW 
+//#define INFOFLOW 1
 
 extern std::set<std::string> voidTypeCasts;
 size_t maxVoidTypeCastSize = 8;
@@ -131,7 +124,7 @@ std::map<std::string, std::set<unsigned int> > externalFuncsSig;
 std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
 extern std::set<std::pair<std::string, int>> cachelocs;
 extern std::set<std::pair<std::string, int>> codeCachelocs;
-extern unsigned int cacheLineBits;
+extern unsigned long cacheLineBits;
 extern bool cacheLineMode;
 extern bool cacheBitmaskMode;
 extern unsigned int cacheBitmask;
@@ -187,8 +180,8 @@ RD *root;
 RD *currentRD;
 // Instr* -> HA (RD*) -> FuncName -> {rdd1, rdd2, ...}, 
 // where each rdd1 represents a timing observation point
-std::map<long, std::map<long, std::map<std::string, 
-                    std::map<unsigned, std::set<long> > > > > timingObsPointsMap;
+std::map<long, std::map<long, std::map<unsigned, 
+                    std::map<std::string, std::set<long> > > > > timingObsPointsMap;
 std::map<long, long> timingObsPointProducerMap;
 std::vector<ExecutionState *> addedStates_copy;
 std::vector<ExecutionState *> removedStates_copy;
@@ -229,9 +222,6 @@ unsigned loopBound = 0;
 std::map<std::string, std::map<unsigned, 
          std::pair<unsigned, unsigned> > > dataConstraintMap;
 std::map<std::string, std::set<unsigned> > zeroInitArrayTypeBased; 
-
-cl::opt<bool>
-EncVer("encider-verbose", cl::desc("Prints some debug info\n"), cl::init(false));
 
 std::string getTypeName(Type *t);
 
@@ -380,7 +370,7 @@ std::string getStackTrace(ExecutionState &state) {
 
 std::string getSouceWithContext(ExecutionState &state, KInstruction *ki) {
    std::string swctx = getStackTrace(state);
-   if (EncVer) llvm::errs() << "stack trace=" << swctx << "\n";
+   llvm::errs() << "stack trace=" << swctx << "\n";
    swctx = swctx + ki->getSourceLocation();
    return swctx;
 }
@@ -539,8 +529,7 @@ bool operator<(const InfoFlowRegion_t ifr1, const InfoFlowRegion_t ifr2) {
 
 /* Side channel end */
 
-#undef VBSC 
-#undef VB 
+//#define VBSC
 
 #define ASYNC_STR "async_initiate"
 #define ENABLE_STR "enable_entry"
@@ -551,12 +540,6 @@ bool operator<(const InfoFlowRegion_t ifr1, const InfoFlowRegion_t ifr2) {
 // represents size in bits so SIZE_FOR_UNTYPED (2000) * 8
 #define SIZE_FOR_UNKNOWN_TYPES 8*8
 int MAX_ALLOC_SIZE=10240;
-
-
-
-           
-cl::opt<bool>
-UseInternal("use-internal", cl::desc("Try to locate the renamed version of a function that is declared as internal"), cl::init(false));
 
 cl::opt<bool>
 CheckInfoFlowRule("check-infoflow", cl::desc("Checks and reports information flows from high labeled memory to low labeled memory\n"));
@@ -577,10 +560,7 @@ std::map<long, std::map<ref<Expr>, const MemoryObject *> > addressToMemObj;
 std::map<long, std::map<ref<Expr>, ref<Expr> > > symIndexToMemBase;
 extern std::set<std::string> assemblyFunctions;
 
-cl::opt<bool>
-HandleSingleSuccessors("handle-single-succ", 
-    cl::desc("Check security sensitive branches when single successor\n"), 
-    cl::init(false));
+
 
 KModule *kmoduleExt;
 llvm::Function *entryFunc;
@@ -646,17 +626,6 @@ std::set<InfoFlowRegion_t> setIF(InfoFlowRegion_t &ifr) {
   std::set<InfoFlowRegion_t> res;
   res.insert(ifr);
   return res;
-}
-
-Function *getInternalVersion(std::string fname) {
-   for(unsigned int i=0; i < kmoduleExt->functions.size(); i++) {
-      Function *f = kmoduleExt->functions[i]->function;
-      if (f) {
-         if (f->getName().find(fname+".") != std::string::npos)
-            return f;
-      }
-   }
-   return NULL;
 }
 
 void print(const InfoFlowRegion_t &ifr) {
@@ -737,8 +706,7 @@ void Executor::recordArgRegisters(Function *f) {
    unsigned int argi = 0;
    for(llvm::Function::arg_iterator ai = f->arg_begin(); ai != f->arg_end(); ai++, argi++) {
       argRegsInfoFlow[kf->getArgRegister(argi)] = argi;
-      if (EncVer)
-         llvm::errs() << "recording arg " << argi << " and the register " << kf->getArgRegister(argi) << " as info flow relevant in " << f->getName() << "\n"; 
+      llvm::errs() << "recording arg " << argi << " and the register " << kf->getArgRegister(argi) << " as info flow relevant in " << f->getName() << "\n"; 
    }     
 }
 
@@ -767,8 +735,7 @@ void initInfoFlowContext(ExecutionState &state) {
    currentInfoFlowContext = initvalue;
    ctxstack->push_back(initvalue);
    infoflowstack[&state] = ctxstack;
-   if (EncVer)
-      llvm::errs() << "init info flow context for " << &state << "\n"; 
+   llvm::errs() << "init info flow context for " << &state << "\n"; 
 }
 
 void cloneInfoFlowContext(ExecutionState &state1, ExecutionState &state2) {
@@ -778,16 +745,14 @@ void cloneInfoFlowContext(ExecutionState &state1, ExecutionState &state2) {
        cpstack->push_back((*infoflowstack[&state1])[i]);
     infoflowstack[&state2] = cpstack;
     memoryInfoFlow[&state2] = memoryInfoFlow[&state1];
-    if (EncVer)
-       llvm::errs() << "cloning info flow context from " << &state1 << " to " << &state2 << "\n";
+    llvm::errs() << "cloning info flow context from " << &state1 << " to " << &state2 << "\n";
 }
 
 void updateCurrentInfoFlowContext(ExecutionState &state) {
   if (!infoFlowSummaryMode) return;
   int last = infoflowstack[&state]->size() - 1; 
   currentInfoFlowContext = (*infoflowstack[&state])[last];
-  if (EncVer)
-     llvm::errs() << "switching to state " << &state << "\n";
+  llvm::errs() << "switching to state " << &state << "\n";
 }
 
 void pushInfoFlowContext(ExecutionState &state) {
@@ -799,21 +764,21 @@ void pushInfoFlowContext(ExecutionState &state) {
    initvalue.localIFlow = new std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > >();
    infoflowstack[&state]->push_back(initvalue);
    currentInfoFlowContext = initvalue;
-   if (EncVer) llvm::errs() << "pushing info flow context for " << &state << "\n";
+   llvm::errs() << "pushing info flow context for " << &state << "\n";
 }
 
 void popInfoFlowContext(ExecutionState &state) {
    if (!infoFlowSummaryMode) return; 
    infoflowstack[&state]->pop_back();
    currentInfoFlowContext =  infoflowstack[&state]->back();
-   if (EncVer) llvm::errs() << "poping info flow context for " << &state << "\n";
+   llvm::errs() << "poping info flow context for " << &state << "\n";
 }
 
 void saveInfoFlowContext(ExecutionState &state) {
    if (!infoFlowSummaryMode) return;
    int last = infoflowstack[&state]->size() - 1;
    (*infoflowstack[&state])[last] = currentInfoFlowContext;       
-   if (EncVer) llvm::errs() << "saving info flow context for " << &state << "\n"; 
+   llvm::errs() << "saving info flow context for " << &state << "\n"; 
 }
 
 bool operator==(region r1, region r2) {
@@ -839,11 +804,9 @@ InfoFlowRegion_t createInfoFlowRegion(int source, unsigned int offset, unsigned 
 }
 
 void addLevel(InfoFlowRegion_t &dc, unsigned int offset, unsigned int size) {
-   if (EncVer) {
-      llvm::errs() << "adding a point of indirection to ";
-      print(dc);
-      llvm::errs() << "\n";
-   }
+   llvm::errs() << "adding a point of indirection to ";
+   print(dc);
+   llvm::errs() << "\n";
    region r;
    r.offset = offset;
    r.size = size;
@@ -926,13 +889,11 @@ void recordInfoFlow(ExecutionState &state, InfoFlowRegion_t dest, InfoFlowRegion
   ifsmap[dest] = sources;
   ifsmapt[desti] = ifsmap; 
   infoFlowSummaryPerState[&state] = ifsmapt;
-  if (EncVer) {
-     llvm::errs() << "RECORDING info flow to destination=" << desti << "\n";
-     print(sources);
-     llvm::errs() << "===>\n";
-     print(dest);
-     llvm::errs() << "\n";
-  } 
+  llvm::errs() << "RECORDING info flow to destination=" << desti << "\n";
+  print(sources);
+  llvm::errs() << "===>\n";
+  print(dest);
+  llvm::errs() << "\n";
 }
 
 /*void checkAndMarkPointerRegForLoad(ExecutionState &state, KInstruction *target, int destregIndex) {
@@ -987,7 +948,7 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
       // conservative approximation when offset is symbolic
       offset = 0;
       size = mo->size;
-      if (EncVer) llvm::errs() << "handling symbolic offset by conservatively using 0 and " << mo->size << "for size\n"; 
+      llvm::errs() << "handling symbolic offset by conservatively using 0 and " << mo->size << "for size\n"; 
    }
    else offset = CE->getZExtValue();
    int sourceIndex = getRegIndexFor(mo);
@@ -1007,17 +968,15 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
       if (t->isPointerTy())
             doublepointer = true;
    }
-   if (EncVer) llvm::errs() << "Info Flow For LOAD register=" << regIndex << " offset=" << offset << " size=" << size << "\n";
+   llvm::errs() << "Info Flow For LOAD register=" << regIndex << " offset=" << offset << " size=" << size << "\n";
    std::map<const MemoryObject*, 
                   std::map<region, 
                            std::set<InfoFlowRegion_t> > > memoryIFlow = memoryInfoFlow[&state];
    bool update = false;
    std::vector<region> updated;
    if (memoryIFlow.find(mo) != memoryIFlow.end()) {
-         if (EncVer) {
-            llvm::errs() << "Transferring info in LOAD: " << target->inst << "\n";
-            llvm::errs() << "source register=" << regIndex << "\n"; 
-         }
+         llvm::errs() << "Transferring info in LOAD: " << target->inst << "\n";
+         llvm::errs() << "source register=" << regIndex << "\n"; 
          std::map<region, std::set<InfoFlowRegion_t> > ifrmaps =  slice(memoryIFlow[mo], rs);  
          std::map<region, std::set<InfoFlowRegion_t> > ifrmap = (*currentInfoFlowContext.localIFlow)[target->dest];         
          for(auto me : ifrmaps) {
@@ -1031,7 +990,7 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
    }
    std::vector<region> notupdated = diffPartitionRegion(rt, updated);
    if (notupdated.size() > 0) {
-      if (EncVer) llvm::errs() << "Trying to fill uncovered " << notupdated.size() << " regions in LOAD after handling flow from memory\n";
+      llvm::errs() << "Trying to fill uncovered " << notupdated.size() << " regions in LOAD after handling flow from memory\n";
       int source = isInfoFlowRelevant(target, regIndex);    
       if (source >= 0) {
          // info flow tracking relevant
@@ -1039,10 +998,8 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
          ifr = createInfoFlowRegion(source, offset, size);   
          if (!isLocal(regIndex)) 
             addLevel(ifr, offset, size); 
-         if (EncVer) {
-            llvm::errs() << "Adding info flow source in LOAD: " << target->inst << "\n";
-            print(ifr);
-         }
+         llvm::errs() << "Adding info flow source in LOAD: " << target->inst << "\n";
+         print(ifr);
          std::set<InfoFlowRegion_t> ifrs;
          ifrs.insert(ifr);
          std::map<region, std::set<InfoFlowRegion_t> > ifrmap  = (*currentInfoFlowContext.localIFlow)[target->dest];
@@ -1054,7 +1011,7 @@ void Executor::updateInfoFlowForLoad(ExecutionState &state,
          // not updated yet with any infoflow so let's see if this refers to an inforelevant address
          std::map<region, std::set<InfoFlowRegion_t> > ifrmap  = (*currentInfoFlowContext.localIFlow)[target->dest];
          for(auto rtp : notupdated) {
-            if (EncVer) llvm::errs() << "region " << rtp.offset << ":" << rtp.size << "\n";
+            llvm::errs() << "region " << rtp.offset << ":" << rtp.size << "\n";
             //std::map<region, std::set<InfoFlowRegion_t> > ifrmaps2 = slice(currentInfoFlowContext.localIFlow[regIndex], rtp);
             std::map<region, std::set<InfoFlowRegion_t> > ifrmaps2 = (*currentInfoFlowContext.localIFlow)[regIndex];
             std::map<region, std::set<InfoFlowRegion_t> > ifrmaps;
@@ -1167,7 +1124,7 @@ std::vector<region> adjust(std::vector<region> r, region adj) {
 }
 
 InfoFlowRegion_t adjust(InfoFlowRegion_t ifr, region adj) {
-  if (EncVer) llvm::errs() << "adj = " << adj.offset << "," << adj.size << "\n";
+  llvm::errs() << "adj = " << adj.offset << "," << adj.size << "\n";
   InfoFlowRegion_t res;
   res.index = ifr.index;
   for(unsigned int i=0; i<ifr.regions.size(); i++)
@@ -1235,23 +1192,17 @@ void partitionAndUpdateIFlow(std::map<region, std::set<InfoFlowRegion_t> > &ifrm
   if (exactMatch) {
      if (replace)  {
         ifrmap[rt] = ifrcs;
-        if (EncVer) {
-           llvm::errs() << "exact match, setting region " << rt.offset << ":" << rt.size << "to:\n";
-           print(ifrcs);
-        }
+        llvm::errs() << "exact match, setting region " << rt.offset << ":" << rt.size << "to:\n";
+        print(ifrcs);
      }
      else {
-        if (EncVer) {
-           llvm::errs() << "exact match, expanding info flow:\n";
-           print(ifrcs);
-        }
+        llvm::errs() << "exact match, expanding info flow:\n";
+        print(ifrcs);
         for(auto rgse : rgs) {
            ifrcs.insert(rgse);
-        }
-        if (EncVer) { 
-           llvm::errs() << "into:\n";
-           print(ifrcs);
-        }
+        } 
+        llvm::errs() << "into:\n";
+        print(ifrcs);
         ifrmap[rt] = ifrcs;
      }
   }
@@ -1278,22 +1229,18 @@ void partitionAndUpdateIFlow(std::map<region, std::set<InfoFlowRegion_t> > &ifrm
            toberemoved.push_back(rd3);
            if (replace) {
               ifrmap[rd3] = adjust(ifrcs, adjustment(rt, rd3));
-              if (EncVer) {
-                 llvm::errs() << "setting common subregion " << rd3.offset << ":" << rd3.size << "to:\n";
-                 print(ifrmap[rd3]);
-              }
+              llvm::errs() << "setting common subregion " << rd3.offset << ":" << rd3.size << "to:\n";
+              print(ifrmap[rd3]);
            }
            else {
-              if (EncVer) llvm::errs() << "expanding info flow:\n";
+              llvm::errs() << "expanding info flow:\n";
               std::set<InfoFlowRegion_t> aifrcs = adjust(ifrcs, adjustment(rt, rd3));
-              if (EncVer) print(aifrcs);              
+              print(aifrcs);              
               for(auto infre: infr[i]) 
                  aifrcs.insert(adjust(infre, adjustment(covered[i], rd3)));
               ifrmap[rd3] = aifrcs;          
-              if (EncVer) {
-                 llvm::errs() << "into:\n";
-                 print(aifrcs);               
-              }
+              llvm::errs() << "into:\n";
+              print(aifrcs);               
            }
         }
      }
@@ -1301,18 +1248,14 @@ void partitionAndUpdateIFlow(std::map<region, std::set<InfoFlowRegion_t> > &ifrm
         std::vector<region> rts = diffPartitionRegion(rt, toberemoved);
         for(unsigned int k=0; k<rts.size(); k++) {
            ifrmap[rts[k]] = adjust(ifrcs, adjustment(rt, rts[k]));
-           if (EncVer) {
-              llvm::errs() << "setting partitioned region " << rts[k].offset << "," << rts[k].size << " :\n";
-              print(ifrmap[rts[k]]);
-           }
+           llvm::errs() << "setting partitioned region " << rts[k].offset << "," << rts[k].size << " :\n";
+           print(ifrmap[rts[k]]);
         }     
      }
      else { //if (covered.size() == 0) {
         ifrmap[rt] = ifrcs;
-        if (EncVer) {
-           llvm::errs() << "setting target region " << rt.offset << ":" << rt.size << "to:\n";
-           print(ifrcs);
-        }
+        llvm::errs() << "setting target region " << rt.offset << ":" << rt.size << "to:\n";
+        print(ifrcs);
      }
   }
 }
@@ -1383,14 +1326,14 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
       if (t->isPointerTy())
             doublepointer = true;
    }
-   if (EncVer) llvm::errs() << "Info Flow For STORE register=" << regIndex << "\n";
+   llvm::errs() << "Info Flow For STORE register=" << regIndex << "\n";
    int dest = isInfoFlowRelevant(target, destregIndex); 
    if (dest >= 0) {
       // info flow tracking relevant
       destif = createInfoFlowRegion(dest, offset, size);  
-      if (EncVer) llvm::errs() << "Adding info flow relevant destination in STORE: " << target->inst << "\n";
+      llvm::errs() << "Adding info flow relevant destination in STORE: " << target->inst << "\n";
       destifs = setIF(destif);
-      if (EncVer) print(destifs);
+      print(destifs);
       record = true;
    }
    else if (currentInfoFlowContext.localIFlow->find(destregIndex) != currentInfoFlowContext.localIFlow->end()) {
@@ -1400,10 +1343,8 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
          if (!isLocal(destregIndex))
             destifs = addLevel(destifs, offset, size);
          record = true;
-         if (EncVer) {
-            llvm::errs() << "Adding info flow relevant destination from register in STORE: " << target->inst << "\n";
-            print(destifs);
-         }
+         llvm::errs() << "Adding info flow relevant destination from register in STORE: " << target->inst << "\n";
+         print(destifs);
          break;
       }
    } 
@@ -1412,9 +1353,9 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
       std::map<region, std::set<InfoFlowRegion_t> > ifrmap, ifrmaps;
       if (source >= 0) {
          sourceif = createInfoFlowRegion(source, offset, size);   
-         if (EncVer) llvm::errs() << "Adding info flow relevant source in STORE: " << target->inst << "\n";
+         llvm::errs() << "Adding info flow relevant source in STORE: " << target->inst << "\n";
          sourceifs = setIF(sourceif);
-         if (EncVer) print(sourceifs);
+         print(sourceifs);
          ifrmaps[rs] = sourceifs;
       }
       else {
@@ -1439,7 +1380,7 @@ void Executor::updateInfoFlowForStore(ExecutionState &state,
       }
    }
    else if (record) {
-      if (EncVer) llvm::errs() << "CLEARING INFO FLOW\n";
+      llvm::errs() << "CLEARING INFO FLOW\n";
       // clear the info flow to the destif
       for(auto destif : destifs)
          clearInfoFlowSummaryPerState(state, destif);
@@ -1453,7 +1394,7 @@ int getReturnIndex(Function *f) {
 }
 
 void Executor::updateInfoFlowForReturn(ExecutionState &state, int regIndex, KInstruction *ki) {
-   if (EncVer) llvm::errs() << "Info Flow for RETURN\n";
+   llvm::errs() << "Info Flow for RETURN\n";
    if (!infoFlowSummaryMode) return;
    if (regIndex < 0) return; 
    if (ki->inst->getNumOperands() > 0) {
@@ -1594,7 +1535,7 @@ std::string removeDotSuffix(std::string name) {
 
 bool isInputFunction(Function *function) {
     std::string fname = removeDotSuffix(function->getName());    
-    if (EncVer) llvm::errs() << "checking " << fname << " to see if an input function\n";
+    llvm::errs() << "checking " << fname << " to see if an input function\n";
     return (inputFuncs.find(fname) != inputFuncs.end());
 }
 
@@ -1613,87 +1554,41 @@ void timeSideChannelAnalysis(Executor *executor) {
     if (((RD*)topm.first)->HA != NULL)
        continue;
     for(auto frs : topm.second) {
-       std::vector<unsigned> succMin;
-       std::vector<unsigned> succMax;
-       std::vector<long> maxRD;
-       std::vector<long> minRD;
-       //int maxsucc = -1, minsucc = -1;
-       for(auto succ : frs.second) {
+      std::vector<unsigned> succMin;
+      std::vector<unsigned> succMax;
+      for(auto succ : frs.second) {
          long int min=LONG_MAX, max=0;
-         long minrd, maxrd;
          for(auto rdd : succ.second) {
-             if (((RD*)rdd)->ru < min) { 
+             if (((RD*)rdd)->ru < min)
                 min = ((RD*)rdd)->ru;
-                minrd = rdd;
-             }
-             if (((RD*)rdd)->ru > max) {
+             if (((RD*)rdd)->ru > max)
                 max = ((RD*)rdd)->ru;
-                maxrd = rdd;
              }
          }
          succMin.push_back(min);
          succMax.push_back(max);
-         minRD.push_back(minrd);
-         maxRD.push_back(maxrd);
       }
-      for(unsigned int i=0; i<succMin.size(); i++) {
-         for(unsigned int j=i+1; j<succMin.size(); j++) {
-            int diff1 = succMax[i] - succMin[j];
-            int diff2 = succMax[j] - succMin[i]; 
-            if (diff1 >= maxdiff || 
-                diff2 >= maxdiff) {
-               if (diff1 > diff2) {
-                  maxdiff = diff1;
-                  //maxsucc = i;
-                  //minsucc = j;
-                  if (diff1 > maxdiff)
-                     topsCandidate.clear();
-                  topsCandidate.insert(maxRD[i]); 
-                  topsCandidate.insert(minRD[j]); 
-               }
-               else if (diff1 < diff2) {
-                  maxdiff = diff2;
-                  //maxsucc = j;
-                  //minsucc = i;
-                  if (diff2 > maxdiff)
-                     topsCandidate.clear();
-                  topsCandidate.insert(maxRD[j]); 
-                  topsCandidate.insert(minRD[i]); 
-               }
-               else {
-                  maxdiff = diff2;
-                  //maxsucc = j;
-                  //minsucc = i;
-                  if (diff2 > maxdiff)
-                     topsCandidate.clear();
-                  topsCandidate.insert(maxRD[j]); 
-                  topsCandidate.insert(maxRD[i]); 
-                  topsCandidate.insert(minRD[i]); 
-                  topsCandidate.insert(minRD[j]); 
-               }
-               fname = frs.first;
-               ha = topm.first;               
-            }
-         } 
+      for(unsigned 
+       if (max - min > maxdiff) {
+          maxdiff = max - min;
+          fname = frs.first;
+          ha = topm.first;
+          topsCandidate = frs.second; 
+       } 
       }
     }
    }
-
-    if (EncVer) llvm::errs() << "Timing observation point for H-ancestor " << (*((Instruction*)im.first)) 
-                 << fname << "\n";
-
-   for(auto t : topsCandidate) { 
+   for(auto t : topsCandidate) 
       finalTops.insert(t);
-      if (EncVer) llvm::errs() << "RD with usage " << ((RD*)t)->ru << "\n";
-   }
-   
+
+    llvm::errs() << "Timing observation point for H-ancestor " << (*((Instruction*)im.first)) 
+                 << fname << "\n";
  }
  // remove timing observation points that do not yield the max diff
- /*for(auto im : timingObsPointsMap) {
+ for(auto im : timingObsPointsMap) {
    for(auto topm : im.second) {
        for(auto frs : topm.second) {
-         for(auto succ : frs.second) {
-          for(auto rdd : succ.second) {
+          for(auto rdd : frs.second) {
              if (finalTops.find(rdd) == finalTops.end()) {
                 llvm::errs() << "removing candidate timign observation point " 
                        << ((RD*)rdd)->stateid << " with inst " << (*((RD*)rdd)->i) << "\n";
@@ -1703,29 +1598,13 @@ void timeSideChannelAnalysis(Executor *executor) {
                 ((RD*)prod)->succ->erase(((RD*)rdd));
              }
           }
-        }
        }
     }
- }*/
- codecacheos.rdbuf()->pubsetbuf(0, 0);
- codecacheos.open("codeCacheSideChannels_time.txt", std::fstream::out);
- timingos.rdbuf()->pubsetbuf(0, 0);
- timingos.open("timingSideChannels_time.txt", std::fstream::out);
- normaltermtimingos.rdbuf()->pubsetbuf(0, 0);
- normaltermtimingos.open("normalTermTimingSideChannels_time.txt",                                              std::fstream::out);
- inferredtimingos.rdbuf()->pubsetbuf(0, 0);
- inferredtimingos.open("inferredTimingSideChannels_time.txt", 
-                                            std::fstream::out);
+ }
  for(rroot : resourceTreeRootList) {
     propagate(rroot, "", executor);
     checkLeakage(rroot, executor);
  }
- codecacheos.close();
- timingos.close();
- normaltermtimingos.close();
- inferredtimingos.close();       
- if (EncVer) llvm::errs() << "closed timing stat files!\n";
-
  std::cerr << "\n\n\n\n>>>> Listing violations :  \n";
  printviolations(executor);
 }
@@ -1734,7 +1613,7 @@ Type *getTypeFromName(llvm::Module *module, std::string tname) {
    llvm::TypeFinder StructTypes;
    StructTypes.run(*(module), true);
    for (auto *STy : StructTypes) { 
-    if (EncVer) llvm::errs() << getTypeName(STy) << " vs " << tname << "\n";
+    llvm::errs() << getTypeName(STy) << " vs " << tname << "\n";
     if (getTypeName(STy) == tname)
        return STy;
    }
@@ -1821,7 +1700,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
   //if (stackLeakToBeChecked.find(fname) == stackLeakToBeChecked.end())
   //   return;
   const InstructionInfo &ii_info = kmodule->infos->getInfo(ii);
-  if (EncVer) llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n";
+  llvm::errs() << "checking leak in " << sf.kf->function->getName() << " with " << sf.allocas.size() << "locals \n";
   unsigned int localVar = 0; 
   for (std::vector<const MemoryObject*>::iterator it = sf.allocas.begin(), 
          ie = sf.allocas.end(); it != ie; ++it, localVar++) {
@@ -1849,7 +1728,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
             ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             ss2 << value << "\n\n";
             highSecurityLeaksOnStack.insert(ss2.str());
-            if (EncVer) llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
+            llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
          }
       }
       else if (exprHasSymRegionFast(value, true, info)) {
@@ -1860,7 +1739,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
             ss2 << ii_info.file.c_str() << " " << ii_info.line << ": \n\n";
             ss2 << value << " " << info << "\n\n";
             highSecurityLeaksOnStack.insert(ss2.str());
-            if (EncVer) llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
+            llvm::errs() << "Sensitive leak via local variable " << localVar << " in function " << fname << " at address " << (*it)->getBaseExpr() << "\n"; 
       } 
    }
    /*Cell *cells = state.stack.back().locals; 
@@ -1877,7 +1756,7 @@ void Executor::checkHighSensitiveLocals(ExecutionState &state, Instruction *ii) 
          }
      }
    }*/
-   if (EncVer) llvm::errs() << "checking done\n";
+   llvm::errs() << "checking done\n";
 }
 
 unsigned int Executor::getTimingCost(ExecutionState &state, Instruction *inst) {
@@ -1929,9 +1808,9 @@ void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *func
            solver->setTimeout(0);
            if (asuccess) {
               ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int32), getWidthForLLVMType(bt));
-              if (EncVer) llvm::errs() << "checking arg " << a << " of " <<  fname << " : " << result << " for sensitive flow\n"; 
+              llvm::errs() << "checking arg " << a << " of " <<  fname << " : " << result << " for sensitive flow\n"; 
               if (exprHasSymRegion(state, result, true)) {
-                 if (EncVer) llvm::errs() << " high region flows into " << fname << "\n";
+                 llvm::errs() << " high region flows into " << fname << "\n";
                  highIndices.push_back(a);
                  sig += pow(2,a);
               }
@@ -1939,7 +1818,7 @@ void Executor::checkAndRecordSensitiveFlow(ExecutionState &state, Function *func
         }
         else {
            if (exprHasSymRegion(state, args[a], true)) {
-              if (EncVer) llvm::errs() << " high region flows into " << fname << "\n";
+              llvm::errs() << " high region flows into " << fname << "\n";
               highIndices.push_back(a);
               sig += pow(2,a);
            }
@@ -2049,7 +1928,7 @@ void clearMemoryRegion(ExecutionState &state, ref<Expr> a, std::vector<region> r
       clearRegion(rs, m[a], temp);
       if (temp.size() == 0) {
          m.erase(a);
-         if (EncVer) llvm::errs() << "clearing high=" << high << " status of " << a << "\n";
+         llvm::errs() << "clearing high=" << high << " status of " << a << "\n";
       }
       else m[a] = temp;
       if (high) 
@@ -2065,7 +1944,7 @@ void clearSymRegion(std::string name, std::vector<region> rs, bool high) {
      clearRegion(rs, cur, temp);
       if (temp.size() == 0) {
          highSymRegions.erase(name);
-         if (EncVer) llvm::errs() << "clearing high=" << high << " status of " << name << "\n";
+         llvm::errs() << "clearing high=" << high << " status of " << name << "\n";
       }
       highSymRegions[name] = temp; 
   }
@@ -2075,7 +1954,7 @@ void clearSymRegion(std::string name, std::vector<region> rs, bool high) {
      clearRegion(rs, cur, temp);
       if (temp.size() == 0) {
          lowSymRegions.erase(name);
-         if (EncVer) llvm::errs() << "clearing high=" << high << " status of " << name << "\n";
+         llvm::errs() << "clearing high=" << high << " status of " << name << "\n";
       }
       lowSymRegions[name] = temp; 
   }
@@ -2159,7 +2038,7 @@ void setHighSymRegion(std::string name, std::vector<region> rs) {
   }*/
   highSymRegions[name] = rs;
   clearSymRegion(name, rs, false);
-  if (EncVer) llvm::errs() << "setting symbolic region high: " << name << "\n";
+  llvm::errs() << "setting symbolic region high: " << name << "\n";
 }
 
 void setLowSymRegion(std::string name, std::vector<region> rs) {
@@ -2168,7 +2047,7 @@ void setLowSymRegion(std::string name, std::vector<region> rs) {
      assert(false && "duplicate entry for lowsymregions");
   }*/
   lowSymRegions[name] = rs; 
-  if (EncVer) llvm::errs() << "clearing " << name << " from high\n";
+  llvm::errs() << "clearing " << name << " from high\n";
   clearSymRegion(name, rs, true);
 }
 
@@ -2243,7 +2122,7 @@ bool Executor::isInRegion(ExecutionState &state, std::vector<region> rs, ref<Exp
            return true;
         } 
      }
-    if (EncVer) llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
+    llvm::errs() << "Symbolic offset do not fall into the security sensitive region!\n";
   }
   return false;
 }
@@ -2257,19 +2136,19 @@ bool isASymRegion(std::string symname, bool high) {
 
 bool Executor::isInSymRegion(ExecutionState &state, std::string symname, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed,  
       bool high) {
-  //llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
+  llvm::errs() << "Checking if symbolic region " << symname << " offset=" << offset << " size=" << type << " is (high?) " << high << "\n";  
   if (high) {
      if (highSymRegions.find(symname) == highSymRegions.end()) 
         return false;
      std::vector<region> rs = highSymRegions[symname];    
-     //llvm::errs() << "Yes, now checking region is ok\n";
+     llvm::errs() << "Yes, now checking region is ok\n";
      return isInRegion(state, rs, offset, offsetType, type, computed);
   }
   else {
      if (lowSymRegions.find(symname) == lowSymRegions.end()) 
         return false;
      std::vector<region> rs = lowSymRegions[symname];
-     //llvm::errs() << "Yes, now checking region is ok\n";
+     llvm::errs() << "Yes, now checking region is ok\n";
      return isInRegion(state, rs, offset, offsetType, type, computed);
   }
 }
@@ -2281,25 +2160,23 @@ bool Executor::isInHighMemoryRegion(ExecutionState &state, ref<Expr> baseAddress
   }
   std::map<ref<Expr>, std::vector<region> > m = highMemoryRegions[sa];
   if (m.find(baseAddress) == m.end()) {
-     if (EncVer) llvm::errs() << "base address not marked as security sensitive\n";
+     llvm::errs() << "base address not marked as security sensitive\n";
      return false;
   }
   else {
      std::vector<region> rs = m[baseAddress];
-     if (EncVer) llvm::errs() << "checking if is in high mem region: \n";
+     llvm::errs() << "checking if is in high mem region: \n";
      return isInRegion(state, rs, offset, offsetType, type, computed);
   }
 }
 
 void printSymRegions() {
-  if (EncVer)  {
   llvm::errs() << "High symbolic regions:\n";
   for(auto  k : highSymRegions)
      llvm::errs() << k.first << "\n";
   llvm::errs() << "Low symbolic regions:\n";    
   for(auto  k : lowSymRegions)
      llvm::errs() << k.first << "\n";
-  }
 }
 
 bool Executor::isInLowMemoryRegion(ExecutionState &state, ref<Expr> baseAddress, ref<Expr> offset, Expr::Width offsetType, Expr::Width type, bool computed) {
@@ -2338,19 +2215,17 @@ void Executor::checkAndUpdateInfoFlow(ExecutionState &state, Function *f, std::v
    std::vector<ref<Expr> > argsValues;
    getArgValue(state, f, args, argsValues);
    if (argsValues.size() == 0) {
-      if (EncVer) llvm::errs() << "no relevant args to check for info flow for " << fname << "\n";   
+      llvm::errs() << "no relevant args to check for info flow for " << fname << "\n";   
       return;
    }
    std::vector<region> rs = getHighInfoFlowRegions(state, fname, argsValues);
    //llvm::errs() << "will info flow into " << mo->name << "\n";
    if (rs.size() > 0) {
       //llvm::errs() << "yes!\n";
-      if (EncVer) {
-         for(unsigned int i=0; i<rs.size(); i++)
-            llvm::errs() << rs[i].offset << "," << rs[i].size << "\n";
-      }
+      for(unsigned int i=0; i<rs.size(); i++)
+         llvm::errs() << rs[i].offset << "," << rs[i].size << "\n";
       setHighMemoryRegion(state, mo->getBaseExpr(), rs);
-      if (EncVer) llvm::errs() << "calling setHighSym from checkAndUpdateInfoFlow for " << fname << "\n"; 
+      llvm::errs() << "calling setHighSym from checkAndUpdateInfoFlow for " << fname << "\n"; 
       setHighSymRegion(mo->name, rs);
    }
 }
@@ -2390,7 +2265,7 @@ void computeMaxVoidTypeCastSize() {
         std::string tname = getTypeName(STy);
         if (tname.find(vct) != std::string::npos) 
            if (targetData->getTypeStoreSize(STy) > maxVoidTypeCastSize) {
-              if (EncVer) llvm::errs() << "Storing size of " << tname << " for max void cast size: " << targetData->getTypeStoreSize(STy) << " \n";
+              llvm::errs() << "Storing size of " << tname << " for max void cast size: " << targetData->getTypeStoreSize(STy) << " \n";
               maxVoidTypeCastSize = targetData->getTypeStoreSize(STy);   
            } 
      }
@@ -2423,7 +2298,7 @@ void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
            else if (sizes[offset.first] == 64)
               ve = klee::ConstantExpr::alloc(offset.second, Expr::Int64); 
            else assert(0 && "unhandled size in lazy init initializers!");
-           if (EncVer) llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset.first << " to value " << ve << " at base address " << mo->getBaseExpr() << "\n";
+           llvm::errs() << "Initializing object of lazy init type " << tname << " at offset " << offset.first << " to value " << ve << " at base address " << mo->getBaseExpr() << "\n";
            obj->write(offset.first, ve); 
         }
      }
@@ -2442,12 +2317,12 @@ void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
            // lookup the function 
            Function *f = moduleHandle->getFunction(e.second);
            if (!f) {
-              if (EncVer) llvm::errs() << "Unable to find function " << e.second << " in the module to init func pointer!!!\n";
+              llvm::errs() << "Unable to find function " << e.second << " in the module to init func pointer!!!\n";
               exit(1);
            }
            // assign the function address to the offset
            obj->write(e.first, Expr::createPointer((uint64_t)f));
-           if (EncVer) llvm::errs() << "assigning function " << f->getName() << "to offset " << e.first << " of base address " << mo->getBaseExpr() << "\n";
+           llvm::errs() << "assigning function " << f->getName() << "to offset " << e.first << " of base address " << mo->getBaseExpr() << "\n";
         }
      }
   }
@@ -2960,10 +2835,10 @@ void Executor::getArgValue(ExecutionState &state, Function *function,
                   argsRes.push_back(result);
                }
                else {
-                  if (EncVer) llvm::errs() << op.second->isByteConcrete(0) << " " 
+                  llvm::errs() << op.second->isByteConcrete(0) << " " 
                                << op.second->isByteKnownSymbolic(0) << " "
                                << op.second->isByteFlushed(0) << "\n";
-                  if (EncVer) llvm::errs() << "getArgValue " << ai  << "\n";
+                  llvm::errs() << "getArgValue " << ai  << "\n";
                   ref<Expr> result = op.second->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(bt));
                   argsRes.push_back(result);
                }
@@ -3169,7 +3044,7 @@ void Executor::initializeGlobalObject(ExecutionState &state, ObjectState *os,
     // Extend the constant if necessary;
    // assert(StoreBits >= C->getWidth() && "Invalid store size!");
     if (StoreBits > C->getWidth()) {
-      if (EncVer) llvm::errs() << "WARNING: StoreBits " << StoreBits << " greater than width " << C->getWidth() << "\n";
+      llvm::errs() << "WARNING: StoreBits " << StoreBits << " greater than width " << C->getWidth() << "\n";
       C = C->ZExt(StoreBits);
     }
     os->write(offset, C);
@@ -3533,30 +3408,10 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal, bo
         // add constraints
         if(branch) {
           res = Solver::True;
-          if (EncVer) { 
-             llvm::errs() << "Last condition before "
-                               << "fork single successor: ";
-             llvm::errs() <<  current.lastCondition << "\n";
-          }
           addConstraint(current, condition, forBranch);
-          if (EncVer) { 
-             llvm::errs() << "Last condition before "
-                               << "fork single successor: ";
-             llvm::errs() <<  current.lastCondition << "\n";
-          }
         } else  {
           res = Solver::False;
-          if (EncVer) { 
-             llvm::errs() << "Last condition before "
-                               << "fork single successor: ";
-             llvm::errs() <<  current.lastCondition << "\n";
-          }
           addConstraint(current, Expr::createIsZero(condition), forBranch);
-          if (EncVer) { 
-             llvm::errs() << "Last condition before "
-                               << "fork single successor: ";
-             llvm::errs() <<  current.lastCondition << "\n";
-          }     
         }
       }
     } else if (res==Solver::Unknown) {
@@ -3612,19 +3467,9 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal, bo
     }
     if (!(trueSeed && falseSeed)) {
       assert(trueSeed || falseSeed);
-      if (EncVer) { 
-         llvm::errs() << "Last condition before "
-                               << "fork single successor: ";
-         llvm::errs() <<  current.lastCondition << "\n";
-      }
+
       res = trueSeed ? Solver::True : Solver::False;
       addConstraint(current, trueSeed ? condition : Expr::createIsZero(condition), forBranch);
-      if (EncVer) { 
-         llvm::errs() << "Last condition after "
-                               << "fork single successor: ";
-         llvm::errs() <<  current.lastCondition << "\n";
-      }
-
     }
   }
 
@@ -4033,22 +3878,12 @@ void Executor::executeCall(ExecutionState &state,
       std::string prosename = f->getName().str() + "_PROSE"; 
       Function *proseFn = moduleHandle->getFunction(prosename);
       if (proseFn) {
-         if (EncVer) llvm::errs() << "WARNING: Using " << prosename << " for " << f->getName() << "\n";
+         llvm::errs() << "WARNING: Using " << prosename << " for " << f->getName() << "\n";
          ((CallInst*)ki->inst)->setCalledFunction(proseFn);
          executeCall(state, ki, proseFn, arguments);
          return;
       }
 
-       /*if (UseInternal) {
-          Function *inf = getInternalVersion(f->getName().str());
-          if (inf) {
-             llvm::errs() << "WARNING: Using internal function " << inf->getName() << " for " << f->getName() << "\n";
-             ((CallInst*)ki->inst)->setCalledFunction(inf);
-             executeCall(state, ki, inf, arguments);   
-             return;
-          }
-       }*/
-        
 
        //llvm::errs() << "checking regular function call for high/low flows\n";
        //checkHighArgumentFlow(state, ki, f, arguments);
@@ -4178,9 +4013,9 @@ void Executor::executeCall(ExecutionState &state,
     unsigned numFormals = f->arg_size();
     for (unsigned i=0; i<numFormals; ++i)
       bindArgument(kf, i, state, arguments[i]);
-    if (EncVer) llvm::errs() << "before check 2\n";
+    llvm::errs() << "before check 2\n";
     symbolizeAndMarkSensitiveArgumentsOnCall(state,ki,f,arguments,false);
-    if (EncVer) llvm::errs() << "after check 2\n";
+    llvm::errs() << "after check 2\n";
   }
 }
 
@@ -4277,26 +4112,6 @@ static inline const llvm::fltSemantics * fpWidthToSemantics(unsigned width) {
   }
 }
 
-bool reachable(RD *r1, RD *r2) {
-    if (r1 == r2)
-       return true;
-    for(auto rs : (*r2->succ)) {
-       if  (reachable(r1, rs))
-           return true;
-    }
-    return false;
-}
-
-int reachableBySuccessor(RD *r1, RD *r2) {
-    int sno = 0;
-    for(auto rs : (*r2->succ)) {
-       if  (reachable(r1, rs))
-           return sno;
-       sno++;
-    }    
-    return -1;
-}
-
 // Records the timing observation point for the relevant top-most H-ancestors 
 void Executor::recordTimingObservationPoint(void* rddtermp, void *child, void *hap, std::string fname) {
    if (!hap || fname == "") 
@@ -4304,26 +4119,32 @@ void Executor::recordTimingObservationPoint(void* rddtermp, void *child, void *h
    RD* rddterm = (RD*)rddtermp;
    RD* ha = (RD*)hap;
    if (!ha->HA) {
-      unsigned sucno = reachableBySuccessor((RD*)rddtermp, ha);
-      assert(sucno != -1 && "Couldn't match the successor of RD node!\n");
-      std::map<long, std::map<std::string, std::map<unsigned, std::set<long> > > > m1;
-      std::map<std::string, std::map<unsigned, std::set<long> > > m2;
-      std::map<unsigned, std::set<long> >m3;
+      unsigned sucno = -1;
+      unsigned index = 0;
+      for(auto hs : ha->succ) {
+         if (hs == child) {
+            sucno = index;
+            break;  
+         }
+         index++;
+      }
+      std::map<long, std::map<unsigned, std::map<std::string, std::set<long> > > > m1;
+      std::map<unsigned, std::map<std::string, std::set<long> > > m2;
+      std::map<std::string, std::set<long> >m3;
       std::set<long> s;
       if (timingObsPointsMap.find((long)ha->i) != timingObsPointsMap.end())
          m1 = timingObsPointsMap[(long)ha->i];
       if (m1.find((long)ha) != m1.end())
          m2 = m1[(long)ha];
-      if (m2.find(fname) != m2.end())
-         m3 = m2[fname];
-      if (m3.find(sucno) != m3.end())
-         s = m3[sucno];
+      if (m2.find(sucno) != m2.end())
+         m3 = m2[sucno];
+      if (m3.find(fname) != m3.end())
+         s = m3[fname];
       s.insert((long)rddterm);
-      m3[sucno] = s;
-      m2[fname] = m3;
+      m3[fname] = s;
+      m2[sucno] = m3;
       m1[(long)ha] = m2;
      timingObsPointsMap[(long)ha->i] = m1;    
-     if (EncVer) llvm::errs() << "Successor " << sucno << " of h ancestor at " << (*ha->i) << "\n";
    }
    else recordTimingObservationPoint(rddterm, hap, ha->HA, fname);
 }
@@ -4337,7 +4158,7 @@ void Executor::handleTimingObservationPoint(ExecutionState &state, bool restart,
    std::pair<PTree::Node*, PTree::Node*> res = processTree->split(state.ptreeNode, tobeterm, &state);
    tobeterm->ptreeNode = res.first;
    state.ptreeNode = res.second;
-   if (EncVer) llvm::errs() << "copy of state " << &state << " to be terminated: " << tobeterm << "\n"; 
+   llvm::errs() << "copy of state " << &state << " to be terminated: " << tobeterm << "\n"; 
    RD *rdd = getrdmap(&state);
    RD *rddterm = newNode(tobeterm);
    rddterm->isHBr = rdd->isHBr;
@@ -4355,7 +4176,7 @@ void Executor::handleTimingObservationPoint(ExecutionState &state, bool restart,
    rddterm->pathterminated = true;
    rddterm->timingObservationPoint = true;
    rddterm->topsLoc = fname;
-   if (EncVer) llvm::errs() << "Candidate tops " << rddterm->stateid << " with inst " << (*rddterm->i) << "\n";
+   llvm::errs() << "Candidate tops " << rddterm->stateid << " with inst " << (*rddterm->i) << "\n";
    recordTimingObservationPoint(rddterm, rddterm, rddterm->HA, fname);
    /*if (rddterm->HA && fname != "") {
       std::map<long, std::map<std::string, std::set<long> > > m1;
@@ -4387,13 +4208,13 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
   Instruction *i = ki->inst;
 
-  if (EncVer) llvm::errs() << "next instruction: " << (*i) << "\n";
+  llvm::errs() << "next instruction: " << (*i) << "\n";
 
   /* SYSREL extension */
   /* side channel begin */
   if (!state.inEnclave && i->getParent()->getParent() && 
          ((Function*)i->getParent()->getParent())->getName() == state.getLastEnclaveFunction()) {
-     if (EncVer) llvm::errs() << "returned back to the enclave inside " << state.getLastEnclaveFunction() << "\n";
+     llvm::errs() << "returned back to the enclave inside " << state.getLastEnclaveFunction() << "\n";
      state.inEnclave = true;
   }
   /* side channel end */  
@@ -4443,10 +4264,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          #endif
          ConstantExpr *re = dyn_cast<ConstantExpr>(result);
          if (re) {
-            if (EncVer) {
+            //#ifdef VB
             llvm::errs() << "Recording return value for an expression of width " << re->getWidth() << ":\n";
             llvm::errs() << re->getZExtValue(re->getWidth()) << " for " << ri->getParent()->getParent()->getName() << "\n";
-            }
+            //#endif
             state.returnValueModel[ri->getParent()->getParent()->getName()] = re->getZExtValue(re->getWidth());
          }
          else if (state.lcmStepMovesWhenReturns(rf->getName().str())) { //  consider possibility of a success case
@@ -4486,7 +4307,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       #endif
 
       if (!state.activeThreads() && (!state.hasLCM() || state.lcmCompletesWith(rf->getName().str()))) {
-         if (EncVer) llvm::errs() << "terminating state with " << rf->getName() << "\n";
+         //#ifdef VB
+         llvm::errs() << "terminating state with " << rf->getName() << "\n";
+         //#endif
 
          /* Side channel begin */
          RD* rdd = getrdmap(&state);
@@ -4598,7 +4421,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           //terminateStateOnExecError(state, "return void when caller expected a result");
         //}
         #ifdef VB
-        if (EncVer) llvm::errs() << "Warning: return void when caller expected a result\n";
+        llvm::errs() << "Warning: return void when caller expected a result\n";
         #endif
         /* SYSREL extension */
       }
@@ -4621,7 +4444,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* SYSREL side channel end */
       //llvm::errs() << "PC: \n"; 
       //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
-      if (EncVer) llvm::errs() << "Forking on condition: " << cond  << " " << (*i) << "\n";
+      llvm::errs() << "Forking on condition: " << cond  << " " << (*i) << "\n";
       
       Executor::StatePair branches = fork(state, cond, false, true);
 
@@ -4690,7 +4513,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                   terminateStateOnError(state, "Memory error", Ptr, NULL, 
                              getAddressInfo(*branches.first, offendingAddress));
                }
-               if (EncVer) llvm::errs() << "executingPM on successor second\n";
+               llvm::errs() << "executingPM on successor second\n";
                branches.second->executePM(abort);
                if (abort) {
                   terminateStateOnError(state, "Memory error", Ptr, NULL, 
@@ -4707,9 +4530,6 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                else                   
                   transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
 
-               if (HandleSingleSuccessors)
-                  branches.first->lastCondition = cond;
-
                /* SYSREL side channel begin */
                successorsPaths->insert(branches.first); // Keeping track of the new paths
                /* SYSREL side channel end */
@@ -4724,9 +4544,6 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                }
                else {               
                   transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
-
-               if (HandleSingleSuccessors)
-                  branches.second->lastCondition = cond;
 
                   /* SYSREL side channel begin */
                   successorsPaths->insert(branches.second); // Keeping track of the new paths
@@ -4758,7 +4575,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 	       terminateStateOnError(state, "Memory error", Ptr, NULL, 
                              getAddressInfo(*branches.first, offendingAddress));
             }
-            if (EncVer) llvm::errs() << "executingPM on successor second\n";
+            llvm::errs() << "executingPM on successor second\n";
             branches.second->executePM(abort);
             if (abort) {
 	       terminateStateOnError(state, "Memory error", Ptr, NULL, 
@@ -4991,24 +4808,19 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           // possible timing observation point; terminate a copy 
           RD* rdd = getrdmap(&state);
           if (rdd->HA) {
-             if (EncVer) llvm::errs() << " Terminating path at timing observation point " << f->getName() 
+             llvm::errs() << " Terminating path at timing observation point " << f->getName() 
                           << " with resource usage " << rdd->ru << " and inst " << (*rdd->i) 
                           << " high ancestor at " << (*rdd->HA->i) << "\n"; 
 
              const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);
-             if (EncVer) {
-                state.prevPC->inst->print(llvm::errs());
-                llvm::errs() << "Source line info for timing observation point:\n";
-                printInfo(iit);                    
-             } 
+             state.prevPC->inst->print(llvm::errs());
+             llvm::errs() << "Source line info for timing observation point:\n";
+             printInfo(iit);                    
+
              std::string MsgString;
              llvm::raw_string_ostream msg(MsgString);
              state.dumpStack(msg);
-             if (EncVer) {
-                llvm::errs() << "STACK:\n" << msg.str() << "\n";
-                llvm::errs() << "PC:\n" ;
-                ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
-             }
+             llvm::errs() << "STACK:\n" << msg.str() << "\n";
              //handleTimingObservationPoint(state, false, f->getName());
              handleTimingObservationPoint(state, false, msg.str());
           }
@@ -5047,7 +4859,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        rdd->succ->insert(rddreset);
        terminateStateOnExit(*tobeterm);
        */ 
-       if (EncVer) llvm::errs() << "making ocall " << f->getName() << " from " << ((Function*)i->getParent()->getParent())->getName() << "\n";
+       llvm::errs() << "making ocall " << f->getName() << " from " << ((Function*)i->getParent()->getParent())->getName() << "\n";
        state.setLastEnclaveFunction(((Function*)i->getParent()->getParent())->getName());
        state.inEnclave = false;
     }
@@ -5105,7 +4917,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           break;
        }
        else {
-          if (EncVer) llvm::errs() << "inline assembly is unsupported: " << iasm->getAsmString() << "\n";
+          llvm::errs() << "inline assembly is unsupported: " << iasm->getAsmString() << "\n";
           terminateStateOnExecError(state, "inline assembly is unsupported");
           break;
        }
@@ -5232,7 +5044,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           /* SYSREL side channel begin */
           successorsPaths->insert(branches.first); // Keeping track of the new paths
          /* SYSREL side channel end */
-          if (EncVer) llvm::errs() << "True branch of select: " << (*ki->inst) << " condition " << cond << "\n";
+          llvm::errs() << "True branch of select: " << (*ki->inst) << " condition " << cond << "\n";
        }
        if (branches.second) {
           ref<Expr> fExpr = eval(ki, 2, state).value;
@@ -5240,7 +5052,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
           /* SYSREL side channel begin */
           successorsPaths->insert(branches.second); // Keeping track of the new paths
           /* SYSREL side channel end */
-          if (EncVer) llvm::errs() << "False branch of select: " << (*ki->inst) << " condition !" << cond << "\n";
+          llvm::errs() << "False branch of select: " << (*ki->inst) << " condition !" << cond << "\n";
        }
     }
     else {
@@ -5606,21 +5418,17 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       ref<Expr> index = eval(ki, it->first, state).value;
 
       #ifdef VB
-      if (EncVer) {
-         llvm::errs() << "gep index: " << index << "\n";
-         llvm::errs() << "gep pointer: " << Expr::createPointer(elementSize) << "\n";
-      }
+      llvm::errs() << "gep index: " << index << "\n";
+      llvm::errs() << "gep pointer: " << Expr::createPointer(elementSize) << "\n";
       #endif
 
       /* SYSREL extension */ 
       /* side channel begin */
-      if (EncVer) llvm::errs() << "Before checking security sensitive, inEnclave?" << state.inEnclave << "\n";
+      llvm::errs() << "Before checking security sensitive, inEnclave?" << state.inEnclave << "\n";
       if (state.inEnclave && exprHasSymRegion(state, index, true)) {
-          if (EncVer) llvm::errs() << "CRITICAL: Security sensitive index in GetElementPtr:\n";
-          if (EncVer) ki->inst->print(llvm::errs());
-          #ifdef VB
-          if (EncVer) llvm::errs() << index << "\n"; 
-          #endif
+          llvm::errs() << "CRITICAL: Security sensitive index in GetElementPtr:\n";
+          ki->inst->print(llvm::errs());
+          llvm::errs() << index << "\n"; 
       }
       /* side channel end */
       /* SYSREL extension */ 
@@ -5631,18 +5439,16 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                                              Expr::createPointer(elementSize)));
 
       #ifdef VB
-      if (EncVer) llvm::errs() << "gep base: " << base << "\n";
+      llvm::errs() << "gep base: " << base << "\n";
       #endif
     }
     if (kgepi->offset) {
       /* SYSREL extension */ 
       /* side channel begin */
       if (state.inEnclave && exprHasSymRegion(state, Expr::createPointer(kgepi->offset), true)) {
-          if (EncVer) {
-             llvm::errs() << "CRITICAL: Security sensitive offset in GetElementPtr:\n";
-             ki->inst->print(llvm::errs());
-             llvm::errs() << kgepi->offset << "\n";
-          }
+          llvm::errs() << "CRITICAL: Security sensitive offset in GetElementPtr:\n";
+          ki->inst->print(llvm::errs());
+          llvm::errs() << kgepi->offset << "\n";
       } 
       /* side channel end */
       /* SYSREL extension */ 
@@ -5650,15 +5456,13 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       base = AddExpr::create(base,
                              Expr::createPointer(kgepi->offset));
       #ifdef VB
-      if (EncVer) {
-         ki->inst->print(llvm::errs());  
-         llvm::errs() << "geptr offset: " << kgepi->offset << "\n";
-         llvm::errs() << "geptr base: " << base << "\n";
-      }
+      ki->inst->print(llvm::errs());  
+      llvm::errs() << "geptr offset: " << kgepi->offset << "\n";
+      llvm::errs() << "geptr base: " << base << "\n";
       #endif
     }
     #ifdef VB
-    if (EncVer) llvm::errs() << "geptr final base: " << base << "\n";
+    llvm::errs() << "geptr final base: " << base << "\n";
     #endif
     bindLocal(ki, state, base);
 
@@ -5668,7 +5472,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
            if (base != origbase || m.find(base) == m.end()) { 
               m[base] = origbase;
               symIndexToMemBase[(long)&state] = m;
-              if (EncVer) llvm::errs() << "recording mapping from geptr index " << base << " to " << origbase << " in state " << &state << "\n";
+              llvm::errs() << "recording mapping from geptr index " << base << " to " << origbase << " in state " << &state << "\n";
           }
        }
     }
@@ -5681,10 +5485,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        // \exists high'. base >> L<> base[high'/high] >> L
        //llvm::errs() << "Checking for cache based side channel:\n";
        ref<Expr> rexpr = renameExpr(memory, base, true); 
-       //llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
+       llvm::errs() << "Renaming of " << base << ":\n" << rexpr << "\n";
        ref<Expr> diffcachelines;
        if (cacheLineMode) {
-          //llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
+          llvm::errs() << "address: " << base << " cache line size: " << pow(2,cacheLineBits) << "\n";
           ref<Expr> clexpr1 = LShrExpr::alloc(base, ConstantExpr::alloc(cacheLineBits, 64));
           ref<Expr> clexpr2 = LShrExpr::alloc(rexpr, ConstantExpr::alloc(cacheLineBits, 64));
           ref<Expr> cleqexpr = EqExpr::create(clexpr1, clexpr2);
@@ -5702,20 +5506,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
        assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
        if (result) {
           std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
-          if (EncVer) llvm::errs() << "CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
-          if (EncVer) llvm::errs() << "Timing=" << statsTracker->elapsed() << "\n";
-          if (EncVer) ki->inst->print(llvm::errs());
+          llvm::errs() << "CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
+          ki->inst->print(llvm::errs());
           const InstructionInfo &ii = kmodule->infos->getInfo(ki->inst);
           std::pair<std::string, int> p = std::pair<std::string, int>(ii.file, ii.line);
           cachelocs.insert(p);
-          if (EncVer) llvm::errs() << "Stack trace for the code loc " << ii.file << " " << ii.line << "\n";
-          if (EncVer) llvm::errs() << getStackTrace(state) << "\n";
-          std::string tstr;
-          llvm::raw_string_ostream ros(tstr);
-          ros << (*(ki->inst)) << "\n";
-          datacacheos << "Timing=" << statsTracker->elapsed() << "\n";
-          datacacheos << "Instruction: " << ros.str() << "\n";
-          datacacheos << "Location: " << ii.file.c_str() << " " << ii.line << "\n\n\n";
+          llvm::errs() << "Stack trace for the code loc " << ii.file << " " << ii.line << "\n";
+          llvm::errs() << getStackTrace(state) << "\n";
+
        }
     }
     #ifdef INFOFLOW
@@ -5827,7 +5625,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
              state.typeToAddr[t] = result;
 
              #ifdef VB
-             if (EncVer) llvm::errs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
+             llvm::errs() << "mapping bitcast instance of " << tname << " to " << result << " type pointer=" << t << " in " << ki->inst << "\n";
              #endif
           }
        }
@@ -6411,11 +6209,6 @@ void Executor::run(ExecutionState &initialState) {
 
   states.insert(&initialState);
   /* SYSREL side channel begin */
-  datacacheos.rdbuf()->pubsetbuf(0, 0);
-  datacacheos.open("dataCacheSideChannels_time.txt", std::fstream::out);
-  secretdependentos.rdbuf()->pubsetbuf(0, 0);
-  secretdependentos.open("secretDependentBranch_time.txt", 
-                                       std::fstream::out); 
   if (initialState.hasLCM()) {
      Sequential *lcmModel = LifeCycleModelState::lcm;
      publicOutputReturningFName = lcmModel->getStep(lcmModel->getNumSteps()-1)->getValue();
@@ -6425,7 +6218,7 @@ void Executor::run(ExecutionState &initialState) {
      publicOutputReturningFName = entryFunctionName;
      sidechannelstarted = true;
   }
-  if (EncVer) llvm::errs() << "Registering publicOutputReturningFName as " << publicOutputReturningFName << "\n";
+  llvm::errs() << "Registering publicOutputReturningFName as " << publicOutputReturningFName << "\n";
   bool validOutputExp = false;
   MemoryObject  *rmo = NULL;
   publicOutputVar = initialState.addSymbolicReturnAsPublicOutput(publicOutputReturningFName, publicOutputVarName, memory, arrayCache, rmo, validOutputExp);
@@ -6459,7 +6252,7 @@ void Executor::run(ExecutionState &initialState) {
     ExecutionState *lastState = 0;
     while (!seedMap.empty()) {
       if (haltExecution) {
-        if (EncVer) llvm::errs() << "Halting execution (seedmap not empty)!!!\n";        
+        llvm::errs() << "Halting execution (seedmap not empty)!!!\n";        
         doDumpStates();
         return;
       }
@@ -6527,16 +6320,16 @@ void Executor::run(ExecutionState &initialState) {
     }
 
     if (OnlySeed) {
-      if (EncVer) llvm::errs() << "Halting execution (only seed) !!!\n";
+      llvm::errs() << "Halting execution (only seed) !!!\n";
       doDumpStates();
       return;
     }
   }
 
   searcher = constructUserSearcher(*this);
-  if (EncVer) llvm::errs() << "Using searcher "; 
-  if (EncVer) searcher->printName(llvm::errs());
-  if (EncVer) llvm::errs() << "\n";
+  llvm::errs() << "Using searcher "; 
+  searcher->printName(llvm::errs());
+  llvm::errs() << "\n";
 
   std::vector<ExecutionState *> newStates(states.begin(), states.end());
   searcher->update(0, newStates, std::vector<ExecutionState *>());
@@ -6670,40 +6463,12 @@ void Executor::run(ExecutionState &initialState) {
    RD* rdd = getrdmap(&state);
    currentRD = rdd;
    currentRD->ru += getTimingCost(state, ii);
-   if (EncVer) llvm::errs() << "inserting instruction " << (*ii) << " 's bb " << ii->getParent() << " to " << currentRD->stateid << "\n";  
+   llvm::errs() << "inserting instruction " << (*ii) << " 's bb " << ii->getParent() << " to " << currentRD->stateid << "\n";  
    currentRD->bbs.insert((long)ii->getParent());
 
    if (isbranch) {
-      if (EncVer) llvm::errs() << "it was a branch instr!\n";
+      llvm::errs() << "it was a branch instr!\n";
       isbranch = false;
-      if (HandleSingleSuccessors && successorsPaths->size() == 1) {
-         if (EncVer) llvm::errs() << "Single successor on path:\n";
-         //if (EncVer) ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
-         std::set<klee::ExecutionState*>::iterator it = successorsPaths->begin();
-         bool done = false;
-         for(; it!=successorsPaths->end(); ++it) {
-            ExecutionState *s = *it;
-            ref<Expr> r1 = s->lastCondition;
-            if (EncVer) llvm::errs() << "last condition: " << r1 << "\n";
-            llvm::Instruction *brInst = NULL;
-            bool mrbfound = false;
-            getMostRecentBranchInfo(state,brInst, mrbfound);
-            assert(mrbfound && "Most recent branch of the state has not been recorded\n");
-            bool hasHloc = exprHasSymRegion(state, r1, true);
-            if (hasHloc) {
-               std::string tstr; 
-               llvm::raw_string_ostream ros(tstr);
-               if (brInst != NULL) {
-                  ros << (*brInst) << "\n";
-                  if (EncVer) llvm::errs() << "Secret dependent branch (single successor) " << (*brInst) << "\n";
-                  secretdependentos << "Time=" << statsTracker->elapsed() << "\n";
-                  secretdependentos << "Instruction: " << ros.str() << "\n";
-                  secretdependentos << "Location: " << ii_info.file.c_str() << " " << ii_info.line << "\n\n\n";
-               }
-            }
-         }
-      }
-         
       if (successorsPaths->size() > 1) {
       	 bool printsucc = false;
     	 std::set<klee::ExecutionState*>::iterator it = successorsPaths->begin();
@@ -6718,20 +6483,20 @@ void Executor::run(ExecutionState &initialState) {
              bool hasHloc = exprHasSymRegion(state, r1, true);
              bool hasLloc = exprHasSymRegion(state, r1, false);
              //#ifdef VBSC
-	            if (EncVer) std::cerr << "\n>>>> Branch Condition : \n";
-		    if (EncVer) r1->dump();
+	            std::cerr << "\n>>>> Branch Condition : \n";
+		    r1->dump();
                     const InstructionInfo &iit = kmodule->infos->getInfo(state.prevPC->inst);
-                    if (EncVer) state.prevPC->inst->print(llvm::errs());
-                    if (EncVer) llvm::errs() << "instruction in ii: " << (*ii) << "\n";
-                    if (EncVer) printInfo(iit);                    
-                    if (EncVer) llvm::errs() << "has high? " << hasHloc << "\n";
-                    if (EncVer) llvm::errs() << "has low? " << hasLloc << "\n";
+                    state.prevPC->inst->print(llvm::errs());
+                    llvm::errs() << "instruction in ii: " << (*ii) << "\n";
+                    printInfo(iit);                    
+                    llvm::errs() << "has high? " << hasHloc << "\n";
+                    llvm::errs() << "has low? " << hasLloc << "\n";
              //#endif
              if (hasHloc)
                 s->setSecretDescendant(true);
 
              RD* srd = newNode(s);
-             if (EncVer) llvm::errs() << "instruction recorded to " << srd->stateid << " " << (*srd->i) << "\n";
+             llvm::errs() << "instruction recorded to " << srd->stateid << " " << (*srd->i) << "\n";
 	     s->rdid = srd->stateid;
 	     rdmapinsert(s->rdid, srd);
              // initialize srd in case it does not satisfy any special case
@@ -6743,17 +6508,16 @@ void Executor::run(ExecutionState &initialState) {
              srd->bbs = currentRD->bbs;
 	     if (hasHloc && !hasLloc) {
 	     	ref<Expr> proj = getProjectionOnRegion(state, r1, true);
-                if (EncVer) llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
+                llvm::errs() << " high projection on " << r1 << " : " << proj << "\n";
                 // check if the projection is consistent with the path condition
                 bool result;
                 bool success = solver->mayBeTrue(*s, proj, result);
                 assert(success && "FIXME: Unhandled solver failure while checking feasibility of the projection");
                 if (result) {
-                   if (EncVer) llvm::errs() << "Timing=" << statsTracker->elapsed() << "\n";
                    //#ifdef VBSC
-                          if (EncVer) std::cerr << "Projection on high consistent with PC\n";
-    	                  if (EncVer) std::cerr << "\n>>>> Projection : ";
-	                  if (EncVer) proj->dump();
+                          std::cerr << "Projection on high consistent with PC\n";
+    	                  std::cerr << "\n>>>> Projection : ";
+	                  proj->dump();
                           //const InstructionInfo &ii = kmodule->infos->getInfo(state.prevPC->inst);
                           //state.prevPC->inst->print(llvm::errs());
                           //printInfo(ii);
@@ -6777,10 +6541,7 @@ void Executor::run(ExecutionState &initialState) {
                       ss << ros.str() ;
                       ss << proj << "\n";
                       securitySensitiveBranches.insert(ss.str());
-                      if (EncVer) llvm::errs() << "recorded security sensitive branch " << ss.str() << "\n";
-                      secretdependentos << "Time=" << statsTracker->elapsed() << "\n";
-                      secretdependentos << "Instruction: " << ros.str() << "\n";
-                      secretdependentos << "Location: " << ii_info.file.c_str() << " " << ii_info.line << "\n\n\n";
+                      llvm::errs() << "recorded security sensitive branch " << ss.str() << "\n";
 	           }
 	   	   srd->HA = currentRD;
 		   srd->HAset = true;
@@ -6789,13 +6550,11 @@ void Executor::run(ExecutionState &initialState) {
 	        }                
                 else {
                    #ifdef VBSC
-                     if (EncVer) {
                           std::cerr << "Infeasible Projection on high\n";
                           std::cerr << "\n>>>> Projection : ";
                           proj->dump();
                           std::cerr << "PC:\n";
                           ExprPPrinter::printConstraints(llvm::errs(), s->constraints);
-                     }
                    #endif
 
                 }                                                 
@@ -6804,7 +6563,7 @@ void Executor::run(ExecutionState &initialState) {
                 if (hasHloc && hasLloc) {
                    RD::numHLMixedConstraints++;
                    #ifdef VBSC
-                   if (EncVer) llvm::errs() << "Mixed Branch Condition:\n";
+                   llvm::errs() << "Mixed Branch Condition:\n";
                    // Note: may increase runtime
                    //r1->dump();
                    #endif
@@ -6828,13 +6587,11 @@ void Executor::run(ExecutionState &initialState) {
                    }
                    else {
                       #ifdef VBSC
-                         if (EncVer) {
                           std::cerr << "Infeasible Projection on low\n";
                           std::cerr << "\n>>>> Projection : ";
                           proj->dump();
                           std::cerr << "PC:\n";
                           ExprPPrinter::printConstraints(llvm::errs(), s->constraints);
-                        }
                       #endif
 
                    }                     
@@ -6879,9 +6636,9 @@ void Executor::run(ExecutionState &initialState) {
   delete searcher;
   searcher = 0;
   // SYSREL side channel
-  if (EncVer) std::cerr << "Size of rdmap : " << rdmap->size() << "\n";
+  std::cerr << "Size of rdmap : " << rdmap->size() << "\n";
   if (!SolverImpl::interrupted || !SolverImpl::forceOutput) {
-    if (EncVer) llvm::errs() << "Halting execution from regular loop!\n";
+    llvm::errs() << "Halting execution from regular loop!\n";
     doDumpStates();
   }
   /* SYSREL side channel begin */
@@ -7044,7 +6801,7 @@ void Executor::terminateState(ExecutionState &state) {
      }
   }
   #ifdef VB
-  if (EncVer) llvm::errs() << "Checking the state at the end of path\n";
+  llvm::errs() << "Checking the state at the end of path\n";
   state.check();
   #endif
   /* SYSREL extension */
@@ -7256,7 +7013,6 @@ void Executor::callExternalFunction(ExecutionState &state,
   if (specialFunctionHandler->handle(state, function, target, arguments))
     return;
 
-
   if (NoExternals && !okExternals.count(function->getName())) {
     klee_warning("Disallowed call to external function: %s\n",
                function->getName().str().c_str());
@@ -7274,7 +7030,7 @@ void Executor::callExternalFunction(ExecutionState &state,
   unsigned wordIndex = 2;
   ObjectPair result;
  if (!APIHandler::handles(function->getName()) && !isInfoFlowAPI(removeDotSuffix(function->getName()))) { // this check is a SYSREL extension to avoid issues with pointers to 128 bit 
-  if (EncVer) llvm::errs() << "treating as external function: " << function->getName() << "\n";
+  llvm::errs() << "treating as external function: " << function->getName() << "\n";
   for (std::vector<ref<Expr> >::iterator ai = arguments.begin(),
        ae = arguments.end(); ai!=ae; ++ai) {
     if (AllowExternalSymCalls) { // don't bother checking uniqueness
@@ -7370,14 +7126,14 @@ void Executor::callExternalFunction(ExecutionState &state,
 
     if (progModel) {
       checkAndRecordSensitiveFlow(state,function, arguments);
-      if (EncVer) llvm::errs() << "before check 1\n";
+      llvm::errs() << "before check 1\n";
       symbolizeAndMarkSensitiveArgumentsOnCall(state, target, function, arguments, true);
-      if (EncVer)  llvm::errs() << "after check 1\n";
+      llvm::errs() << "after check 1\n";
       // check if PROSE version of the function exists, if so use that one
       std::string prosename = function->getName().str() + "_PROSE"; 
       Function *proseFn = moduleHandle->getFunction(prosename);
       if (proseFn) {
-         if (EncVer) llvm::errs() << "WARNING: Using " << prosename << " for " << function->getName() << "\n";
+         llvm::errs() << "WARNING: Using " << prosename << " for " << function->getName() << "\n";
          ((CallInst*)target->inst)->setCalledFunction(proseFn);
          executeCall(state, target, proseFn, arguments);
          return;
@@ -7402,28 +7158,15 @@ void Executor::callExternalFunction(ExecutionState &state,
                 std::string fname = function->getName();
                 std::string modelName =  fname.substr(pr.length());
                 Function *modelFn = moduleHandle->getFunction(modelName);
-                if (EncVer) llvm::errs() << "Checking model function " << modelName << " using redacted prefix " << pr << "\n";
+                llvm::errs() << "Checking model function " << modelName << " using redacted prefix " << pr << "\n";
                 if (modelFn) {
-                   if (EncVer)  llvm::errs() << "WARNING: Using " << modelName << " for " << function->getName() << "\n";
+                   llvm::errs() << "WARNING: Using " << modelName << " for " << function->getName() << "\n";
                    ((CallInst*)target->inst)->setCalledFunction(modelFn);
                    executeCall(state, target, modelFn, arguments);
                    return;
                 }
              }
           }          
-
-          if (UseInternal) {
-             Function *inf = getInternalVersion(function->getName().str());
-             if (inf) {
-                if (EncVer) llvm::errs() << "WARNING: Using internal function " << inf->getName() << " for function " << function->getName() << "\n";
-                ((CallInst*)target->inst)->setCalledFunction(inf);
-                executeCall(state, target, inf, arguments);   
-                return;
-             }
-          }
-
-
-
           /* side channel */
           //checkHighArgumentFlow(state, target, function, arguments);
           /* side channel */
@@ -7692,11 +7435,11 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
        argsL = lowFunctionArgs[fname];
     if (mixedFunctionArgs.find(fname) != mixedFunctionArgs.end())
        argsM = mixedFunctionArgs[fname];     
-    if (EncVer) llvm::errs() << "Handling functions with sensitive args " << function->getName() << "\n"; 
+    llvm::errs() << "Handling functions with sensitive args " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
        if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) {
-          if (EncVer) llvm::errs() << "handling arg " << ai << " " << arguments[ai] << "\n"; 
+          llvm::errs() << "handling arg " << ai << " " << arguments[ai] << "\n"; 
           // a local var
           Type *at = agi->getType();
           bool pointerType = false;
@@ -7727,18 +7470,18 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                   solver->setTimeout(0);
                   if (asuccess) {
                    if (state.isSymbolic(op.first) || updatedWithSymbolic.find((long)op.first) != updatedWithSymbolic.end()) {
-                      if (EncVer) llvm::errs() << "yes!\n";
+                      llvm::errs() << "yes!\n";
                       if (!skipOptimizingSensitiveRegionCheck) {
                       // check if it is already known to have a sensitive region
                       ref<Expr> cur = op.second->read(ConstantExpr::alloc(0, Expr::Int64),op.first->size*8);
                       ConstantExpr *CE = dyn_cast<ConstantExpr>(cur);
                       if (!CE) {
-                        if (EncVer) llvm::errs() << "going to check sym region sensitive\n";
+                        llvm::errs() << "going to check sym region sensitive\n";
                         if (isSymRegionSensitive(state, cur, fname, ai, true)) {
-                           if (EncVer) llvm::errs() << cur << "already known to be sensitive \n";
+                           llvm::errs() << cur << "already known to be sensitive \n";
                            continue;
                         }
-                        if (EncVer) llvm::errs() << "done checking sym region sensitive\n";
+                        llvm::errs() << "done checking sym region sensitive\n";
                      } 
                      }
                      // set high/low
@@ -7747,7 +7490,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                      unsigned long diff = 0;
                      if (mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                     if (EncVer) llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
+                     llvm::errs() << &state << " calling setSymRegionSensitive from OnCall " << fname  << " for arg " << ai << "\n";
                      setSymRegionSensitive(state,op.first,fname,bt,ai,pointerType,true,diff); 
                    }
                    else {
@@ -7765,15 +7508,13 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
                    ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);
                    unsigned long diff = 0;
                    if (mob) {
-                      if (EncVer) {
-                         llvm::errs() << "cexpr: " <<  cexpr << "\n"; 
-                         llvm::errs() << "width: " << cexpr->getWidth() << "\n";
-                         llvm::errs() << "mob: " <<  mob << "\n";  
-                         llvm::errs() << "width: " << mob->getWidth() << "\n";
-                      }
+                      llvm::errs() << "cexpr: " <<  cexpr << "\n"; 
+                      llvm::errs() << "width: " << cexpr->getWidth() << "\n";
+                      llvm::errs() << "mob: " <<  mob << "\n";  
+                      llvm::errs() << "width: " << mob->getWidth() << "\n";
                       diff = cexpr->getZExtValue() - mob->getZExtValue();                    
                    }
-                   if (EncVer) llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 2" << fname  << " for arg " << ai << "\n";
+                   llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 2" << fname  << " for arg " << ai << "\n";
                    setSymRegionSensitive(state, op.first, fname, bt, ai, pointerType, true, diff);
                   }
                  }
@@ -7787,7 +7528,7 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             ConstantExpr *CE = dyn_cast<ConstantExpr>(cur); 
             if (!CE) {
                if (isSymRegionSensitive(state, cur, fname, ai, true)) {
-                  if (EncVer) llvm::errs() << cur << "already known to be sensitive \n";
+                  llvm::errs() << cur << "already known to be sensitive \n";
                   continue;
                }
             } 
@@ -7812,12 +7553,12 @@ bool Executor::symbolizeAndMarkSensitiveArgumentsOnCall(ExecutionState &state,
             ref<Expr> result = sos->read(ConstantExpr::alloc(0, Expr::Int64), getWidthForLLVMType(at));
             bindArgument(kf, ai, state, result);
             std::string atname = getTypeName(at);
-            if (EncVer) llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 3" << fname  << " for arg " << ai << "\n";
+            llvm::errs() << &state << " calling setSymRegionSensitive from OnCall 3" << fname  << " for arg " << ai << "\n";
             setSymRegionSensitive(state,mo, fname, at, ai, pointerType, true);
           } 
           else { // useCallInstOperands
              // It means we have been called without a stack frame for the called function!
-             if (EncVer) llvm::errs() << "Skipping marking sensitivity for arg " << ai << " with value " << arguments[ai] << " in function " << function->getName() << " to avoid data-flow analysis\n";
+             llvm::errs() << "Skipping marking sensitivity for arg " << ai << " with value " << arguments[ai] << " in function " << function->getName() << " to avoid data-flow analysis\n";
           }
          }
       }
@@ -7884,7 +7625,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
       argsM = mixedFunctionArgsRet[fname];
    if (argsH.find(ai) != argsH.end()) {
       std::vector<region> rs; 
-      if (EncVer) llvm::errs() << "base address of high marked memory: " <<  sm->getBaseExpr() << "\n";
+      llvm::errs() << "base address of high marked memory: " <<  sm->getBaseExpr() << "\n";
       if (highTypeRegions.find(btname) != highTypeRegions.end()) {
          rs = highTypeRegions[btname];
       }
@@ -7892,7 +7633,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
          region r;
          r.offset = offset;
          //r.size = sm->size * 8;
-         if (EncVer) llvm::errs() << "setting region size of " << sm->name << " to " << argsize * 8 << " while memobj size is " << sm->size * 8 << "\n";
+         llvm::errs() << "setting region size of " << sm->name << " to " << argsize * 8 << " while memobj size is " << sm->size * 8 << "\n";
          if (pointerType)
             r.size = sm->size * 8;
          else 
@@ -7900,7 +7641,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
          rs.push_back(r); 
       }
       setHighMemoryRegion(state, sm->getBaseExpr(), rs);
-      if (EncVer) llvm::errs() << &state << " calling setHighSym from setSymRegionSensitive for " << fname  << " for arg " << ai << "\n";
+      llvm::errs() << &state << " calling setHighSym from setSymRegionSensitive for " << fname  << " for arg " << ai << "\n";
       setHighSymRegion(sm->name, rs);                    
    }
    else if (argsL.find(ai) != argsL.end()) {
@@ -7923,7 +7664,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
    else if (argsM.find(ai) != argsM.end()) {
       if (!hintFound && lowTypeRegions.find(btname) == lowTypeRegions.end() && 
            highTypeRegions.find(btname) == highTypeRegions.end()) {
-         if (EncVer) llvm::errs() << "type=" << btname << "\n"; 
+         llvm::errs() << "type=" << btname << "\n"; 
          assert(false && "Mixed sensitivity arg without type based sensitive regions!\n");
       }
       if (lowTypeRegions.find(btname) != lowTypeRegions.end()) {
@@ -7934,7 +7675,7 @@ void Executor::setSymRegionSensitive(ExecutionState &state,
        if (highTypeRegions.find(btname) != highTypeRegions.end()) {
           std::vector<region> rs = highTypeRegions[btname];  
           setHighMemoryRegion(state, sm->getBaseExpr(), rs);
-          if (EncVer) llvm::errs() << "calling setHighSym from setSymRegionSensitive for " << fname  << "\n";
+          llvm::errs() << "calling setHighSym from setSymRegionSensitive for " << fname  << "\n";
           setHighSymRegion(sm->name, rs); 
        }
    }
@@ -7947,7 +7688,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                                   std::vector< ref<Expr> > &arguments,
                                   ref<Expr> ret_value) {
     std::string fname = removeDotSuffix(function->getName());    
-    if (EncVer) llvm::errs() << "state :" << &state << " checking " << fname << " to see if an input function\n";
+    llvm::errs() << "state :" << &state << " checking " << fname << " to see if an input function\n";
     //llvm::errs() << "instruction: " << (*target->inst) << "\n";
     //llvm::errs() << "return value: " << ret_value << "\n";
     if (inputFuncs.find(fname) == inputFuncs.end()) { 
@@ -7961,7 +7702,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
        ConstantExpr *CE = dyn_cast<ConstantExpr>(ret_value);
        if (CE) {
           if (CE->getZExtValue() != success_value) {
-             if (EncVer) llvm::errs() << "skipping input function " << fname << " handling due to error path\n";
+             llvm::errs() << "skipping input function " << fname << " handling due to error path\n";
              return true;
           }
           tstate = &state;
@@ -7973,7 +7714,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
              tstate = branches.first;
           }
           else {
-             if (EncVer) llvm::errs() << "skipping input function " << fname << " handling due to not satisfying success case:\n";
+             llvm::errs() << "skipping input function " << fname << " handling due to not satisfying success case:\n";
              return true;
           }
        }
@@ -7988,7 +7729,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
        argsL = lowFunctionArgsRet[fname];
     if (mixedFunctionArgsRet.find(fname) != mixedFunctionArgsRet.end())
        argsM = mixedFunctionArgsRet[fname];     
-    if (EncVer) llvm::errs() << "state: " << tstate << " Handling input function " << function->getName() << "\n"; 
+    llvm::errs() << "state: " << tstate << " Handling input function " << function->getName() << "\n"; 
     unsigned int ai = 0;
     for(llvm::Function::arg_iterator agi = function->arg_begin(); agi != function->arg_end(); agi++, ai++) {
        if (argsH.find(ai) != argsH.end() || argsL.find(ai) != argsL.end() || argsM.find(ai) != argsM.end()) { 
@@ -8033,7 +7774,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                      ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                      if (cexpr && mob) 
                         diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                     if (EncVer) llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
+                     llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
                      setSymRegionSensitive((*tstate),op.first,fname,bt,ai,pointerType,false,diff); 
                   }
                   else {
@@ -8041,9 +7782,9 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
                    recordMemObj(state, sm);
                    //#ifdef VB
-                   if (EncVer) llvm::errs() << "Symbolizing and marking argument " << ai << " of function " << function->getName() 
+                   llvm::errs() << "Symbolizing and marking argument " << ai << " of function " << function->getName() 
                                 << ", address=" << sm->getBaseExpr() << "\n";
-                   if (EncVer) llvm::errs() << "base addres=" << base << "\n";
+                   llvm::errs() << "base addres=" << base << "\n";
                    //#endif
                    std::string name = function->getName();
                    std::string uniqueName = name;
@@ -8058,7 +7799,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    ConstantExpr *mob = dyn_cast<ConstantExpr>(mobase);  
                    if (cexpr && mob) 
                       diff = cexpr->getZExtValue() - mob->getZExtValue(); 
-                   if (EncVer) llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
+                   llvm::errs() << "calling setSymRegionSensitive from OnReturn " << fname  << " btname= " << btname << "\n";
                    setSymRegionSensitive((*tstate),sm,fname,bt,ai,pointerType,false,diff); 
                    // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
                    const Array *array = arrayCache.CreateArray(sm->name, sm->size);
@@ -8073,7 +7814,7 @@ bool Executor::symbolizeAndMarkArgumentsOnReturn(ExecutionState &state,
                    if (co) {
                       if ((op.first->size - co->getZExtValue()) < sm->size) {
                          //#ifdef VB
-                         if (EncVer) llvm::errs() << "Lazy init of a void pointer mismatches real type, "
+                         llvm::errs() << "Lazy init of a void pointer mismatches real type, "
                                       << op.first->size << " " << co->getZExtValue() << " " << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
                          //#endif
                          terminateStateOnError((*tstate), "memory error: cast due a void pointer", Ptr,
@@ -8129,7 +7870,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                 }
                 solver->setTimeout(0);
                 if (asuccess) {
-                   if (EncVer) llvm::errs() << "Computing type info on" << (*target->inst) 
+                   llvm::errs() << "Computing type info on" << (*target->inst) 
                                 << " for type " << rso.str() << "\n";
                    MemoryObject *sm = memory->allocate(TD->getTypeAllocSize(bt), op.first->isLocal,
                            op.first->isGlobal, op.first->allocSite, TD->getPrefTypeAlignment(bt));
@@ -8162,7 +7903,7 @@ void Executor::symbolizeArguments(ExecutionState &state,
                    if (co) {
                       if ((op.first->size - co->getZExtValue()) < sm->size) {
                          //#ifdef VB
-                         if (EncVer) llvm::errs() << "Lazy init of a void pointer mismatches real type, "
+                         llvm::errs() << "Lazy init of a void pointer mismatches real type, "
                                       << op.first->size << " " <<  co->getZExtValue() << " " << (op.first->size - co->getZExtValue()) << " vs " << sm->size << "\n";
                          //#endif
                          terminateStateOnError(state, "memory error: cast due a void pointer", Ptr,
@@ -8250,6 +7991,10 @@ const MemoryObject *Executor::symbolizeReturnValueSimple(ExecutionState &state,
        return NULL;
     }
     mo->name = "%sym" + std::to_string(target->dest) + "_" + getUniqueSymRegion(function->getName().str());
+    #ifdef VB
+    llvm::outs() << "mo=" << mo << "\n";
+    llvm::outs() << "base address of symbolic memory to be copied from " << mo->getBaseExpr() << " and real target$
+    #endif
     if (mksym) {
        #ifdef VB
        llvm::outs() << "symbolizing return value \n";
@@ -8452,7 +8197,7 @@ void Executor::executeAlloc(ExecutionState &state,
     recordMemObj(state, mo);
     //#ifdef VB
     if (isLocal)
-       if (EncVer) llvm::errs() << "Local alloc: " << (*target->inst) << " at address " << mo->getBaseExpr() << "\n"; 
+       llvm::errs() << "Local alloc: " << (*target->inst) << " at address " << mo->getBaseExpr() << "\n"; 
     //#endif
 
 
@@ -8460,7 +8205,7 @@ void Executor::executeAlloc(ExecutionState &state,
     /* SYSREL extension */
  
    if (infoFlowSummaryMode && isLocal && target->dest >= 0)  {
-      if (EncVer) llvm::errs() << "recording register " << target->dest << " as a local variable\n"; 
+      llvm::errs() << "recording register " << target->dest << " as a local variable\n"; 
       (*currentInfoFlowContext.regMap)[target->dest] = mo;
    }
 
@@ -8542,7 +8287,7 @@ void Executor::executeAlloc(ExecutionState &state,
       example = tmp;
     }
 
-    if (EncVer) llvm::errs() << "Inferred alloc size " << example << "\n";
+    llvm::errs() << "Inferred alloc size " << example << "\n";
 
     StatePair fixedSize = fork(state, EqExpr::create(example, size), true);
 
@@ -8584,7 +8329,7 @@ void Executor::executeAlloc(ExecutionState &state,
 
           /* SYSREL extension */
           if (lazyInit) {
-             if (EncVer) llvm::errs() << "concretized symbolic size as " << primArraySize << "\n";
+             llvm::errs() << "concretized symbolic size as " << primArraySize << "\n";
               executeAlloc(*hugeSize.second, ConstantExpr::create(primArraySize,32), isLocal,
                    target, zeroMemory, record, reallocFrom);
 
@@ -8608,7 +8353,7 @@ void Executor::executeAlloc(ExecutionState &state,
        //llvm::errs() << "Encountered a large alloc; symbolizing the return value instead!\n";
        //bool abort = false;
        //symbolizeReturnValueSimple(state, target, target->inst->getParent()->getParent(), abort); 
-       if (EncVer) llvm::errs() << "Encountered a large alloc; using the primitive array size instead!\n";
+       llvm::errs() << "Encountered a large alloc; using the primitive array size instead!\n";
        ref<Expr> ps = ConstantExpr::alloc(primArraySize, 32);
        executeAlloc(*fixedSize.first, ps, isLocal,
                    target, zeroMemory, record, reallocFrom);
@@ -8730,19 +8475,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   /* SYSREL EXTENSION */
 
   if (reached.find(state.prevPC->inst->getParent()->getParent()->getName()) == reached.end()) { 
-     if (EncVer) llvm::errs() << "reached " << state.prevPC->inst->getParent()->getParent()->getName() << "\n";
+     llvm::errs() << "reached " << state.prevPC->inst->getParent()->getParent()->getName() << "\n";
      reached.insert(state.prevPC->inst->getParent()->getParent()->getName());
   }
 
   //#ifdef VB
-  if (EncVer)  {
-     llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
-     state.prevPC->inst->print(llvm::errs());
-     llvm::errs() << "\n address: " << address << "\n";
-     llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
-     if (isWrite)
-        llvm::errs() << "storing value " << value << "\n";
-  }
+  llvm::errs() << "state=" << &state << " memory operation (inside " << state.prevPC->inst->getParent()->getParent()->getName() << ") \n";
+  state.prevPC->inst->print(llvm::errs());
+  llvm::errs() << "\n address: " << address << "\n";
+  llvm::errs() << "executeMemoryOperation isWrite? " << isWrite  << "\n";
+  if (isWrite)
+     llvm::errs() << "storing value " << value << "\n";
   //#endif
 
 
@@ -8760,7 +8503,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       value = state.constraints.simplifyExpr(value);
   }
 
-  if (EncVer) llvm::errs() << "address width " << address->getWidth() << "\n";
+  llvm::errs() << "address width " << address->getWidth() << "\n";
   if (address->getWidth() < Expr::Int64)
      address = ZExtExpr::alloc(address, Expr::Int64); 
 
@@ -8770,7 +8513,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
   solver->setTimeout(coreSolverTimeout);
   if (!state.addressSpace.resolveOne(state, solver, address, op, success)) {
     address = toConstant(state, address, "resolveOne failure");
-    if (EncVer) llvm::errs() << "address2 width " << address->getWidth() << "\n"; 
+    llvm::errs() << "address2 width " << address->getWidth() << "\n"; 
     success = state.addressSpace.resolveOne(cast<ConstantExpr>(address), op);
   }
   solver->setTimeout(0);
@@ -8785,20 +8528,20 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
     ref<Expr> offset = mo->getOffsetExpr(address);
     //#ifdef VB
-    if (EncVer) {
-       llvm::errs() << "address for memop " << address << "\n";
-       llvm::errs() << "default offset for target address " << offset << "\n";
-       llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
-    }
+    llvm::errs() << "address for memop " << address << "\n";
+    llvm::errs() << "default offset for target address " << offset << "\n";
+    llvm::errs() << "base memory address " << mo->getBaseExpr() << "\n";
     //#endif
     /* SYSREL EXTENSION */
     //if (forcedOffset) {
        //offset = ConstantExpr::alloc(0, Expr::Int64);
        //#ifdef VB
-       if (EncVer) llvm::outs() << "(forced) offset for target address " << offset << "\n";
+       llvm::outs() << "(forced) offset for target address " << offset << "\n";
       //#endif
     //}
     /* SYSREL EXTENSION */
+
+
 
     bool inBounds;
     solver->setTimeout(coreSolverTimeout);
@@ -8811,10 +8554,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
       terminateStateEarly(state, "Query timed out (bounds check).");
       return false;
     }
-    #ifdef VB
+    //#ifdef VB
     llvm::outs() << "bounds check expression " << mo->getBoundsCheckOffset(offset, bytes) << "\n";
     llvm::outs() << "in bounds? " << inBounds << "\n";
-    #endif
+    //#endif
 
     if (inBounds) {
       const ObjectState *os = op.second;
@@ -8837,17 +8580,17 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
              ConstantExpr *CO = dyn_cast<ConstantExpr>(offset);
 
              if (hasHloc)
-                if (EncVer) llvm::errs() << "HIGH expr: " << value << " const offset?" << CO << "\n";
+                llvm::errs() << "HIGH expr: " << value << " const offset?" << CO << "\n";
 
 
              if (hasHloc && CO && (os->isByteConcrete(CO->getZExtValue()) || 
                                 os->isByteKnownSymbolic(CO->getZExtValue()))) {
                 ref<Expr> rExpr = os->read(offset, type);
-                if (EncVer) llvm::errs() << "going to check low label!\n";
+                llvm::errs() << "going to check low label!\n";
                 if (exprHasSymRegion(state, rExpr, false))  {
                    leakage = true;                
-                   if (EncVer) llvm::errs() << "source: " << value << "\n";
-                   if (EncVer) llvm::errs() << "dest: " << rExpr << "\n";
+                   llvm::errs() << "source: " << value << "\n";
+                   llvm::errs() << "dest: " << rExpr << "\n";
                 }
              }   
              /*if (hasHloc && isLowMemoryRegion(state, mo->getBaseExpr())) 
@@ -8909,7 +8652,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
             #ifdef INFOFLOW
             // info flow write case 1
-            //llvm::errs() << "case 1: " << target << "\n";
+            llvm::errs() << "case 1: " << target << "\n";
             updateInfoFlowForStore(state, regIndex, destregIndex, mo, target, offset, type);
             #endif
 
@@ -8948,7 +8691,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                //t->print(rso);
                std::string rsostr = getTypeName(t);
                //#ifdef VB 
-               if (EncVer) llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
+               llvm::errs() << "Is " << rsostr << " (count=" << count << ") to be lazy init?\n";
                inst->dump();
                //#endif
                if (lazyInitTemp) {
@@ -8962,15 +8705,15 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   else
                      assert(false && "Expected a pointer type for lazy init");
                  //#ifdef VB
-                  if (EncVer) llvm::errs() << "Yes!\n";
-                  //llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
+                  llvm::errs() << "Yes!\n";
+                  llvm::errs() << "original load result: " << result << " in state " <<&state << "\n";
                  //#endif
                   //std::string type_str2;
                   //llvm::raw_string_ostream rso2(type_str2);
                   //t->print(rso2);
                   std::string rso2str = getTypeName(t);
                   //#ifdef VB
-                  if (EncVer) llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
+                  llvm::errs() << "Allocating memory for type " << rso2str << " of size " << "\n";
                   //#endif
                   ref<Expr> laddr;
                   llvm::Type *rType;
@@ -8984,7 +8727,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                           
 
                   //#ifdef VB
-                  if (EncVer) llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
+                  llvm::errs() << "lazy init mem obj addr=" << laddr << " in state " << &state << " count=" << count << "\n";
                   //#endif
                   mo->name = getUniqueSymRegion(rso2str);
                   if (mksym) {
@@ -8997,12 +8740,12 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                   // Todo: Consider applying the initializations starting at an offset to handle embeddings
                   if (getTypeName(t) == getTypeName(rType))
                      initializeLazyInit(mo,wos,t);
-                  else if (EncVer) llvm::errs() << "WARNING: Missed a chance to initialize during lazy init due to embedding!\n"; 
+                  else llvm::errs() << "WARNING: Missed a chance to initialize during lazy init due to embedding!\n"; 
 
                   std::pair<unsigned, unsigned> fieldInfo;
                   Type *enclosingType = getEnclosingObjectType(target->inst);
                   if (enclosingType) { 
-                     if (EncVer) llvm::errs() << "enclosing type inferred from IR: " << getTypeName(enclosingType) << "\n";
+                     llvm::errs() << "enclosing type inferred from IR: " << getTypeName(enclosingType) << "\n";
                      std::string etname = getTypeName(enclosingType);
                      if (klee::ConstantExpr *OCE = dyn_cast<klee::ConstantExpr>(offset)) {
                         if (getDataConstraint(etname, OCE->getZExtValue(), fieldInfo)) {
@@ -9011,13 +8754,13 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                            ref<Expr> ltExp = UleExpr::create(lengthExp, ConstantExpr::create(count,lengthExp->getWidth()));
                            ref<Expr> dcons = AndExpr::create(positiveExp,ltExp); 
                            addConstraint(state, dcons);
-                           if (EncVer) llvm::errs() << "Adding data constraint " << dcons << "\n"; 
+                           llvm::errs() << "Adding data constraint " << dcons << "\n"; 
                         }
-                        if (EncVer) llvm::errs() << "Checking if type " << etname << " to be zero init at offset " << OCE->getZExtValue() << "\n";
+                        llvm::errs() << "Checking if type " << etname << " to be zero init at offset " << OCE->getZExtValue() << "\n";
                         if (getZeroInitArray(etname, OCE->getZExtValue())) {
                            //const ObjectState *mos = state.addressSpace.findObject(mo);
                            if (mos) {
-                              if (EncVer) llvm::errs() << "Zeroing array at offset " << OCE->getZExtValue() 
+                              llvm::errs() << "Zeroing array at offset " << OCE->getZExtValue() 
                                            << " of type " << etname << "\n";
                               //ObjectState *wos = state.addressSpace.getWriteable(mo, mos);
                               for(unsigned index = 0; index<mo->size; index++)
@@ -9027,7 +8770,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                      }
                   } 
                   //#ifdef VB
-                  if (EncVer) llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
+                  llvm::errs() << "lazy initializing writing " << laddr << "( inside " << mo->getBaseExpr() << ") to " << address << " in state " << &state << "\n";
                   //#endif
                   forcedOffset = true;
                   executeMemoryOperation(state, -2, -2, true, address, laddr, target);
@@ -9084,7 +8827,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
         //#ifdef VB
         if (getDestCell(state, target).value.get())
-         if (EncVer) llvm::errs() << "address to be dest: " << getDestCell(state, target).value << "\n";
+         llvm::errs() << "address to be dest: " << getDestCell(state, target).value << "\n";
         //#endif
 
         bindLocal(target, state, result);
@@ -9128,13 +8871,13 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
 
   bool craftedResList = false;
   if (PreferredResolution) { // use the base address stored in getelementptr to use the MemoryObject for resolution
-     if (EncVer) llvm::errs() << "Checking if we can identify the single resolution candidate with PreferredResolution option!\n"; 
+     llvm::errs() << "Checking if we can identify the single resolution candidate with PreferredResolution option!\n"; 
      if (symIndexToMemBase.find((long)&state) != symIndexToMemBase.end()) {
           std::map<ref<Expr>, ref<Expr> > m = symIndexToMemBase[(long)&state];
           ref<Expr> addtocheck = address;
           int i=0;
           while (m.find(addtocheck) != m.end() && i++ < 3) {
-             if (EncVer) llvm::errs() << " checking mapping for " << addtocheck << "\n";
+             llvm::errs() << " checking mapping for " << addtocheck << "\n";
              ref<Expr> mobase = m[addtocheck];
              if (!isa<ConstantExpr>(mobase)) {
                 // non-constant; keep checking the address it gets mapped 
@@ -9152,14 +8895,14 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
                       opres.second = ores;
                       rl.push_back(opres);
                       craftedResList = true; 
-                      if (EncVer) llvm::errs() << "Using mem obj with base " << mobase << " to resolve " << address << "\n";
+                      llvm::errs() << "Using mem obj with base " << mobase << " to resolve " << address << "\n";
                       break;
                    } 
                    else break;
                 }
                 else { 
                    if (addtocheck == mobase) break;
-                   if (EncVer) llvm::errs() << "memobj for " << mobase << " in state " << &state << " not found \n"; 
+                   llvm::errs() << "memobj for " << mobase << " in state " << &state << " not found \n"; 
                    addtocheck = mobase;                   
                 }
              }
@@ -9191,8 +8934,8 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     // bound can be 0 on failure or overlapped
     if (bound) {
       
-      if (EncVer) llvm::errs() << "inbound case MemObj base=" << mo->getBaseExpr() << " mo size=" << mo->size << " PC:\n";
-      if (EncVer) ExprPPrinter::printConstraints(llvm::errs(), bound->constraints);
+      llvm::errs() << "inbound case MemObj base=" << mo->getBaseExpr() << " mo size=" << mo->size << " PC:\n";
+      ExprPPrinter::printConstraints(llvm::errs(), bound->constraints);
 
       if (isWrite) {
         if (os->readOnly) {
@@ -9207,7 +8950,7 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
              #ifdef INFOFLOW
              // info flow write case 2
              ref<Expr> oe = mo->getOffsetExpr(address);
-             if (EncVer) llvm::errs() << "case 2: " << target << "\n";
+             llvm::errs() << "case 2: " << target << "\n";
              updateInfoFlowForStore(*bound, regIndex, destregIndex, mo, target, oe, type);
              #endif
           }
@@ -9253,10 +8996,10 @@ bool Executor::executeMemoryOperation(ExecutionState &state,
     if (incomplete) {
       terminateStateEarly(*unbound, "Query timed out (resolve).");
     } else {
-      #ifdef VB
-      if (EncVer) llvm::outs() << "Offending address for unbound" << address << "\n";
-      if (EncVer) ExprPPrinter::printConstraints(llvm::errs(), unbound->constraints);
-      #endif
+      //#ifdef VB
+      llvm::outs() << "Offending address for unbound" << address << "\n";
+      ExprPPrinter::printConstraints(llvm::errs(), unbound->constraints);
+      //#endif
 
       std::string s;
       llvm::raw_string_ostream ors(s);
@@ -9419,14 +9162,14 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
      std::string type_str;
      llvm::raw_string_ostream rso(type_str);
      at->print(rso);
-     if (EncVer) llvm::errs() << "base type pointer=" << at << "\n";
+     llvm::errs() << "base type pointer=" << at << "\n";
      if (at->isPointerTy()) {
         at = at->getPointerElementType();
         bool singleInstance = false;
         int count = 1; // force symbolic init of pointers to array types
         bool lazyInitT = isAllocTypeLazyInit(at, singleInstance, count);
         //#ifdef VB
-        if (EncVer) llvm::errs() << "arg " << ind << " type " << getTypeName(at) << " pointer= " << at << " count=" << count << "\n";
+        llvm::errs() << "arg " << ind << " type " << getTypeName(at) << " pointer= " << at << " count=" << count << "\n";
         //#endif
         //if (lazyInitT) {
           /*
@@ -9462,10 +9205,10 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                               count, rType, laddr, mksym, abort); 
               if (abort) return;
               //#ifdef VB
-              if (EncVer) llvm::errs() << "Symbolizing arg " << argi << " of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << " size=" << mo->size << "\n";
+              llvm::errs() << "Symbolizing arg " << argi << " of " << entryFunc->getName() << ", address " << mo->getBaseExpr() << " size=" << mo->size << "\n";
               //mo = memory->allocateForLazyInit(state, state.prevPC->inst, at, singleInstance, count, laddr);
-              if (EncVer) llvm::errs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
-              if (EncVer) llvm::errs() << "to be made symbolic? " << mksym << "\n";
+              llvm::errs() << "is arg " << ind <<  " type " << rso.str() << " single instance? " << singleInstance << "\n";
+              llvm::errs() << "to be made symbolic? " << mksym << "\n";
               //#endif
               mo->name = getUniqueSymRegion(fname + std::string("_arg_") + std::to_string(ind));
               #ifdef VB
@@ -9484,24 +9227,22 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                  std::vector<region> rs; 
                  if (highTypeRegions.find(atname) != highTypeRegions.end()) {
                     rs = highTypeRegions[atname];
-                    if (EncVer) { 
-                       llvm::errs() << "high security regions from type def\n";
-                       for(unsigned int hr=0; hr<rs.size(); hr++)
-                           llvm::errs() << rs[hr].offset << "," << rs[hr].size << "\n"; 
-                    }
+                    llvm::errs() << "high security regions from type def\n";
+                    for(unsigned int hr=0; hr<rs.size(); hr++)
+                       llvm::errs() << rs[hr].offset << "," << rs[hr].size << "\n"; 
                  }
                  else { // if not specified assume the whole region is high security sensitive
                     region r;
                     r.offset = 0;
                     r.size = mo->size * 8;
                     rs.push_back(r); 
-                    if (EncVer) llvm::errs() << " setting high security region offset= " << r.offset << " size= " << r.size << "\n";
+                    llvm::errs() << " setting high security region offset= " << r.offset << " size= " << r.size << "\n";
                  }
                  mo->ishigh = true;
                  setHighMemoryRegion(state, mo->getBaseExpr(), rs);
                  setHighSymRegion(mo->name, rs);
                  //#ifdef VB
-                 if (EncVer) llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as high security sensitive\n";
+                 llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as high security sensitive\n";
                  //#endif 
               }
               else if (argL.find(argi) != argL.end()) {
@@ -9514,13 +9255,13 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                     r.offset = 0;
                     r.size = mo->size * 8;
                     rs.push_back(r);
-                    if (EncVer) llvm::errs() << " setting low security region offset= " << r.offset << " size= " << r.size << "\n";
+                    llvm::errs() << " setting low security region offset= " << r.offset << " size= " << r.size << "\n";
                  }
                  mo->islow = true;
                  setLowMemoryRegion(state, mo->getBaseExpr(), rs);
                  setLowSymRegion(mo->name, rs);
                  //#ifdef VB
-                 if (EncVer) llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as low security insensitive\n";
+                 llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as low security insensitive\n";
                  //#endif 
               }
               else if (argM.find(argi) != argM.end()) {
@@ -9534,15 +9275,13 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
                  }
                  if (highTypeRegions.find(atname) != highTypeRegions.end()) {
                     std::vector<region> rs = highTypeRegions[atname];  
-                    if (EncVer) {
-                       llvm::errs() << "high security regions from type def\n";
-                       for(unsigned int hr=0; hr<rs.size(); hr++)
-                          llvm::errs() << rs[hr].offset << "," << rs[hr].size << "\n"; 
-                    }
+                    llvm::errs() << "high security regions from type def\n";
+                    for(unsigned int hr=0; hr<rs.size(); hr++)
+                       llvm::errs() << rs[hr].offset << "," << rs[hr].size << "\n"; 
                     setHighMemoryRegion(state, mo->getBaseExpr(), rs);
                     setHighSymRegion(mo->name, rs); 
                     //#ifdef VB
-                    if (EncVer) llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as high security insensitive\n";
+                    llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as high security insensitive\n";
                     //#endif            
                  }
               }
@@ -9567,7 +9306,7 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
         MemoryObject *mo =  memory->allocate(dl.getTypeAllocSize(at), false, /*true*/false, inst, allocationAlignment);
         recordMemObj(state, mo);
         mo->name = getUniqueSymRegion(fname  + std::string("_arg_") + std::to_string(ind));
-        if (EncVer) llvm::errs() << "lazy init arg " << mo->name << "\n";
+        llvm::errs() << "lazy init arg " << mo->name << "\n";
         // we're mimicking what executeMemoryOperation do without a relevant load or store instruction
         const Array *array = arrayCache.CreateArray(mo->name, mo->size);
         ObjectState *sos = bindObjectInState(state, mo, true, array);
@@ -9589,13 +9328,13 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               r.offset = 0;
               r.size = mo->size * 8;
               rs.push_back(r); 
-              if (EncVer) llvm::errs() << " setting high security region offset= " << r.offset << " size= " << r.size << "\n";
+              llvm::errs() << " setting high security region offset= " << r.offset << " size= " << r.size << "\n";
            }
            mo->ishigh = true;
            setHighMemoryRegion(state, mo->getBaseExpr(), rs);
            setHighSymRegion(mo->name, rs);
            //#ifdef VB
-            if (EncVer) llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive \n";
+            llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as security sensitive \n";
            //#endif 
         }
         else if (argL.find(argi) != argL.end()) {
@@ -9608,13 +9347,13 @@ void Executor::initArgsAsSymbolic(ExecutionState &state, Function *entryFunc, bo
               r.offset = 0;
               r.size = mo->size * 8;
               rs.push_back(r);
-              if (EncVer) llvm::errs() << " setting low security region offset= " << r.offset << " size= " << r.size << "\n";
+              llvm::errs() << " setting low security region offset= " << r.offset << " size= " << r.size << "\n";
            }
            mo->islow = true;
            setLowMemoryRegion(state, mo->getBaseExpr(), rs);
            setLowSymRegion(mo->name, rs);
            //#ifdef VB
-            if (EncVer) llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as not security sensitive\n"; 
+            llvm::errs() << "recording address of " << mo->name << " " << mo->getBaseExpr() << " as not security sensitive\n"; 
            //#endif 
         }        
         else if (argM.find(argi) != argM.end()) {
@@ -9984,11 +9723,9 @@ bool Executor::getSymbolicSolution(const ExecutionState &state,
   solver->setTimeout(0);
   if (!success) {
     klee_warning("unable to compute initial values (invalid constraints?)!");
-    if (!SolverImpl::interrupted || !SolverImpl::forceOutput) {
-       if (EncVer) 
-           ExprPPrinter::printQuery(llvm::errs(), state.constraints,
+    if (!SolverImpl::interrupted || !SolverImpl::forceOutput) 
+       ExprPPrinter::printQuery(llvm::errs(), state.constraints,
                              ConstantExpr::alloc(0, Expr::Bool));
-    }
     else statesWithCorruptedPC.insert((long)&state);;
     return false;
   }
@@ -10083,7 +9820,7 @@ size_t Executor::getAllocationAlignment(const llvm::Value *allocSite) const {
       allocationSiteName = fn->getName().str();
 
     
-    if (EncVer) llvm::errs() << (*allocSite) << "\n";
+    llvm::errs() << (*allocSite) << "\n";
  
     klee_warning_once(fn != NULL ? fn : allocSite,
                       "Alignment of memory from call \"%s\" is not "

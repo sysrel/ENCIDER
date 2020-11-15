@@ -473,6 +473,8 @@ SolverImpl::SolverRunStatus Z3SolverImpl::getOperationStatusCode() {
 
 /* SYSREL extension */
 unsigned Z3SolverImpl::maxSat(std::vector<ref<Expr> > softConstraints) {
+  // Some API change is causing a compilation error; we will deal with this later..
+  /*
   TimerStatIncrementer t(stats::queryTime);
   Z3_optimize optimizer = Z3_mk_optimize(builder->ctx);
   Z3_optimize_inc_ref(builder->ctx, optimizer);
@@ -508,6 +510,8 @@ unsigned Z3SolverImpl::maxSat(std::vector<ref<Expr> > softConstraints) {
   llvm::errs() << "z3 stats: " << Z3_stats_to_string(builder->ctx,r) << "\n";
   Z3_optimize_dec_ref(builder->ctx, optimizer);
   return leakage;
+  */
+  return -1;
 }
 /* SYSREL extension end */
 

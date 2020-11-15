@@ -228,7 +228,7 @@ void readMemLoc() {
 			if((*rit).compare(umarker)==0) {
 				++rit;
 				highLoc->insert(*rit);
-                                llvm::errs() << "high " << (*rit) << "\n";
+                                //llvm::errs() << "high " << (*rit) << "\n";
 			}
 		}
 	}
@@ -244,7 +244,7 @@ void readMemLoc() {
 			if((*rit).compare(umarker2)==0) {
 				++rit;
 				lowLoc->insert(*rit);
-                                llvm::errs() << "low " << (*rit) << "\n";
+                                //llvm::errs() << "low " << (*rit) << "\n";
 			}
 		}
 	}
@@ -414,7 +414,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
           if (isInSymRegion(state, rexpr->updates.root->name, rexpr->index, Expr::Int8, rexpr->getWidth(), false, high))  {
              numsym++;
              marked = true;
-             llvm::errs() << "symvar " << rexpr->updates.root->name << " marked high/low (" << high << ")\n"; 
+             //llvm::errs() << "symvar " << rexpr->updates.root->name << " marked high/low (" << high << ")\n"; 
           }
           // also check the index to see if secret dependent
           int nsi = 0;
@@ -422,7 +422,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
           if (ri.size() > 0) {
              numsym++;  
              marked = true;
-             llvm::errs() << "index of read " << rexpr->index << " marked high/low\n";  
+             //llvm::errs() << "index of read " << rexpr->index << " marked high/low\n";  
           }
           if (marked) {
              ConstantExpr *CE = dyn_cast<ConstantExpr>(rexpr->index);
@@ -440,7 +440,7 @@ std::vector<region> Executor::extractRegion(ExecutionState &state, ref<Expr> cex
                    r.offset = 0;
                    r.size = rexpr->getWidth();
                 }      
-                llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
+                //llvm::errs() << "read expr range: " << r.offset << "," << r.size << "\n";
                 rs.push_back(r);
              }
           }

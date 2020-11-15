@@ -1,0 +1,713 @@
+//===-- Executor.cpp ------------------------------------------------------===//
+//
+//                     The KLEE Symbolic Virtual Machine
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#include "Executor.h"
+#include "Context.h"
+#include "CoreStats.h"
+#include "ExternalDispatcher.h"
+#include "ImpliedValue.h"
+#include "Memory.h"
+#include "MemoryManager.h"
+#include "PTree.h"
+#include "Searcher.h"
+#include "SeedInfo.h"
+#include "SpecialFunctionHandler.h"
+#include "StatsTracker.h"
+#include "TimingSolver.h"
+#include "UserSearcher.h"
+#include "ExecutorTimerInfo.h"
+
+#include "../Solver/Z3Solver.h"
+
+#include "klee/ExecutionState.h"
+#include "klee/Expr.h"
+#include "klee/Interpreter.h"
+#include "klee/TimerStatIncrementer.h"
+#include "klee/CommandLine.h"
+#include "klee/Common.h"
+#include "klee/util/Assignment.h"
+#include "klee/util/ExprPPrinter.h"
+#include "klee/util/ExprSMTLIBPrinter.h"
+#include "klee/util/ExprUtil.h"
+#include "klee/util/GetElementPtrTypeIterator.h"
+#include "klee/Config/Version.h"
+#include "klee/Internal/ADT/KTest.h"
+#include "klee/Internal/ADT/RNG.h"
+#include "klee/Internal/Module/Cell.h"
+#include "klee/Internal/Module/InstructionInfoTable.h"
+#include "klee/Internal/Module/KInstruction.h"
+#include "klee/Internal/Module/KModule.h"
+#include "klee/Internal/Support/ErrorHandling.h"
+#include "klee/Internal/Support/FloatEvaluation.h"
+#include "klee/Internal/Support/ModuleUtil.h"
+#include "klee/Internal/System/Time.h"
+#include "klee/Internal/System/MemoryUsage.h"
+#include "klee/SolverStats.h"
+#include "klee/sysrel.h"
+#include "klee/SolverImpl.h"
+
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/TypeBuilder.h"
+#include "llvm/IR/TypeFinder.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Process.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/DerivedTypes.h"
+
+#if LLVM_VERSION_CODE < LLVM_VERSION(3, 5)
+#include "llvm/Support/CallSite.h"
+#else
+#include "llvm/IR/CallSite.h"
+#endif
+
+#ifdef HAVE_ZLIB_H
+#include "klee/Internal/Support/CompressionStream.h"
+#endif
+
+#include <cassert>
+#include <algorithm>
+#include <iomanip>
+#include <iosfwd>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+
+#include <sys/mman.h>
+
+#include <errno.h>
+#include <cxxabi.h>
+
+#include "llvm/IR/InlineAsm.h"
+#include "ResourceUsage.h"
+#include "AnalyzeConstraint.h"
+
+using namespace llvm;
+using namespace klee;
+
+/* SYSREL extension */
+
+bool symbolizeInlineAssembly = false;
+
+bool skipOptimizingSensitiveRegionCheck = false;
+
+//#define INFOFLOW 1
+
+extern std::set<std::string> voidTypeCasts;
+size_t maxVoidTypeCastSize = 8;
+std::set<std::string> reached;
+
+/* Side channel begin */
+// Type hints for void function args
+std::map<std::string, std::map<unsigned int, std::vector<unsigned int> > > externalFuncsWithSensitiveFlow;
+std::map<std::string, unsigned int> externalFuncs;
+std::map<std::string, std::set<unsigned int> > externalFuncsSig;
+std::map<std::string, std::map<int, std::string> > funcArgTypeHints;
+extern std::set<std::pair<std::string, int>> cachelocs;
+extern std::set<std::pair<std::string, int>> codeCachelocs;
+extern unsigned long cacheLineBits;
+extern bool cacheLineMode;
+extern bool cacheBitmaskMode;
+extern unsigned int cacheBitmask;
+//  Functions that receive input from the environment
+std::set<std::string> inputFuncs;
+std::map<std::string, std::set<unsigned int> > inputFuncArgs;
+// Maps function arguments to its high security regions
+std::map<std::string, std::set<int> > highFunctionArgs;
+// Maps function arguments to its low security regions
+std::map<std::string, std::set<int> > lowFunctionArgs;  
+// Maps function arguments to its mixed security regions
+std::map<std::string, std::set<int> > mixedFunctionArgs;  
+// Maps function arguments to its high security regions
+std::map<std::string, std::set<int> > highFunctionArgsRet;
+// Maps function arguments to its low security regions
+std::map<std::string, std::set<int> > lowFunctionArgsRet;  
+// Maps function arguments to its mixed security regions
+std::map<std::string, std::set<int> > mixedFunctionArgsRet; 
+// Maps types to its high security regions
+std::map<std::string, std::vector<region> > highTypeRegions;
+// Maps types to its low security regions
+std::map<std::string, std::vector<region> > lowTypeRegions;
+// Maps symbolic regions to its high security regions
+// unique symbolic names eliminate the need to do the mapping per state
+std::map<std::string, std::vector<region> > highSymRegions;
+// Maps symbolic regions to its low security regions
+// unique symbolic names eliminate the need to do the mapping per state
+std::map<std::string, std::vector<region> > lowSymRegions;
+// Maps addresses of ExecutionState's to addresses of high security sensitive regions
+// regions provide precise tracking of subregions
+std::map<long, std::map<ref<Expr>, std::vector<region> > > highMemoryRegions;
+// Maps addresses of ExecutionState's to addresses of low security sensitive regions
+// regions provide precise tracking of subregions
+std::map<long, std::map<ref<Expr>, std::vector<region> > > lowMemoryRegions;
+std::map<long, klee::ref<Expr> > branchConditionMap;
+std::map<long, llvm::Instruction*> branchInstrMap;
+std::set<klee::ExecutionState*> * successorsPaths = new std::set<klee::ExecutionState*>();
+extern std::string entryFunctionName;
+//extern std::map<std::string, std::set<int> > dynamicHighLoc, dynamicLowLoc;
+extern std::map<std::string, std::map<int, std::vector<region> > > dynamicHighRegion, dynamicLowRegion;
+std::string publicOutputVarName = "return_value";
+std::string publicOutputReturningFName;
+ref<Expr> publicOutputVar;
+extern std::string sidechannelentry;
+bool sidechannelstarted = false;
+extern std::set<std::string> * highLoc;
+extern std::set<std::string> * lowLoc;
+extern std::map<int, RD*> * rdmap;
+extern std::vector<std::string> * untrusted;
+extern std::set<std::string> prefixRedact;
+std::set<RD*> resourceTreeRootList;
+RD *root;
+RD *currentRD;
+// Instr* -> HA (RD*) -> FuncName -> {rdd1, rdd2, ...}, 
+// where each rdd1 represents a timing observation point
+std::map<long, std::map<long, std::map<unsigned, 
+                    std::map<std::string, std::set<long> > > > > timingObsPointsMap;
+std::map<long, long> timingObsPointProducerMap;
+std::vector<ExecutionState *> addedStates_copy;
+std::vector<ExecutionState *> removedStates_copy;
+bool fset = false;
+Function *ff;
+ArrayCache *acache = NULL;
+//int maxForkMulRes = 10;
+int maxForkMulRes = 2147483647;
+int primArraySize = 32;
+int leakCheckOffset = 64;
+std::map<std::string, int> uniqueSym;
+std::set<std::string> highSecurityLeaksOnStack;
+std::set<std::string> codeLocHighSecurityLeaksOnStack;
+std::set<std::string> stackLeakToBeChecked;
+bool checkLeaksPreciseAndFocused = false;
+std::set<std::string> securitySensitiveBranches;
+std::map<std::string, int> inputFuncsSuccRetValue;
+std::set<long> updatedWithSymbolic;
+std::set<unsigned> secretDependentRUSet;
+std::map<unsigned, unsigned> secretDependentRUMap;
+std::map<unsigned, std::vector<ConstraintManager> > secretDependentRUConstMap;
+std::string infoFlowSummarizedFuncName;
+Function *infoFlowSummarizedFunc = NULL;
+bool leakageWMaxSat = false;
+unsigned leakageMaxSat = 0;
+unsigned numSecretDependent=0;
+unsigned numSecretIndependent=0;
+bool pauseSecretIndependent = false;
+std::set<long> statesWithCorruptedPC;
+extern void recordMemObj(ExecutionState &state, const MemoryObject *mo);
+std::map<std::string, std::set<int> > ocallFuncPtrMap;
+std::set<std::string> timingObservationPointCaller;
+std::map<std::string, int> reachabilityTimingObservationPoints;
+std::map<long, std::map<std::string, unsigned> > forkFreqMapTrue;
+std::map<long, std::map<std::string, unsigned> > forkFreqMapFalse;
+std::set<std::string> loopBoundExceptions;
+unsigned loopBound = 0;
+std::map<std::string, std::map<unsigned, 
+         std::pair<unsigned, unsigned> > > dataConstraintMap;
+std::map<std::string, std::set<unsigned> > zeroInitArrayTypeBased; 
+
+std::string getTypeName(Type *t);
+
+bool isLowMemoryRegion(ExecutionState &state, ref<Expr> a);
+
+bool getZeroInitArray(std::string tname, unsigned offset) {
+     if (zeroInitArrayTypeBased.find(tname) == zeroInitArrayTypeBased.end())
+        return false;
+     std::set<unsigned> s = zeroInitArrayTypeBased[tname];
+     return s.find(offset) != s.end();
+}
+
+bool getDataConstraint(std::string tname, unsigned offset, 
+                                  std::pair<unsigned, unsigned> &fieldinfo) {
+     for(auto mi : dataConstraintMap) {
+        if (mi.first.find(tname) != std::string::npos || 
+               tname.find(mi.first) != std::string::npos) {
+           std::map<unsigned, std::pair<unsigned, unsigned> > map = mi.second;
+           if (map.find(offset) != map.end()) {
+              fieldinfo = map[offset];
+              return true;
+           }
+           else return false;
+        }
+     }  
+     return false;
+}
+
+Type *getEnclosingObjectType(Instruction *inst) {
+   std::vector<Value *>  wl;
+   LoadInst *li = dyn_cast<LoadInst>(inst);
+   if (!li) assert(0 && "bitcast info must be computed for load instructions!");
+   Type *result = NULL;
+   std::set<Value*> seen;
+   wl.push_back(li);
+   std::set<Type*> candidates;
+   while (wl.size() > 0) {
+      Value *val = wl.back();
+      seen.insert(val);
+      wl.pop_back();
+      Instruction *ti = dyn_cast<Instruction>(val);
+      if (!ti) { 
+         Type *ct = val->getType();
+         if (ct->isPointerTy()) {
+            ct = ct->getPointerElementType();
+            if (ct->isPointerTy()) {
+               ct = ct->getPointerElementType(); 
+            }
+         }
+         StructType *st = dyn_cast<StructType>(ct);
+         if (st) 
+            candidates.insert(st);
+         continue;
+      }
+      //llvm::errs() << "traversing " << (*ti) << "\n";
+      switch (ti->getOpcode()) {
+        case Instruction::Load: {
+           if (ti != li) {
+              result = ti->getType();
+              if (result->isPointerTy()) {
+                 result = result->getPointerElementType();
+                 if (result->isPointerTy()) {
+                    result = result->getPointerElementType(); 
+                 }
+              }
+              StructType *st = dyn_cast<StructType>(result);
+              if (st) 
+                 return result; 
+              else return NULL;
+           }
+        }
+        default: {
+          for(unsigned int i=0; i<ti->getNumOperands(); i++) {
+             if (seen.find(ti->getOperand(i)) == seen.end())
+                wl.push_back(ti->getOperand(i));
+          }
+        }
+      }      
+   }
+   if (result == NULL) {
+      if (candidates.size() == 1) {
+         for(auto t: candidates)
+            return t; 
+      }
+   }
+   return result;
+}
+
+
+bool isLoopBoundExcluded(std::string s) {
+  for(auto se : loopBoundExceptions) {
+     if (s.find(se) != std::string::npos) return true; 
+  }
+  return false;
+}
+
+void addForkFreq(ExecutionState &state, std::string inst, bool isTrue) {
+  long s = (long)&state;
+  std::map<std::string, unsigned> m;
+  if (isTrue) {
+     if (forkFreqMapTrue.find(s) != forkFreqMapTrue.end()) 
+        m = forkFreqMapTrue[s];
+     if (m.find(inst) != m.end()) 
+        m[inst] = m[inst] + 1;
+     else 
+        m[inst] = 1;
+     forkFreqMapTrue[s] = m;
+  }
+  else {
+     if (forkFreqMapFalse.find(s) != forkFreqMapFalse.end()) 
+        m = forkFreqMapFalse[s];
+     if (m.find(inst) != m.end()) 
+        m[inst] = m[inst] + 1;
+     else 
+        m[inst] = 1;
+     forkFreqMapFalse[s] = m;  
+  }
+}
+
+unsigned getForkFreq(ExecutionState &state, std::string inst, bool isTrue) {
+  long s = (long)&state;
+  std::map<std::string, unsigned> m;
+  //llvm::errs() << "fork freq for " << inst << "\n";
+  if (isTrue) {
+     if (forkFreqMapTrue.find(s) != forkFreqMapTrue.end()) 
+        m = forkFreqMapTrue[s];
+     if (m.find(inst) != m.end()) 
+        return m[inst];
+     else return 0;
+  }
+  else {
+     if (forkFreqMapFalse.find(s) != forkFreqMapFalse.end()) 
+        m = forkFreqMapFalse[s];
+     if (m.find(inst) != m.end()) 
+        return m[inst];
+     else return 0; 
+  }
+}
+
+std::string getStackTrace(ExecutionState &state) {
+    std::string MsgString;
+    llvm::raw_string_ostream msg(MsgString);
+    state.dumpStack(msg);
+    return msg.str();
+}
+
+std::string getSouceWithContext(ExecutionState &state, KInstruction *ki) {
+   std::string swctx = getStackTrace(state);
+   llvm::errs() << "stack trace=" << swctx << "\n";
+   swctx = swctx + ki->getSourceLocation();
+   return swctx;
+}
+
+bool isATimingObservationFuncPtr(std::string tname, int value) {
+   if (tname[0] == '%')
+      tname = tname.substr(1);
+   if (ocallFuncPtrMap.find(tname) == ocallFuncPtrMap.end())
+      return false;
+   if (ocallFuncPtrMap[tname].find(value) == ocallFuncPtrMap[tname].end())
+      return false;
+   return true;
+}
+
+void checkTimingObservationFuncPtr(Value *value) {
+   if (!isa<Instruction>(value)) return;
+   Instruction *inst = (Instruction*)value;
+   switch (inst->getOpcode()) {
+     case Instruction::BitCast:
+        checkTimingObservationFuncPtr(inst->getOperand(0));     
+     case Instruction::GetElementPtr: {
+        GetElementPtrInst *gep = static_cast<GetElementPtrInst*>(inst);
+        if (gep) {
+           //llvm::errs() << "gep: " << (*gep) << "\n";
+           int index = 0;
+           for(User::op_iterator oi = gep->idx_begin(), oe = gep->idx_end(); oi != oe; oi++, index++) {
+              if (index > 1) break;
+              else if (index == 0) continue; 
+              Value *v = oi->get();
+              if (llvm::ConstantInt* CI = dyn_cast<llvm::ConstantInt>(v)) {
+                 Type *t = gep->getSourceElementType();
+                 if (t) {
+                    if (t->isPointerTy()) 
+                       t = t->getPointerElementType();
+                    std::string tname = getTypeName(t);
+                    if (CI->getSExtValue() >= 0 && isATimingObservationFuncPtr(tname, CI->getSExtValue())) {
+                       llvm::errs() << "function " << inst->getParent()->getParent()->getName() << " calls timing observation point " << tname << " field " <<  CI->getSExtValue() << "\n";
+                       timingObservationPointCaller.insert(inst->getParent()->getParent()->getName());
+                       
+                    } 
+                 }
+              }
+           }
+        }     
+        break;
+     }
+     case Instruction::Load: {
+        LoadInst *linst = static_cast<LoadInst*>(inst);
+        checkTimingObservationFuncPtr(linst->getPointerOperand());
+     }
+     default:       
+        return;
+   }
+}
+
+
+bool isIndirectCall(CallSite *cs) {
+   const Value *V = cs->getCalledValue();
+   if (isa<Function>(V) || isa<Constant>(V))
+     return false;
+   if (const CallInst *CI = dyn_cast<CallInst>(V))
+     if (CI->isInlineAsm())
+       return false;
+  return true;
+}
+
+
+void extractFunctionsCallingTimingObservationPoints(KModule *kmodule) {
+    
+   for (Module::iterator F = kmodule->module->begin(); F != kmodule->module->end(); F++) {
+       for (Function::iterator bb = F->begin(), e = F->end(); bb != e; ++bb) {
+           for (BasicBlock::iterator i = bb->begin(), e = bb->end(); i != e; ++i) {
+               Instruction &ii = *i;
+               switch (ii.getOpcode()) {
+                 case Instruction::Invoke:
+                 case Instruction::Call: {
+                    CallSite cs(&ii);
+                    if (isIndirectCall(&cs)) {
+                       checkTimingObservationFuncPtr(cs.getCalledValue());
+                    }
+                    break;
+                 }
+                 default: continue;
+               }
+           }
+       }
+   }
+}
+
+void Executor::recordMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *brinst) {
+  long sid = (long)&state;
+  branchInstrMap[sid] = brinst;     
+  //llvm::errs() << "Recorded most recent branch as " << (*brinst) << "\n";
+}
+
+void Executor::getMostRecentBranchInfo(ExecutionState &state, llvm::Instruction *&brinst, bool &found) {
+  long sid = (long)&state;
+  if (branchInstrMap.find(sid) == branchInstrMap.end()) {
+     found = false;
+     return;
+  }
+  brinst = branchInstrMap[sid];
+  found = true;
+  //llvm::errs() << "Most recent branch: " << (*brinst) << "\n"; 
+}
+
+//#ifdef INFOFLOW
+// InfoFlowSummarization
+struct infoflowdata {
+  std::map<unsigned int, const MemoryObject*> *regMap;
+  std::map<unsigned int, std::map<region, std::set<InfoFlowRegion_t> > > *localIFlow;
+};
+typedef struct infoflowdata infoflowdata_t;
+std::map<ExecutionState*, std::vector<infoflowdata_t>* > infoflowstack;
+infoflowdata_t currentInfoFlowContext;
+std::map<ExecutionState*, 
+         std::map<const MemoryObject*, 
+                  std::map<region, 
+                           std::set<InfoFlowRegion_t> > > > memoryInfoFlow;
+// Maps info flow relevant memory objects to ids that are meaningful to the client, e.g., argument indices of a summarized function
+std::map<int, int> argRegsInfoFlow;
+// dest index to dest memory region to source memory regions 
+std::map<int, std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > >  infoFlowSummary;
+std::map<ExecutionState*, std::map<int, std::map<InfoFlowRegion_t, std::set<InfoFlowRegion_t> > > > infoFlowSummaryPerState;
+
+/*
+bool operator<(const region r1, const region r2) {
+  if (r1.offset == r2.offset)
+     return r1.size < r2.size;
+  else if (r1.size == r2.size) 
+     return r2.offset < r2.offset;
+  else r1.offset + r1.size  < r2.offset + r2.size;
+}*/
+
+namespace std {
+bool operator<(const InfoFlowRegion_t ifr1, const InfoFlowRegion_t ifr2) {
+   if (ifr1.index < ifr2.index)
+      return true;
+   else if (ifr1.index == ifr2.index) {
+      if (ifr1.regions.size() < ifr2.regions.size())
+         return true;
+      else if (ifr1.regions.size() > ifr2.regions.size())
+         return false;
+      else {
+         for(unsigned int i=0; i<ifr1.regions.size(); i++)
+            if (ifr1.regions[i] < ifr2.regions[i])
+               return true;
+         return false; 
+      }
+   } 
+   else return false;
+}
+}
+
+//#endif
+
+/* Side channel end */
+
+//#define VBSC
+
+#define ASYNC_STR "async_initiate"
+#define ENABLE_STR "enable_entry"
+//#define PRIM_LAZY_INIT_SIZE  64
+//#define PRIM_LAZY_INIT_SIZE  32
+#define STRUCT_LAZY_INIT_INS 10
+// this is to avoid assertion failure
+// represents size in bits so SIZE_FOR_UNTYPED (2000) * 8
+#define SIZE_FOR_UNKNOWN_TYPES 8*8
+int MAX_ALLOC_SIZE=10240;
+
+cl::opt<bool>
+CheckInfoFlowRule("check-infoflow", cl::desc("Checks and reports information flows from high labeled memory to low labeled memory\n"));
+
+cl::opt<bool>
+InitFuncPtrs("init-funcptr-fields" , cl::desc("Set function pointer fields to null when lazy initializing struct type objects"),
+             cl::init(false));
+
+
+cl::opt<bool>
+BreakSelectStmt("fork-for-select", cl::desc("Fork states to simulate the select statement\n"),
+           cl::init(false));
+
+cl::opt<bool>
+PreferredResolution("use-one-for-resol", cl::desc("Use the candidate memory object stored for the relevant symbolic \ 
+                                  address expression for symbolic address resolution!\n"), cl::init(false));
+std::map<long, std::map<ref<Expr>, const MemoryObject *> > addressToMemObj;
+std::map<long, std::map<ref<Expr>, ref<Expr> > > symIndexToMemBase;
+extern std::set<std::string> assemblyFunctions;
+
+
+
+KModule *kmoduleExt;
+llvm::Function *entryFunc;
+extern const Module * moduleHandle;
+extern bool asyncMode;
+extern std::vector<std::string> asyncFunc;
+extern std::vector<std::string> enabledFunc;
+extern APIHandler *apiHandler;
+extern bool progModel;
+extern std::map<std::string, std::map<unsigned int, int> > lazyInitInitializersWValues;
+extern std::map<std::string, std::map<unsigned int, unsigned int> > lazyInitInitializersWValuesSize;
+extern std::map<std::string, std::vector<unsigned int> > lazyInitInitializers;
+extern std::map<std::string, std::map<unsigned int, std::string> > lazyFuncPtrInitializers;
+
+std::string getAsyncFunction(std::string fn) {
+
+  return fn.substr(fn.find(ASYNC_STR) + strlen(ASYNC_STR) + 1, fn.size());
+}
+
+std::string getEnableFunction(std::string fn) {
+
+  return fn.substr(fn.find(ENABLE_STR) + strlen(ENABLE_STR) + 1, fn.size());
+}
+
+bool isAssemblyFunc(std::string name) {
+  for(auto af : assemblyFunctions)
+     if (af == name)
+        return true;
+  return false;
+}
+
+extern int minInstCount;
+extern int maxInstCount;
+
+extern bool lazyInit;
+extern bool lazySpec;
+extern int numLazyInst;
+extern std::vector<std::string> lazyInits;
+extern std::set<std::string> lazyInitSingles;
+extern std::map<std::string, int> lazyInitNumInstances;
+//std::set<std::string> embeddedTypes;
+std::set<Type*> embeddedTypes;
+//std::map<std::string, std::set<std::string> >  embeddings;
+std::map<Type*, std::set<Type*> >  embeddingTypes;
+bool singleSuccessor = true;
+
+
+bool infoFlowSummaryMode = false;
+
+
+//#ifdef INFOFLOW
+/* InfoFlowSummarization */
+
+region adjustment(region r1, region r2);
+
+std::set<InfoFlowRegion_t> adjust(std::set<InfoFlowRegion_t> ifrs, region adj);
+
+std::vector<region> diffPartitionRegion(region r1, std::vector<region> rgs);
+
+std::map<region, std::set<InfoFlowRegion_t> > slice(std::map<region, std::set<InfoFlowRegion_t> > ifrmap, region rt);
+
+std::set<InfoFlowRegion_t> setIF(InfoFlowRegion_t &ifr) {
+  std::set<InfoFlowRegion_t> res;
+  res.insert(ifr);
+  return res;
+}
+
+void print(const InfoFlowRegion_t &ifr) {
+  llvm::errs() << ifr.index << ",";
+  for(unsigned int i=0; i<ifr.regions.size(); i++)
+     llvm::errs() << "[" << ifr.regions[i].offset << ":" << ifr.regions[i].size << "]";
+}
+
+void print(std::fstream &fstr, const InfoFlowRegion_t &ifr) {
+  fstr << ifr.index << ",";
+  for(unsigned int i=0; i<ifr.regions.size(); i++)
+     fstr << "[" << ifr.regions[i].offset << ":" << ifr.regions[i].size << "]";
+}
+
+void print(std::set<InfoFlowRegion_t> ifrs) {
+  llvm::errs() << "{";
+  unsigned int i=0;
+  for(auto ifr : ifrs) {
+     print(ifr);
+     if (i < ifrs.size() - 1)
+        llvm::errs() << "\n";
+  }
+  llvm::errs() << "}\n";
+  
+}
+
+void print(std::fstream &fstr, std::set<InfoFlowRegion_t> ifrs) {
+  fstr << "{";
+  unsigned int i=0;
+  for(auto ifr : ifrs) {
+     print(fstr, ifr);
+     if (i < ifrs.size() - 1)
+        fstr << "\n";
+  }
+  fstr << "}\n";
+  
+}
+
+
+
+void dumpInfoFlow() {
+  llvm::errs() << "Info Flow Summary for function " << infoFlowSummarizedFuncName << "\n"; 
+  for(auto ifse : infoFlowSummary) {
+     for(auto ifse2 : ifse.second) {
+           print(ifse2.second);
+           llvm::errs() << "\t===>\n";
+           print(ifse2.first);
+           llvm::errs() << "\n\n";
+     }
+  }
+}
+
+void writeInfoFlowSummary(const char *fname) {
+   std::fstream rc(fname, std::fstream::out);
+   if (rc.is_open()) {
+      for(auto ifse : infoFlowSummary) {
+         for(auto ifse2 : ifse.second) {
+            print(rc, ifse2.second);
+            rc << "=>\n";
+            print(rc, ifse2.first);
+            rc << "\n"; 
+         }
+      }
+      rc.close();
+   }
+}
+
+void readInfoFlowSummary(char *fname){
+}
+
+
+bool isLocal(int reg) {
+   return (currentInfoFlowContext.regMap->find(reg) != currentInfoFlowContext.regMap->end());
+}
+
+void Executor::recordArgRegisters(Function *f) {
+   KFunction *kf = kmodule->functionMap[f];
+   unsigned int argi = 0;
+   for(llvm::Function::arg_iterator ai = f->arg_begin(); ai != f->arg_end(); ai++, argi++) {
+      argRegsInfoFlow[kf->getArgRegister(argi)] = argi;
+      llvm::errs() << "recording arg " << argi << " and the register " << kf->getArgRegister(argi) << " as info flow relevant in " << f->getName() << "\n"; 
+   }     
+}
+
+int isInfoFlowRelevant(KInstruction *ki, int regIndex) {

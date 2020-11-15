@@ -59,7 +59,7 @@ void recordMemObj(ExecutionState &state, const MemoryObject *mo) {
          m[mo->getBaseExpr()] = mo;
          addressToMemObj[(long)&state] = m; 
        }
-       llvm::errs() << "storing memobj " << mo->getBaseExpr() << " for state " << &state << "\n";
+       //llvm::errs() << "storing memobj " << mo->getBaseExpr() << " for state " << &state << "\n";
     }
 }
 

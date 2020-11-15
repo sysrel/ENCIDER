@@ -2430,6 +2430,7 @@ static llvm::Module *linkWithUclibc(llvm::Module *mainModule, StringRef libDir) 
 }
 #endif
 
+
 int main(int argc, char **argv, char **envp) {
   atexit(llvm_shutdown);  // Call llvm_shutdown() on exit.
 
@@ -2503,7 +2504,6 @@ int main(int argc, char **argv, char **envp) {
           }
         }
       }
-
       return 0;
     }
   }

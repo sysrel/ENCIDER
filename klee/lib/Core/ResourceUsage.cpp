@@ -4,6 +4,7 @@
 #include "ResourceUsage.h"
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "TimingSolver.h"
+#include "StatsTracker.h"
 #include "klee/Expr.h"
 #include "klee/util/ExprPPrinter.h"
 #include "llvm/IR/DebugLoc.h"
@@ -17,6 +18,11 @@
 
 using namespace llvm;
 using namespace klee;
+
+extern std::fstream timingos;
+extern std::fstream normaltermtimingos;
+extern std::fstream inferredtimingos;
+extern std::fstream codecacheos;
 
 bool onlycompletedpaths = true;
 typedef std::pair<ref<Expr>, ref<Expr> > HCLC;
@@ -406,7 +412,8 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
      }
      if (found) {
         std::string mode = cacheLineMode ?  "CACHE LINE" : "BIT MASK";
-         llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
+        llvm::errs() << "CODE CACHE BASED SIDE CHANNEL: (MODE=" << mode << ")\n";
+        llvm::errs() << "Timing=" << ex->statsTracker->elapsed() << "\n";
         rd->i->print(llvm::errs());
         llvm::errs() << "\nHCdiff : " << f << "\n";
         std::stringstream ss;
@@ -418,6 +425,13 @@ bool checkCacheLeakage(Executor *ex, RD* rd, BBset diff, BBset b, ref<Expr> f) {
         p.second = ii.line;
         codecachelocs.insert(p);
         llvm::errs() << p.first << "\nLine=" << ii.line << "\n";
+        std::string tstr;
+        llvm::raw_string_ostream ros(tstr);
+        ros << (*(rd->i)) << "\n";
+        codecacheos << "Timing=" << ex->statsTracker->elapsed() << "\n";
+        codecacheos << "Instruction: " << ros.str() << "\n";
+        codecacheos << "Location: " << ii.file.c_str() << " " << ii.line << "\n";
+        codecacheos << "Max accuracy=" << max_accuracy << "\n\n\n";
      }
      return found;
   }
@@ -705,10 +719,18 @@ void printLeakage(RD* rd, Executor* ex) {
 
          // check resource usage diff
          range R2 = rit2->second;
-	 range r = combineRange(R1, R2);
+	 //range r = combineRange(R1, R2);
          std::set<long> rset2 = rd->RDSet[*rvit2];
-	 int diff = r.second - r.first;
-
+	 //int diff = r.second - r.first;
+	 int diff = 0;
+         int dc1=0, dc2 = 0;
+         if (R1.second > R2.second) 
+            dc1 = R1.second - R2.second;
+         else dc1 = R2.second - R1.second;
+         if (R1.first > R1.first)
+            dc2 = R1.first - R2.first;
+         else dc2 = R2.first - R1.first;
+         diff = (dc1 > dc2) ? dc1 : dc2;
 	 //if(diff > epsilon) {
 
          ref<Expr> h1diffh2 = AndExpr::create(h1, Expr::createIsZero(h2));
@@ -720,6 +742,7 @@ void printLeakage(RD* rd, Executor* ex) {
             llvm::errs() << "difference in HCs\n";
             // check is LC's agree on some assignment
 	    if (isTrue(eval, ex)) {
+          
                assert(rd->bbm.find(*rvit2) != rd->bbm.end() && "basic block cov not recorded\n");
                BBset bs1 = rd->bbm[*rvit];
                BBset bs2 = rd->bbm[*rvit2];
@@ -747,20 +770,38 @@ void printLeakage(RD* rd, Executor* ex) {
                }
                llvm::errs() << "numterm1=" << numterm1 << " numterm2=" << numterm2 << "\n";
                if ((!onlycompletedpaths || (numterm1 > 0 && numterm2 > 0)) && diff > epsilon) {
+                  timingos << "Time=" << ex->statsTracker->elapsed() << "\n";
+                  timingos << "resource ranges: "
+                               << "[" << R1.first << "," << R1.second << "]"
+                               << "[" << R2.first << "," << R2.second << "]\n";
 		  vc++;
-		  llvm::errs() << "\n===============\nFound Violation at : ";
+		  llvm::errs()  << "\n===============\nFound Violation at : ";
+                  llvm::errs() << "Timing=" << ex->statsTracker->elapsed() << "\n";
 		  llvm::errs() << "\ndiff : " << diff << "\n";
+                  llvm::errs() << "resource ranges: "
+                               << "[" << R1.first << "," << R1.second << "]"
+                               << "[" << R2.first << "," << R2.second << "]\n";
+         
 		  Instruction * inst = rd->i;
 		  const InstructionInfo &ii = ex->kmodule->infos->getInfo(inst);
                   llvm::errs() << "Instruction:\n";
                   llvm::errs() << (*inst) << "\n";
 		  printInfo(ii);
+
+                  std::string tstr;
+                  llvm::raw_string_ostream ros(tstr);
+                  ros << (*inst) << "\n";
+                  timingos << "Instruction: " << ros.str() << "\n";
+                  timingos << "Location: " << ii.file.c_str() << ":" << ii.line << "\n\n\n";
+
 		  vil->push_back(inst);
 		  if (sourcecheck) updatesource(exhash1, exhash2, rd);
+                     #ifdef HPRINT
 		     llvm::errs() << "\n[ "; h1->dump(); l1->dump(); llvm::errs() << " ] ";
 		     llvm::errs() << "  ---->  [ " << R1.first << " , " << R1.second << " ]\n";
 		     llvm::errs() << "\n[ "; h2->dump(); l2->dump(); llvm::errs() << " ] ";
 		     llvm::errs() << "  ---->  [ " << R2.first << " , " << R2.second << " ]\n";
+                     #endif
 
 		     std::set<RD*>::iterator ssit = rd->succ->begin();
 		     llvm::errs() << "\nSuccessors : \n";
@@ -784,24 +825,33 @@ void printLeakage(RD* rd, Executor* ex) {
 		     }
 		     llvm::errs() << "\n===============\n";
 
+                   unsigned tobsc1 = 0;
                    bool tobs1 = false;
+                   //llvm::errs() << "Path 1 tobs:\n";
                    for(auto rde1 : rset1)
                       if (((RD*)rde1)->timingObservationPoint) {
                          tobs1 = true;
+                         tobsc1++;
+                         //llvm::errs() << ((RD*)rde1)->topsLoc << " ru=" << ((RD*)rde1)->ru << "\n";
                       }
 
+                   unsigned tobsc2 = 0;
                    bool tobs2 = false;
+                   //llvm::errs() << "Path 2 tobs:\n";
                    for(auto rde2 : rset2)
                       if (((RD*)rde2)->timingObservationPoint) {
                          tobs2 = true;
+                         tobsc2++;
+                         //llvm::errs() << ((RD*)rde2)->topsLoc << " ru=" << ((RD*)rde2)->ru << "\n";
                       }
 
+                   llvm::errs() << "num tops 1 =" << tobsc1 << " num tops 2 =" << tobsc2 << "\n";
                    llvm::errs() << "Timing observation point? " << (tobs1 && tobs2) 
                                 << "(path1=" << tobs1 << ")"
                                 << " (path2=" << tobs2 << ")\n";
+                   std::map<unsigned, std::set<long> > diffmap;
                    if (tobs1 && tobs2) {
                       unsigned max = 0;
-                      std::string locs = "";
                       for(auto rde1: rset1) {
                          for(auto rde2: rset2) {
                             if (((RD*)rde1)->timingObservationPoint && 
@@ -810,15 +860,29 @@ void printLeakage(RD* rd, Executor* ex) {
                                 unsigned diff = (((RD*)rde1)->ru > ((RD*)rde2)->ru) ? 
                                       (((RD*)rde1)->ru - ((RD*)rde2)->ru) : 
                                       (((RD*)rde2)->ru - ((RD*)rde1)->ru); 
-                                if (diff > max) {
-                                   max = diff;
-                                   locs = ((RD*)rde1)->topsLoc;
-                                }
-                                                                     
+                                std::set<long> rs;
+                                if (diffmap.find(diff) != diffmap.end())
+                                   rs = diffmap[diff];
+                                rs.insert(rde1);
+                                diffmap[diff] = rs;
                             }  
                          }
                       } 
-                      llvm::errs() << "max diff: " << max << " \n at loc:\n " << locs << "\n";
+                      for(auto dm : diffmap) 
+                         if (dm.first > max)
+                            max = dm.first;
+                      if (diffmap.find(max) != diffmap.end())
+                         for(auto mr : diffmap[max]) {
+                             llvm::errs() << "max diff: " << max << " \n at loc:\n " 
+                                       << ((RD*)mr)->topsLoc << "\n";
+                             llvm::errs() << "Timing=" << ex->statsTracker->elapsed() << "\n";
+                             inferredtimingos << "Time=" << ex->statsTracker->elapsed() 
+                                                         << "\n";
+                             inferredtimingos << "Instruction: " << ros.str() << "\n";
+                             inferredtimingos << "max diff: " << max << " \n at loc:\n " 
+                                       << ((RD*)mr)->topsLoc << "\n";
+ 
+                          }
                     }
 
                     bool term1 = false;
@@ -861,10 +925,28 @@ void printLeakage(RD* rd, Executor* ex) {
                          const InstructionInfo &ii1 = ex->kmodule->infos->getInfo(((RD*)p1)->i);
                          const InstructionInfo &ii2 = ex->kmodule->infos->getInfo(((RD*)p2)->i);
                          llvm::errs() << "max diff: " << max << "\n last branch locs:\n "; 
+                         llvm::errs() << "Timing=" << ex->statsTracker->elapsed() << "\n";
                          llvm::errs() << (*((RD*)p1)->i) << "\n";
                          printInfo(ii1);
                          llvm::errs() << (*((RD*)p2)->i) << "\n";
                          printInfo(ii2);
+                         std::string tstr1;
+                         llvm::raw_string_ostream ros1(tstr1);
+                         ros1 << (*((RD*)p1)->i) << "\n";
+                         std::string tstr2;
+                         llvm::raw_string_ostream ros2(tstr2);
+                         ros2 << (*((RD*)p2)->i) << "\n";
+                         normaltermtimingos << "Time=" << ex->statsTracker->elapsed() 
+                                                         << "\n";
+                         normaltermtimingos << "Instruction: " << ros.str() << "\n";
+                         normaltermtimingos << "max diff: " << max << "\n last branch locs:\n "; 
+                         normaltermtimingos << ros1.str() << "\n";
+                         normaltermtimingos << "Location: " << ii1.file.c_str() 
+                                            << ":" << ii1.line << "\n";
+                         normaltermtimingos << ros2.str() << "\n";
+                         normaltermtimingos << "Location: " << ii2.file.c_str() 
+                                            << ":" << ii2.line << "\n\n\n";
+
                       }
                    }
 
@@ -981,7 +1063,7 @@ unsigned propagate(RD* rd, std::string indent, Executor* ex) {
                                 std::set<long> rset, cset;
                                 if (a->RDSet.find(eh2) != a->RDSet.end())
                                    rset = a->RDSet[eh2];
-                                cset = rd->RDSet[eh2];
+                                cset = rd->RDSet[rit->first];
                                 for(auto rde : cset) 
                                    rset.insert(rde);
                                 a->RDSet[eh2] = rset;

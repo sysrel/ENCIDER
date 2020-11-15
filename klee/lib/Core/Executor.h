@@ -155,7 +155,7 @@ public:
   TimingSolver *solver;
   MemoryManager *memory;
  
-  void recordTimingObservationPoint(void* rddterm, void *ha, std::string fname) ;
+  void recordTimingObservationPoint(void* rddterm, void *child, void *ha, std::string fname) ;
 
   void handleTimingObservationPoint(ExecutionState &state, bool restart, std::string fname="");
 
@@ -257,10 +257,11 @@ public:
                                   KInstruction *target,
                                   llvm::Function *function, int tid);
 
+  StatsTracker *statsTracker;
+
 private:
 /* SYSREL extension */
   std::set<ExecutionState*> states;
-  StatsTracker *statsTracker;
   TreeStreamWriter *pathWriter, *symPathWriter;
   SpecialFunctionHandler *specialFunctionHandler;
   std::vector<TimerInfo*> timers;
