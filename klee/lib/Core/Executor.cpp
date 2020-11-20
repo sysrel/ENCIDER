@@ -5211,6 +5211,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     break;
   }
   case Instruction::PHI: {
+    if (EncVer) llvm::errs() << "phi instruction: " << (*ki->inst) 
+        << " incoming bb index: " << state.incomingBBIndex <<"\n";
     ref<Expr> result = eval(ki, state.incomingBBIndex, state).value;
     bindLocal(ki, state, result);
     #ifdef INFOFLOW

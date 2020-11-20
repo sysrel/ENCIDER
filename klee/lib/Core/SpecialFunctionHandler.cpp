@@ -1498,10 +1498,14 @@ bool AllocAPIHandler::interpret(PMFrame &pmf, APIAction *action, ExecutionState 
              }
            }
            else  {
-              llvm::errs() << "Using " << primArraySize << " for the symbolic size expression \ 
-                         and constraining the path condition accordingly\n";
-              ((Executor*)(theInterpreter))->addConstraint(state, primeq); 
-              allocationSize = primArraySize;
+              if (UseForSymbolicAllocSize) 
+                 allocationSize = UseForSymbolicAllocSize;
+              else {
+                llvm::errs() << "Using " << primArraySize << " for the symbolic size expression \ 
+                       and constraining the path condition accordingly\n";
+                ((Executor*)(theInterpreter))->addConstraint(state, primeq); 
+                allocationSize = primArraySize;
+              }
            }
       }
     }
