@@ -2418,7 +2418,11 @@ void initializeLazyInit(const MemoryObject *mo, ObjectState *obj, Type *t) {
         std::map<unsigned int, unsigned int> sizes = lazyInitInitializersWValuesSize[tname];
         for(auto offset : offsets) {
            ref<Expr> ve;
-           if (sizes[offset.first] == 32)
+           if (sizes[offset.first] == 8)
+              ve = klee::ConstantExpr::alloc(offset.second, Expr::Int8);
+           else if (sizes[offset.first] == 16)
+              ve = klee::ConstantExpr::alloc(offset.second, Expr::Int16); 
+           else if (sizes[offset.first] == 32)
               ve = klee::ConstantExpr::alloc(offset.second, Expr::Int32);
            else if (sizes[offset.first] == 64)
               ve = klee::ConstantExpr::alloc(offset.second, Expr::Int64); 
@@ -4621,7 +4625,9 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       /* SYSREL side channel end */
       //llvm::errs() << "PC: \n"; 
       //ExprPPrinter::printConstraints(llvm::errs(), state.constraints);
-      if (EncVer) llvm::errs() << "Forking on condition: " << cond  << " " << (*i) << "\n";
+      if (EncVer) llvm::errs() << "Forking on condition: " << cond 
+                   << " " << (*i) << " at " 
+                   << state.prevPC->getSourceLocation() << "\n";
       
       Executor::StatePair branches = fork(state, cond, false, true);
 
@@ -4636,6 +4642,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       unsigned tc, fc;
       bool lbe = isLoopBoundExcluded(state.prevPC->getSourceLocation());
       //llvm::errs() << "loop bound= " << loopBound  << " excl? " << lbe << "\n";
+      if (branches.first)
+         recordMostRecentBranchInfo(*branches.first, i);
+      if (branches.second)
+         recordMostRecentBranchInfo(*branches.second, i);
+
       if (loopBound && !lbe) {
          if (branches.first) {
             addForkFreq(state,getSouceWithContext(state, state.prevPC), true);
@@ -4646,29 +4657,38 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          }
          tc = getForkFreq(state, getSouceWithContext(state, state.prevPC), true);
          fc = getForkFreq(state, getSouceWithContext(state, state.prevPC), false);
-         //llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " true branch " << tc << " times\n";
-         //llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " false branch " << fc << " times\n";
+         if (EncVer) llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " true branch " << tc << " times\n";
+         if (EncVer) llvm::errs() << "forked at " << state.prevPC->getSourceLocation() << " false branch " << fc << " times\n";
          
          if (branches.first && branches.second) {
             if (fc > loopBound && tc > loopBound) {
                // terminate state
-               //llvm::errs() << "path terminated early due to reaching bound for both branches\n";
+               if (EncVer) llvm::errs() << "path terminated early due to reaching bound for both branches\n";
                terminateStateEarly(state, "Loop Bound for both successors reached\n");
             }
             else if (tc > loopBound) {
-               //llvm::errs() << "path terminated for the true branch\n";
+               if (EncVer) llvm::errs() << "path terminated for the true branch\n";
                terminateStateEarly(*branches.first, "Loop Bound for true successor reached\n");
                transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second); 
                /* SYSREL side channel begin */
                successorsPaths->insert(branches.second); // Keeping track of the new paths
+               recordMostRecentBranchInfo(*branches.second, i);
+               if (HandleSingleSuccessors) {
+                  branches.second->lastCondition = cond;
+               }
+
                /* SYSREL side channel end */
             }
             else if (fc > loopBound) {
-               //llvm::errs() << "path terminated for the false branch\n";
+               if (EncVer) llvm::errs() << "path terminated for the false branch\n";
                terminateStateEarly(*branches.second, "Loop Bound for false successor reached\n");
                transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
                /* SYSREL side channel begin */
                successorsPaths->insert(branches.first); // Keeping track of the new paths
+               if (HandleSingleSuccessors) {
+                  branches.first->lastCondition = cond;
+               }
+
                /* SYSREL side channel end */
             }
             else {
@@ -4677,10 +4697,14 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                successorsPaths->insert(branches.first); // Keeping track of the new paths
                /* SYSREL side channel end */
 
+               branches.first->lastCondition = cond;
+
                transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
                /* SYSREL side channel begin */
                successorsPaths->insert(branches.second); // Keeping track of the new paths
                /* SYSREL side channel end */
+
+               branches.second->lastCondition = cond;
 
                singleSuccessor = false;
                bool abort = false;
@@ -4701,14 +4725,16 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
          else {
             if (branches.first) {
                if (tc > loopBound) {
-                  //llvm::errs() << "branching to the false successor due to reaching loop bound for the true branch\n";
+                  if (EncVer) llvm::errs() << "branching to the false successor due to reaching loop bound for the true branch\n";
                   transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.first);
                }
                else                   
                   transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
 
-               if (HandleSingleSuccessors)
+               if (HandleSingleSuccessors) {
                   branches.first->lastCondition = cond;
+                  recordMostRecentBranchInfo(*branches.first, i);
+               }
 
                /* SYSREL side channel begin */
                successorsPaths->insert(branches.first); // Keeping track of the new paths
@@ -4725,8 +4751,10 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
                else {               
                   transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
 
-               if (HandleSingleSuccessors)
+               if (HandleSingleSuccessors) {
                   branches.second->lastCondition = cond;
+                  recordMostRecentBranchInfo(*branches.second, i);
+               }
 
                   /* SYSREL side channel begin */
                   successorsPaths->insert(branches.second); // Keeping track of the new paths
@@ -6700,7 +6728,8 @@ void Executor::run(ExecutionState &initialState) {
                   if (EncVer) llvm::errs() << "Secret dependent branch (single successor) " << (*brInst) << "\n";
                   secretdependentos << "Time=" << statsTracker->elapsed() << "\n";
                   secretdependentos << "Instruction: " << ros.str() << "\n";
-                  secretdependentos << "Location: " << ii_info.file.c_str() << " " << ii_info.line << "\n\n\n";
+                  const InstructionInfo &loc_info = kmodule->infos->getInfo(brInst);
+                  secretdependentos << "Location: " << loc_info.file.c_str() << " " << ii_info.line << "\n\n\n";
                }
             }
          }
