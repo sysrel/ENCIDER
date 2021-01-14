@@ -231,6 +231,11 @@ std::map<std::string, std::map<unsigned,
 std::map<std::string, std::set<unsigned> > zeroInitArrayTypeBased; 
 
 cl::opt<bool>
+TimingObsPointAnalysis("timing-obs-point-analysis",
+       cl::desc("Decides to turn on/off timing observation point analysis (default true)\n"),
+       cl::init(true));
+
+cl::opt<bool>
 EncVer("encider-verbose", cl::desc("Prints some debug info\n"), cl::init(false));
 
 std::string getTypeName(Type *t);
@@ -5015,7 +5020,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     /* side channel begin */
 
     if (f) {
-       if (state.reachedFunctions.find(f->getName()) == state.reachedFunctions.end()) {
+       if (TimingObsPointAnalysis && state.reachedFunctions.find(f->getName()) == state.reachedFunctions.end()) {
           // possible timing observation point; terminate a copy 
           RD* rdd = getrdmap(&state);
           if (rdd->HA) {
