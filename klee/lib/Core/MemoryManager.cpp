@@ -66,6 +66,11 @@ void recordMemObj(ExecutionState &state, const MemoryObject *mo) {
 namespace {
 
 cl::opt<bool>
+TurnOffEmbedding("turn-off-embedding",
+                 cl::desc("Decides whether to turn off embedding checks during lazy initialization (default false)\n"),
+                 cl::init(false));
+
+cl::opt<bool>
 ConformToEmbedding("use-embedding-in-alloc", cl::desc("Use embedding relationship in lazy alloc (default false)\n"), cl::init(false));
 
 
@@ -363,6 +368,8 @@ const MemoryObject *MemoryManager::allocateLazyForTypeOrEmbedding(ExecutionState
   std::string type_str;
   llvm::raw_string_ostream rso(type_str);
   allocType->print(rso); 
+  if (TurnOffEmbedding)
+     return allocateLazyForTypeOrEmbeddingSimple(state, inst, origType, allocType, isSingle, count, rallocType, resaddr, sym, abort);
   llvm::errs() << "allocLazyOrEmbed for type " << rso.str() << " address = " << allocType << "\n"; 
   if (ConformToEmbedding && isEmbeddedType(allocType)) {
     if (isSingle) {  
