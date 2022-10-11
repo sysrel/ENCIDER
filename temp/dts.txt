@@ -1,2 +1,0 @@
-struct.data,1
-i8,1

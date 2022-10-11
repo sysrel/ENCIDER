@@ -1,2 +1,0 @@
-low,foo,0
-high,foo,1

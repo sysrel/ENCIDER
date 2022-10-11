@@ -1,1 +1,0 @@
-/usr/bin/clang-3.8  -I/home/tuba/Documents/tools/pmguidedsymex/klee/include -I/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/include -emit-llvm -std=gnu89 -D_DEBUG -D_GNU_SOURCE -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -O2 -g -Wall -Wwrite-strings

@@ -441,7 +441,7 @@ namespace {
   SymbolizeInlineAssembly("sym-inline-asm", cl::desc("Symbolize inline assembly call return value (default false)"), cl::init(false));
 
   cl::opt<bool>
-  LazyInit("lazy-init", cl::desc("Lazy initialization of input data structures (default false)"), cl::init(false));
+  LazyInit("lazy-init", cl::desc("Lazy initialization of input data structures (default false)"), cl::init(true));
 
   cl::opt<bool>
   InfoFlowSummaryMode("infoflow-summary", cl::desc("Information flow summary mode (default false)"), 
@@ -519,7 +519,7 @@ namespace {
   CheckStackLeak("check-stack-leak", cl::desc("Name of the file that specifies the functions for which stack leak check will be performed\n"));
 
   cl::opt<bool>  
-  ComputeLeakageMaxSat("leakage-maxsat", cl::desc("If set to true, computes leakage using a maxSat solver \n"));
+  ComputeLeakageMaxSat("leakage-maxsat", cl::desc("If set to true, computes leakage using a maxSat solver \n"), cl::init(false));
  
   cl::opt<std::string>
   PrefixRedact("prefix-redact", cl::desc("the file that contains the prefixes to be removed \ 
@@ -2690,7 +2690,7 @@ int main(int argc, char **argv, char **envp) {
         readVoidTypeCasts(VoidTypeCasts.c_str());
   }
 
-  if (ProgModelSpec != "") {
+  if (LazyInit || ProgModelSpec != "") {
      moduleHandle = finalModule; 
      progModel = true;
      APIHandler::readProgModelSpec(ProgModelSpec.c_str());

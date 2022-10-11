@@ -1,5 +1,0 @@
-/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/runtime/runtime_build_Release+Debug+Asserts/POSIX/stubs.bc: \
-  /home/tuba/Documents/tools/pmguidedsymex/klee/runtime/POSIX/stubs.c \
-  /home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/include/klee/Config/config.h
-
-/home/tuba/Documents/tools/pmguidedsymex/klee_build_dir/include/klee/Config/config.h:

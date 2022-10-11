@@ -1,1 +1,0 @@
-/usr/bin/c++   -Wall -Wextra -Wno-unused-parameter -O2 -g  -rdynamic CMakeFiles/not.dir/not.cpp.o  -o ../bin/not /usr/lib/llvm-3.8/lib/libLLVMSupport.a -lrt -ldl -ltinfo -lpthread -lz -lm -lrt -ldl -ltinfo -lpthread -lz -lm 

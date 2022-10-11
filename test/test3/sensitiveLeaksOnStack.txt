@@ -1,5 +1,0 @@
-/home/tuba/Documents/tools/pmguidedsymex/test/test3/test3.c 70: 
-
-(ReadLSB w32 0 foo_arg_1_0)
-
-

@@ -1,6 +1,0 @@
-
-
-
-struct usbtv {
-   struct device *dev;
-};

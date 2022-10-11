@@ -1,4 +1,0 @@
-low,%struct.public_t,0,32
-high,%struct.secret_t,0,32
-low,%struct.data_t,0,32
-high,%struct.data_t,0,32

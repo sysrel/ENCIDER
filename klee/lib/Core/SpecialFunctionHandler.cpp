@@ -2418,6 +2418,7 @@ void APIHandler::readProgModelSpec(const char *name) {
   sideEffectAPIHandler = new SideEffectAPIHandler();
   terminateAPIHandler = new TerminateAPIHandler();
   std::fstream cf(name, std::fstream::in);
+  if (!name) return;
   if (cf.is_open()) {
      std::string line, desc, data;
      APIBlock *apiblock = NULL;
